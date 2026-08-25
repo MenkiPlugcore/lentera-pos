@@ -5,7 +5,7 @@ import './barcodeDetectorPolyfill.js'
 import App from './App.jsx'
 import HardDeletePanel from './HardDeletePanel.jsx'
 import POSPanel from './POSPanel.jsx'
-import POSFocusOverlay from './POSFocusOverlay.jsx'
+import POSModalOverlay from './POSModalOverlay.jsx'
 import ReportsPanel from './ReportsPanel.jsx'
 
 createRoot(document.getElementById('root')).render(
@@ -13,7 +13,7 @@ createRoot(document.getElementById('root')).render(
     <App />
     <HardDeletePanel />
     <POSPanel />
-    <POSFocusOverlay />
+    <POSModalOverlay />
     <ReportsPanel />
   </StrictMode>,
 )
