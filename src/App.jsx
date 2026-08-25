@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import ProductBarcodeActions from './ProductBarcodeActions.jsx'
 
 const emptyProduct = {
   name: '',
@@ -24,10 +25,7 @@ async function apiFetch(url, options = {}) {
   })
 
   const data = await response.json().catch(() => ({}))
-  if (!response.ok) {
-    throw new Error(data?.error || 'Permintaan gagal diproses.')
-  }
-
+  if (!response.ok) throw new Error(data?.error || 'Permintaan gagal diproses.')
   return data
 }
 
@@ -44,7 +42,6 @@ export default function App() {
 
   async function refreshAuth() {
     setAuth((current) => ({ ...current, loading: true, error: '' }))
-
     try {
       const data = await apiFetch('/api/auth/status')
       setAuth({
@@ -58,26 +55,12 @@ export default function App() {
     }
   }
 
-  useEffect(() => {
-    refreshAuth()
-  }, [])
+  useEffect(() => { refreshAuth() }, [])
 
-  if (auth.loading) {
-    return <CenteredMessage title="LENTERA POS" message="Memuat sistem admin..." />
-  }
-
-  if (auth.error) {
-    return <CenteredMessage title="Koneksi admin gagal" message={auth.error} action="Coba Lagi" onAction={refreshAuth} />
-  }
-
-  if (auth.setupRequired) {
-    return <SetupAdmin onSuccess={refreshAuth} />
-  }
-
-  if (!auth.user) {
-    return <Login onSuccess={refreshAuth} />
-  }
-
+  if (auth.loading) return <CenteredMessage title="LENTERA POS" message="Memuat sistem admin..." />
+  if (auth.error) return <CenteredMessage title="Koneksi admin gagal" message={auth.error} action="Coba Lagi" onAction={refreshAuth} />
+  if (auth.setupRequired) return <SetupAdmin onSuccess={refreshAuth} />
+  if (!auth.user) return <Login onSuccess={refreshAuth} />
   return <AdminApp user={auth.user} onLogout={refreshAuth} />
 }
 
@@ -99,7 +82,6 @@ function SetupAdmin({ onSuccess }) {
   async function submit(event) {
     event.preventDefault()
     setError('')
-
     if (form.password !== form.confirmPassword) {
       setError('Konfirmasi password tidak sama.')
       return
@@ -109,11 +91,7 @@ function SetupAdmin({ onSuccess }) {
     try {
       await apiFetch('/api/auth/setup', {
         method: 'POST',
-        body: JSON.stringify({
-          fullName: form.fullName,
-          username: form.username,
-          password: form.password,
-        }),
+        body: JSON.stringify({ fullName: form.fullName, username: form.username, password: form.password }),
       })
       await onSuccess()
     } catch (submitError) {
@@ -133,24 +111,12 @@ function SetupAdmin({ onSuccess }) {
         </div>
 
         <form className="space-y-4" onSubmit={submit}>
-          <Field label="Nama Admin">
-            <input className="input" value={form.fullName} onChange={(event) => setForm({ ...form, fullName: event.target.value })} placeholder="Contoh: Admin Lentera" required />
-          </Field>
-          <Field label="Username">
-            <input className="input" value={form.username} onChange={(event) => setForm({ ...form, username: event.target.value })} autoComplete="username" required />
-          </Field>
-          <Field label="Password">
-            <input className="input" type="password" value={form.password} onChange={(event) => setForm({ ...form, password: event.target.value })} autoComplete="new-password" minLength={10} required />
-          </Field>
-          <Field label="Ulangi Password">
-            <input className="input" type="password" value={form.confirmPassword} onChange={(event) => setForm({ ...form, confirmPassword: event.target.value })} autoComplete="new-password" minLength={10} required />
-          </Field>
-
+          <Field label="Nama Admin"><input className="input" value={form.fullName} onChange={(event) => setForm({ ...form, fullName: event.target.value })} placeholder="Contoh: Admin Lentera" required /></Field>
+          <Field label="Username"><input className="input" value={form.username} onChange={(event) => setForm({ ...form, username: event.target.value })} autoComplete="username" required /></Field>
+          <Field label="Password"><input className="input" type="password" value={form.password} onChange={(event) => setForm({ ...form, password: event.target.value })} autoComplete="new-password" minLength={10} required /></Field>
+          <Field label="Ulangi Password"><input className="input" type="password" value={form.confirmPassword} onChange={(event) => setForm({ ...form, confirmPassword: event.target.value })} autoComplete="new-password" minLength={10} required /></Field>
           {error && <Alert tone="error">{error}</Alert>}
-
-          <button className="primary-button w-full" type="submit" disabled={busy}>
-            {busy ? 'Membuat admin...' : 'Buat Admin & Masuk'}
-          </button>
+          <button className="primary-button w-full" type="submit" disabled={busy}>{busy ? 'Membuat admin...' : 'Buat Admin & Masuk'}</button>
         </form>
       </div>
     </AuthLayout>
@@ -166,12 +132,8 @@ function Login({ onSuccess }) {
     event.preventDefault()
     setBusy(true)
     setError('')
-
     try {
-      await apiFetch('/api/auth/login', {
-        method: 'POST',
-        body: JSON.stringify(form),
-      })
+      await apiFetch('/api/auth/login', { method: 'POST', body: JSON.stringify(form) })
       await onSuccess()
     } catch (submitError) {
       setError(submitError.message)
@@ -185,20 +147,11 @@ function Login({ onSuccess }) {
       <div className="rounded-3xl border border-slate-800 bg-slate-900/80 p-7 shadow-2xl shadow-black/30">
         <h2 className="text-2xl font-black">Login Admin</h2>
         <p className="mt-2 text-sm text-slate-400">Masuk untuk mengelola LENTERA POS.</p>
-
         <form className="mt-6 space-y-4" onSubmit={submit}>
-          <Field label="Username">
-            <input className="input" value={form.username} onChange={(event) => setForm({ ...form, username: event.target.value })} autoComplete="username" required autoFocus />
-          </Field>
-          <Field label="Password">
-            <input className="input" type="password" value={form.password} onChange={(event) => setForm({ ...form, password: event.target.value })} autoComplete="current-password" required />
-          </Field>
-
+          <Field label="Username"><input className="input" value={form.username} onChange={(event) => setForm({ ...form, username: event.target.value })} autoComplete="username" required autoFocus /></Field>
+          <Field label="Password"><input className="input" type="password" value={form.password} onChange={(event) => setForm({ ...form, password: event.target.value })} autoComplete="current-password" required /></Field>
           {error && <Alert tone="error">{error}</Alert>}
-
-          <button className="primary-button w-full" type="submit" disabled={busy}>
-            {busy ? 'Memverifikasi...' : 'Masuk'}
-          </button>
+          <button className="primary-button w-full" type="submit" disabled={busy}>{busy ? 'Memverifikasi...' : 'Masuk'}</button>
         </form>
       </div>
     </AuthLayout>
@@ -218,10 +171,7 @@ function AuthLayout({ children }) {
             <Feature text="Stok & laporan otomatis" />
           </div>
         </div>
-        <div>
-          <div className="mb-6 lg:hidden"><Brand /></div>
-          {children}
-        </div>
+        <div><div className="mb-6 lg:hidden"><Brand /></div>{children}</div>
       </div>
     </main>
   )
@@ -236,9 +186,8 @@ function AdminApp({ user, onLogout }) {
 
   async function logout() {
     setLoggingOut(true)
-    try {
-      await apiFetch('/api/auth/logout', { method: 'POST', body: '{}' })
-    } finally {
+    try { await apiFetch('/api/auth/logout', { method: 'POST', body: '{}' }) }
+    finally {
       setLoggingOut(false)
       await onLogout()
     }
@@ -254,16 +203,11 @@ function AdminApp({ user, onLogout }) {
               <p className="text-sm font-bold text-white">{user.fullName}</p>
               <p className="text-xs text-slate-500">@{user.username} · Admin</p>
             </div>
-            <button type="button" className="secondary-button" onClick={logout} disabled={loggingOut}>
-              {loggingOut ? 'Keluar...' : 'Logout'}
-            </button>
+            <button type="button" className="secondary-button" onClick={logout} disabled={loggingOut}>{loggingOut ? 'Keluar...' : 'Logout'}</button>
           </div>
         </div>
       </header>
-
-      <div className="mx-auto max-w-7xl px-5 py-7">
-        <ProductManager />
-      </div>
+      <div className="mx-auto max-w-7xl px-5 py-7"><ProductManager /></div>
     </main>
   )
 }
@@ -283,12 +227,9 @@ function ProductManager() {
   async function loadData() {
     setLoading(true)
     try {
-      const [productData, categoryData] = await Promise.all([
-        apiFetch('/api/products'),
-        apiFetch('/api/categories'),
-      ])
-      setProducts(productData.products)
-      setCategories(categoryData.categories)
+      const [productData, categoryData] = await Promise.all([apiFetch('/api/products'), apiFetch('/api/categories')])
+      setProducts(productData.products || [])
+      setCategories(categoryData.categories || [])
     } catch (error) {
       setNotice({ tone: 'error', text: error.message })
     } finally {
@@ -296,19 +237,14 @@ function ProductManager() {
     }
   }
 
-  useEffect(() => {
-    loadData()
-  }, [])
+  useEffect(() => { loadData() }, [])
 
   const filteredProducts = useMemo(() => {
     const keyword = search.trim().toLowerCase()
     if (!keyword) return products
-
-    return products.filter((product) => {
-      return [product.name, product.sku, product.barcode, product.category_name]
-        .filter(Boolean)
-        .some((value) => String(value).toLowerCase().includes(keyword))
-    })
+    return products.filter((product) => [product.name, product.sku, product.barcode, product.category_name]
+      .filter(Boolean)
+      .some((value) => String(value).toLowerCase().includes(keyword)))
   }, [products, search])
 
   const activeProducts = products.filter((product) => product.is_active)
@@ -343,7 +279,6 @@ function ProductManager() {
     event.preventDefault()
     setBusy(true)
     setNotice(null)
-
     const payload = {
       ...form,
       purchasePrice: Number(form.purchasePrice || 0),
@@ -354,19 +289,12 @@ function ProductManager() {
 
     try {
       if (editingId) {
-        await apiFetch(`/api/products/${editingId}`, {
-          method: 'PATCH',
-          body: JSON.stringify(payload),
-        })
+        await apiFetch(`/api/products/${editingId}`, { method: 'PATCH', body: JSON.stringify(payload) })
         setNotice({ tone: 'success', text: 'Produk berhasil diperbarui.' })
       } else {
-        const data = await apiFetch('/api/products', {
-          method: 'POST',
-          body: JSON.stringify(payload),
-        })
+        const data = await apiFetch('/api/products', { method: 'POST', body: JSON.stringify(payload) })
         setNotice({ tone: 'success', text: `Produk berhasil dibuat dengan kode ${data.product.sku}.` })
       }
-
       resetForm()
       await loadData()
     } catch (error) {
@@ -377,9 +305,7 @@ function ProductManager() {
   }
 
   async function archiveProduct(product) {
-    const confirmed = window.confirm(`Arsipkan produk ${product.name} (${product.sku})? Riwayat transaksi tetap aman.`)
-    if (!confirmed) return
-
+    if (!window.confirm(`Arsipkan produk ${product.name} (${product.sku})? Riwayat transaksi tetap aman.`)) return
     setNotice(null)
     try {
       await apiFetch(`/api/products/${product.id}`, { method: 'DELETE' })
@@ -395,14 +321,10 @@ function ProductManager() {
     event.preventDefault()
     const name = categoryName.trim()
     if (!name) return
-
     setCategoryBusy(true)
     setNotice(null)
     try {
-      const data = await apiFetch('/api/categories', {
-        method: 'POST',
-        body: JSON.stringify({ name }),
-      })
+      const data = await apiFetch('/api/categories', { method: 'POST', body: JSON.stringify({ name }) })
       setCategories((current) => [...current, data.category].sort((a, b) => a.name.localeCompare(b.name)))
       setForm((current) => ({ ...current, categoryId: data.category.id }))
       setCategoryName('')
@@ -428,87 +350,32 @@ function ProductManager() {
       <section className="grid gap-6 xl:grid-cols-[420px_1fr]">
         <div className="rounded-3xl border border-slate-800 bg-slate-900/70 p-6 xl:sticky xl:top-6 xl:self-start">
           <div className="mb-5 flex items-start justify-between gap-4">
-            <div>
-              <p className="text-xs font-bold uppercase tracking-[0.2em] text-cyan-400">Produk</p>
-              <h2 className="mt-2 text-xl font-black">{editingId ? 'Edit Produk' : 'Tambah Produk'}</h2>
-            </div>
+            <div><p className="text-xs font-bold uppercase tracking-[0.2em] text-cyan-400">Produk</p><h2 className="mt-2 text-xl font-black">{editingId ? 'Edit Produk' : 'Tambah Produk'}</h2></div>
             {editingId && <button type="button" className="text-sm font-semibold text-slate-400 hover:text-white" onClick={resetForm}>Batal</button>}
           </div>
 
           <form className="space-y-4" onSubmit={saveProduct}>
-            <Field label="Nama Produk">
-              <input className="input" value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} placeholder="Contoh: Air Mineral 600ml" required />
-            </Field>
-
-            <Field label="Kategori">
-              <select className="input" value={form.categoryId} onChange={(event) => setForm({ ...form, categoryId: event.target.value })}>
-                <option value="">Tanpa kategori</option>
-                {categories.map((category) => <option key={category.id} value={category.id}>{category.name}</option>)}
-              </select>
-            </Field>
-
+            <Field label="Nama Produk"><input className="input" value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} placeholder="Contoh: Air Mineral 600ml" required /></Field>
+            <Field label="Kategori"><select className="input" value={form.categoryId} onChange={(event) => setForm({ ...form, categoryId: event.target.value })}><option value="">Tanpa kategori</option>{categories.map((category) => <option key={category.id} value={category.id}>{category.name}</option>)}</select></Field>
             <div className="grid grid-cols-2 gap-3">
-              <Field label="Harga Beli">
-                <input className="input" type="number" min="0" step="1" value={form.purchasePrice} onChange={(event) => setForm({ ...form, purchasePrice: event.target.value })} />
-              </Field>
-              <Field label="Harga Jual">
-                <input className="input" type="number" min="0" step="1" value={form.sellingPrice} onChange={(event) => setForm({ ...form, sellingPrice: event.target.value })} required />
-              </Field>
+              <Field label="Harga Beli"><input className="input" type="number" min="0" step="1" value={form.purchasePrice} onChange={(event) => setForm({ ...form, purchasePrice: event.target.value })} /></Field>
+              <Field label="Harga Jual"><input className="input" type="number" min="0" step="1" value={form.sellingPrice} onChange={(event) => setForm({ ...form, sellingPrice: event.target.value })} required /></Field>
             </div>
-
             <div className="grid grid-cols-2 gap-3">
-              <Field label="Stok">
-                <input className="input" type="number" min="0" step="1" value={form.stock} onChange={(event) => setForm({ ...form, stock: event.target.value })} required />
-              </Field>
-              <Field label="Stok Minimum">
-                <input className="input" type="number" min="0" step="1" value={form.minimumStock} onChange={(event) => setForm({ ...form, minimumStock: event.target.value })} />
-              </Field>
+              <Field label="Stok"><input className="input" type="number" min="0" step="1" value={form.stock} onChange={(event) => setForm({ ...form, stock: event.target.value })} required /></Field>
+              <Field label="Stok Minimum"><input className="input" type="number" min="0" step="1" value={form.minimumStock} onChange={(event) => setForm({ ...form, minimumStock: event.target.value })} /></Field>
             </div>
-
-            <Field label="Barcode / Kode Eksternal" hint="Kosongkan agar otomatis memakai LP000001, LP000002, dst.">
-              <input className="input font-mono" value={form.barcode} onChange={(event) => setForm({ ...form, barcode: event.target.value })} placeholder="Kosong = otomatis" />
-            </Field>
-
-            {form.barcode && (
-              <Field label="Tipe Barcode">
-                <select className="input" value={form.barcodeType} onChange={(event) => setForm({ ...form, barcodeType: event.target.value })}>
-                  <option value="CODE128">Code 128</option>
-                  <option value="EAN13">EAN-13</option>
-                  <option value="UPC">UPC</option>
-                  <option value="OTHER">Lainnya</option>
-                </select>
-              </Field>
-            )}
-
-            <Field label="URL Gambar" hint="Opsional untuk versi awal.">
-              <input className="input" type="url" value={form.imageUrl} onChange={(event) => setForm({ ...form, imageUrl: event.target.value })} placeholder="https://..." />
-            </Field>
-
-            <Field label="Keterangan">
-              <textarea className="input min-h-20 resize-y" value={form.description} onChange={(event) => setForm({ ...form, description: event.target.value })} />
-            </Field>
-
-            {editingId && (
-              <label className="flex items-center gap-3 rounded-2xl border border-slate-800 bg-slate-950/60 px-4 py-3 text-sm">
-                <input type="checkbox" checked={form.isActive} onChange={(event) => setForm({ ...form, isActive: event.target.checked })} />
-                Produk aktif dan tampil di kasir
-              </label>
-            )}
-
-            <button className="primary-button w-full" type="submit" disabled={busy}>
-              {busy ? 'Menyimpan...' : editingId ? 'Simpan Perubahan' : 'Tambah Produk'}
-            </button>
+            <Field label="Barcode / Kode Eksternal" hint="Kosongkan agar otomatis memakai LP000001, LP000002, dst."><input className="input font-mono" value={form.barcode} onChange={(event) => setForm({ ...form, barcode: event.target.value })} placeholder="Kosong = otomatis" /></Field>
+            {form.barcode && <Field label="Tipe Barcode"><select className="input" value={form.barcodeType} onChange={(event) => setForm({ ...form, barcodeType: event.target.value })}><option value="CODE128">Code 128</option><option value="EAN13">EAN-13</option><option value="UPC">UPC</option><option value="OTHER">Lainnya</option></select></Field>}
+            <Field label="URL Gambar" hint="Opsional untuk versi awal."><input className="input" type="url" value={form.imageUrl} onChange={(event) => setForm({ ...form, imageUrl: event.target.value })} placeholder="https://..." /></Field>
+            <Field label="Keterangan"><textarea className="input min-h-20 resize-y" value={form.description} onChange={(event) => setForm({ ...form, description: event.target.value })} /></Field>
+            {editingId && <label className="flex items-center gap-3 rounded-2xl border border-slate-800 bg-slate-950/60 px-4 py-3 text-sm"><input type="checkbox" checked={form.isActive} onChange={(event) => setForm({ ...form, isActive: event.target.checked })} />Produk aktif dan tampil di kasir</label>}
+            <button className="primary-button w-full" type="submit" disabled={busy}>{busy ? 'Menyimpan...' : editingId ? 'Simpan Perubahan' : 'Tambah Produk'}</button>
           </form>
 
           <div className="my-6 border-t border-slate-800" />
-
           <form onSubmit={addCategory}>
-            <Field label="Tambah Kategori Cepat">
-              <div className="flex gap-2">
-                <input className="input" value={categoryName} onChange={(event) => setCategoryName(event.target.value)} placeholder="Contoh: Minuman" />
-                <button type="submit" className="secondary-button shrink-0" disabled={categoryBusy}>{categoryBusy ? '...' : '+ Kategori'}</button>
-              </div>
-            </Field>
+            <Field label="Tambah Kategori Cepat"><div className="flex gap-2"><input className="input" value={categoryName} onChange={(event) => setCategoryName(event.target.value)} placeholder="Contoh: Minuman" /><button type="submit" className="secondary-button shrink-0" disabled={categoryBusy}>{categoryBusy ? '...' : '+ Kategori'}</button></div></Field>
           </form>
         </div>
 
@@ -517,60 +384,36 @@ function ProductManager() {
             <div>
               <p className="text-xs font-bold uppercase tracking-[0.2em] text-cyan-400">Inventory</p>
               <h2 className="mt-2 text-xl font-black">Daftar Produk</h2>
-              <p className="mt-1 text-sm text-slate-400">SKU internal dibuat otomatis dan tidak dipakai ulang.</p>
+              <p className="mt-1 text-sm text-slate-400">SKU internal otomatis menjadi Code 128 untuk scan POS dan label produk.</p>
             </div>
-            <div className="w-full md:w-72">
-              <input className="input" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Cari nama, SKU, barcode..." />
-            </div>
+            <div className="w-full md:w-72"><input className="input" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Cari nama, SKU, barcode..." /></div>
           </div>
 
           {loading ? (
             <div className="rounded-2xl border border-slate-800 bg-slate-950/50 p-8 text-center text-slate-400">Memuat produk...</div>
           ) : filteredProducts.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-slate-700 bg-slate-950/40 p-10 text-center">
-              <p className="font-bold text-slate-200">Belum ada produk</p>
-              <p className="mt-2 text-sm text-slate-500">Tambahkan produk pertama. Sistem akan memberikan kode LP000001 secara otomatis.</p>
-            </div>
+            <div className="rounded-2xl border border-dashed border-slate-700 bg-slate-950/40 p-10 text-center"><p className="font-bold text-slate-200">Belum ada produk</p><p className="mt-2 text-sm text-slate-500">Tambahkan produk pertama. Sistem akan memberikan kode LP000001 secara otomatis.</p></div>
           ) : (
             <div className="overflow-x-auto rounded-2xl border border-slate-800">
               <table className="min-w-full divide-y divide-slate-800 text-sm">
                 <thead className="bg-slate-950/80 text-left text-xs uppercase tracking-wider text-slate-500">
-                  <tr>
-                    <th className="px-4 py-3">Produk</th>
-                    <th className="px-4 py-3">Kode</th>
-                    <th className="px-4 py-3 text-right">Harga</th>
-                    <th className="px-4 py-3 text-right">Stok</th>
-                    <th className="px-4 py-3">Status</th>
-                    <th className="px-4 py-3 text-right">Aksi</th>
-                  </tr>
+                  <tr><th className="px-4 py-3">Produk</th><th className="px-4 py-3">Kode & Label</th><th className="px-4 py-3 text-right">Harga</th><th className="px-4 py-3 text-right">Stok</th><th className="px-4 py-3">Status</th><th className="px-4 py-3 text-right">Aksi</th></tr>
                 </thead>
                 <tbody className="divide-y divide-slate-800 bg-slate-900/40">
                   {filteredProducts.map((product) => {
                     const isLow = product.is_active && Number(product.stock) <= Number(product.minimum_stock)
                     return (
                       <tr key={product.id} className={!product.is_active ? 'opacity-55' : ''}>
-                        <td className="px-4 py-4">
-                          <p className="font-bold text-white">{product.name}</p>
-                          <p className="mt-1 text-xs text-slate-500">{product.category_name || 'Tanpa kategori'}</p>
-                        </td>
-                        <td className="px-4 py-4">
+                        <td className="px-4 py-4"><p className="font-bold text-white">{product.name}</p><p className="mt-1 text-xs text-slate-500">{product.category_name || 'Tanpa kategori'}</p></td>
+                        <td className="px-4 py-4 align-top">
                           <p className="font-mono font-bold text-cyan-300">{product.sku}</p>
-                          <p className="mt-1 max-w-44 truncate font-mono text-xs text-slate-500" title={product.barcode}>{product.barcode}</p>
+                          <p className="mt-1 max-w-52 truncate font-mono text-xs text-slate-500" title={product.barcode}>Barcode DB: {product.barcode || '-'}</p>
+                          <ProductBarcodeActions product={product} />
                         </td>
                         <td className="px-4 py-4 text-right font-semibold">{formatRupiah(product.selling_price)}</td>
-                        <td className="px-4 py-4 text-right">
-                          <span className={isLow ? 'font-black text-amber-300' : 'font-bold text-slate-200'}>{product.stock}</span>
-                          <p className="mt-1 text-xs text-slate-600">min. {product.minimum_stock}</p>
-                        </td>
-                        <td className="px-4 py-4">
-                          {!product.is_active ? <Badge tone="muted">Arsip</Badge> : isLow ? <Badge tone="warning">Stok Menipis</Badge> : <Badge tone="success">Aktif</Badge>}
-                        </td>
-                        <td className="px-4 py-4">
-                          <div className="flex justify-end gap-2">
-                            <button type="button" className="table-button" onClick={() => editProduct(product)}>Edit</button>
-                            {product.is_active && <button type="button" className="table-button text-rose-300" onClick={() => archiveProduct(product)}>Arsipkan</button>}
-                          </div>
-                        </td>
+                        <td className="px-4 py-4 text-right"><span className={isLow ? 'font-black text-amber-300' : 'font-bold text-slate-200'}>{product.stock}</span><p className="mt-1 text-xs text-slate-600">min. {product.minimum_stock}</p></td>
+                        <td className="px-4 py-4">{!product.is_active ? <Badge tone="muted">Arsip</Badge> : isLow ? <Badge tone="warning">Stok Menipis</Badge> : <Badge tone="success">Aktif</Badge>}</td>
+                        <td className="px-4 py-4"><div className="flex justify-end gap-2"><button type="button" className="table-button" onClick={() => editProduct(product)}>Edit</button>{product.is_active && <button type="button" className="table-button text-rose-300" onClick={() => archiveProduct(product)}>Arsipkan</button>}</div></td>
                       </tr>
                     )
                   })}
@@ -585,40 +428,20 @@ function ProductManager() {
 }
 
 function Field({ label, hint, children }) {
-  return (
-    <label className="block">
-      <span className="mb-2 block text-sm font-bold text-slate-300">{label}</span>
-      {children}
-      {hint && <span className="mt-1.5 block text-xs leading-5 text-slate-500">{hint}</span>}
-    </label>
-  )
+  return <label className="block"><span className="mb-2 block text-sm font-bold text-slate-300">{label}</span>{children}{hint && <span className="mt-1.5 block text-xs leading-5 text-slate-500">{hint}</span>}</label>
 }
 
 function Alert({ tone = 'success', children }) {
-  const classes = tone === 'error'
-    ? 'border-rose-900/70 bg-rose-950/40 text-rose-200'
-    : 'border-emerald-900/70 bg-emerald-950/40 text-emerald-200'
-
+  const classes = tone === 'error' ? 'border-rose-900/70 bg-rose-950/40 text-rose-200' : 'border-emerald-900/70 bg-emerald-950/40 text-emerald-200'
   return <div className={`rounded-2xl border px-4 py-3 text-sm font-medium ${classes}`}>{children}</div>
 }
 
 function Stat({ label, value, note, alert }) {
-  return (
-    <div className="rounded-3xl border border-slate-800 bg-slate-900/70 p-5">
-      <p className="text-xs font-bold uppercase tracking-wider text-slate-500">{label}</p>
-      <p className={`mt-2 text-2xl font-black ${alert ? 'text-amber-300' : 'text-white'}`}>{value}</p>
-      <p className="mt-1 text-xs text-slate-500">{note}</p>
-    </div>
-  )
+  return <div className="rounded-3xl border border-slate-800 bg-slate-900/70 p-5"><p className="text-xs font-bold uppercase tracking-wider text-slate-500">{label}</p><p className={`mt-2 text-2xl font-black ${alert ? 'text-amber-300' : 'text-white'}`}>{value}</p><p className="mt-1 text-xs text-slate-500">{note}</p></div>
 }
 
 function Badge({ tone, children }) {
-  const classes = tone === 'success'
-    ? 'border-emerald-900 bg-emerald-950/50 text-emerald-300'
-    : tone === 'warning'
-      ? 'border-amber-900 bg-amber-950/50 text-amber-300'
-      : 'border-slate-700 bg-slate-800 text-slate-400'
-
+  const classes = tone === 'success' ? 'border-emerald-900 bg-emerald-950/50 text-emerald-300' : tone === 'warning' ? 'border-amber-900 bg-amber-950/50 text-amber-300' : 'border-slate-700 bg-slate-800 text-slate-400'
   return <span className={`inline-flex rounded-full border px-2.5 py-1 text-xs font-bold ${classes}`}>{children}</span>
 }
 
