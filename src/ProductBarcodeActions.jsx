@@ -25,6 +25,22 @@ function safeFilename(value) {
     .replace(/^-+|-+$/g, '')
 }
 
+function Icon({ type }) {
+  if (type === 'print') {
+    return (
+      <svg viewBox="0 0 24 24" aria-hidden="true" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="2">
+        <path d="M6 9V2h12v7" /><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" /><path d="M6 14h12v8H6z" />
+      </svg>
+    )
+  }
+
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="2">
+      <path d="M12 3v12" /><path d="m7 10 5 5 5-5" /><path d="M5 21h14" />
+    </svg>
+  )
+}
+
 function buildLabelSvg(product) {
   const barcode = buildCode128SvgMarkup(product.sku, {
     height: 52,
@@ -97,12 +113,26 @@ export default function ProductBarcodeActions({ product }) {
 
   return (
     <div className="mt-3 min-w-[170px]">
-      <div className="rounded-xl bg-white p-1.5 shadow-sm">
+      {product.image_url && (
+        <div className="mb-2 overflow-hidden rounded-xl border border-slate-200 bg-slate-50">
+          <img
+            src={product.image_url}
+            alt={product.name}
+            loading="lazy"
+            className="h-24 w-full bg-white object-cover"
+            onError={(event) => {
+              event.currentTarget.closest('div').style.display = 'none'
+            }}
+          />
+        </div>
+      )}
+
+      <div className="rounded-xl border border-slate-200 bg-white p-1.5 shadow-sm">
         <Code128Svg value={product.sku} className="h-12 w-full" height={42} includeText />
       </div>
       <div className="mt-2 flex flex-wrap justify-end gap-1.5">
-        <button type="button" className="table-button" onClick={printLabel}>Print Label</button>
-        <button type="button" className="table-button" onClick={downloadSvg}>Download SVG</button>
+        <button type="button" className="table-button" onClick={printLabel}><Icon type="print" /> Print Label</button>
+        <button type="button" className="table-button" onClick={downloadSvg}><Icon type="download" /> SVG</button>
       </div>
     </div>
   )
