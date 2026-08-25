@@ -73,6 +73,7 @@ export async function onRequestPost(context) {
   const minimumStock = parseInteger(body?.minimumStock)
   const rawBarcode = String(body?.barcode || '').trim()
   const barcode = rawBarcode || null
+  const hasExternalBarcode = Boolean(barcode)
   const barcodeType = BARCODE_TYPES.has(body?.barcodeType) ? body.barcodeType : 'CODE128'
   const imageUrl = String(body?.imageUrl || '').trim() || null
   const description = String(body?.description || '').trim() || null
@@ -118,9 +119,9 @@ export async function onRequestPost(context) {
           ${sellingPrice},
           ${stock},
           ${minimumStock},
-          COALESCE(${barcode}, g.sku),
-          CASE WHEN ${barcode} IS NULL THEN 'CODE128' ELSE ${barcodeType} END,
-          ${!barcode},
+          CASE WHEN ${hasExternalBarcode} THEN ${barcode}::text ELSE g.sku END,
+          CASE WHEN ${hasExternalBarcode} THEN ${barcodeType} ELSE 'CODE128' END,
+          ${!hasExternalBarcode},
           ${imageUrl},
           ${description},
           true
