@@ -34,6 +34,38 @@ function isEditableTarget(target) {
   return target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement || target?.isContentEditable
 }
 
+function ProductImage({ product, compact = false }) {
+  const [failed, setFailed] = useState(false)
+  const hasImage = Boolean(product?.image_url) && !failed
+
+  if (!hasImage) {
+    return (
+      <div
+        className={compact
+          ? 'grid h-12 w-12 shrink-0 place-items-center rounded-xl border border-slate-200 bg-gradient-to-br from-cyan-50 to-blue-50 text-lg'
+          : 'grid aspect-[4/3] w-full place-items-center rounded-2xl border border-slate-200 bg-gradient-to-br from-cyan-50 via-white to-blue-50 text-4xl'}
+        aria-label={`Gambar ${product?.name || 'produk'} belum tersedia`}
+      >
+        📦
+      </div>
+    )
+  }
+
+  return (
+    <img
+      src={product.image_url}
+      alt={product.name || 'Produk'}
+      loading="lazy"
+      decoding="async"
+      referrerPolicy="no-referrer"
+      onError={() => setFailed(true)}
+      className={compact
+        ? 'h-12 w-12 shrink-0 rounded-xl border border-slate-200 bg-white object-cover'
+        : 'aspect-[4/3] w-full rounded-2xl border border-slate-200 bg-white object-cover'}
+    />
+  )
+}
+
 export default function POSPanel() {
   const [authenticated, setAuthenticated] = useState(false)
   const [open, setOpen] = useState(false)
@@ -438,7 +470,7 @@ export default function POSPanel() {
             <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-5 py-4">
               <div>
                 <p className="text-xs font-bold tracking-[0.22em] text-cyan-400">LENTERA POS</p>
-                <h2 className="text-xl font-black">POS Kasir v0.5</h2>
+                <h2 className="text-xl font-black">POS Kasir v0.6</h2>
                 <p className="mt-1 text-xs text-slate-500">Global scanner listener aktif selama halaman POS terbuka.</p>
               </div>
               <button type="button" className="secondary-button" onClick={() => setOpen(false)}>Kembali ke Admin</button>
@@ -494,7 +526,7 @@ export default function POSPanel() {
               {loading ? (
                 <div className="rounded-3xl border border-slate-800 bg-slate-900/70 p-10 text-center text-slate-400">Memuat produk...</div>
               ) : (
-                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 lg:grid-cols-3">
                   {filteredProducts.map((product) => {
                     const stock = Number(product.stock || 0)
                     return (
@@ -503,12 +535,15 @@ export default function POSPanel() {
                         type="button"
                         disabled={stock <= 0}
                         onClick={() => addProduct(product)}
-                        className="rounded-3xl border border-slate-800 bg-slate-900/70 p-5 text-left transition hover:border-cyan-800 hover:bg-slate-900 disabled:cursor-not-allowed disabled:opacity-45"
+                        className="overflow-hidden rounded-3xl border border-slate-800 bg-slate-900/70 p-3 text-left transition hover:-translate-y-0.5 hover:border-cyan-500 hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-45 sm:p-4"
                       >
-                        <p className="font-black text-white">{product.name}</p>
-                        <p className="mt-1 font-mono text-xs text-cyan-300">{product.sku}</p>
-                        <p className="mt-3 text-lg font-black">{formatRupiah(product.selling_price)}</p>
-                        <p className="mt-1 text-xs text-slate-500">Stok: {stock}</p>
+                        <ProductImage product={product} />
+                        <div className="px-1 pb-1 pt-3">
+                          <p className="line-clamp-2 font-black text-white">{product.name}</p>
+                          <p className="mt-1 font-mono text-xs text-cyan-300">{product.sku}</p>
+                          <p className="mt-3 text-lg font-black">{formatRupiah(product.selling_price)}</p>
+                          <p className="mt-1 text-xs text-slate-500">Stok: {stock}</p>
+                        </div>
                       </button>
                     )
                   })}
@@ -531,18 +566,23 @@ export default function POSPanel() {
                     <div className="rounded-2xl border border-dashed border-slate-700 p-6 text-center text-sm text-slate-500">Belum ada produk.</div>
                   ) : cart.map((item) => (
                     <div key={item.id} className="rounded-2xl border border-slate-800 bg-slate-950/50 p-4">
-                      <div className="flex justify-between gap-3">
-                        <div>
-                          <p className="font-bold">{item.name}</p>
-                          <p className="mt-1 text-xs text-slate-500">{item.sku} · {formatRupiah(item.selling_price)}</p>
+                      <div className="flex items-start gap-3">
+                        <ProductImage product={item} compact />
+                        <div className="min-w-0 flex-1">
+                          <div className="flex justify-between gap-3">
+                            <div className="min-w-0">
+                              <p className="truncate font-bold">{item.name}</p>
+                              <p className="mt-1 text-xs text-slate-500">{item.sku} · {formatRupiah(item.selling_price)}</p>
+                            </div>
+                            <p className="shrink-0 font-black">{formatRupiah(Number(item.selling_price) * item.quantity)}</p>
+                          </div>
+                          <div className="mt-3 flex items-center gap-2">
+                            <button type="button" className="table-button" onClick={() => changeQuantity(item.id, item.quantity - 1)}>−</button>
+                            <span className="min-w-10 text-center font-black">{item.quantity}</span>
+                            <button type="button" className="table-button" onClick={() => changeQuantity(item.id, item.quantity + 1)}>+</button>
+                            <button type="button" className="ml-auto text-xs font-bold text-rose-300" onClick={() => changeQuantity(item.id, 0)}>Hapus</button>
+                          </div>
                         </div>
-                        <p className="font-black">{formatRupiah(Number(item.selling_price) * item.quantity)}</p>
-                      </div>
-                      <div className="mt-3 flex items-center gap-2">
-                        <button type="button" className="table-button" onClick={() => changeQuantity(item.id, item.quantity - 1)}>−</button>
-                        <span className="min-w-10 text-center font-black">{item.quantity}</span>
-                        <button type="button" className="table-button" onClick={() => changeQuantity(item.id, item.quantity + 1)}>+</button>
-                        <button type="button" className="ml-auto text-xs font-bold text-rose-300" onClick={() => changeQuantity(item.id, 0)}>Hapus</button>
                       </div>
                     </div>
                   ))}
