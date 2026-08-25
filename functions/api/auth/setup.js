@@ -1,5 +1,5 @@
 import { getSql } from '../../_lib/db.js'
-import { createSession, hashPassword, sessionCookie } from '../../_lib/auth.js'
+import { createSession, sessionCookie } from '../../_lib/auth.js'
 import { json, readJson } from '../../_lib/http.js'
 
 const USERNAME_PATTERN = /^[A-Za-z0-9._-]{3,32}$/
@@ -24,7 +24,6 @@ export async function onRequestPost(context) {
 
   try {
     const sql = getSql(context.env)
-    const passwordData = await hashPassword(password)
 
     const rows = await sql`
       WITH bootstrap_claim AS (
@@ -49,9 +48,9 @@ export async function onRequestPost(context) {
         )
         SELECT
           id,
-          ${passwordData.hash},
-          ${passwordData.salt},
-          ${passwordData.iterations}
+          crypt(${password}, gen_salt('bf', 12)),
+          'pgcrypto-bcrypt',
+          100000
         FROM new_profile
         RETURNING profile_id
       )

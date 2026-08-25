@@ -1,5 +1,5 @@
 import { getSql } from '../../_lib/db.js'
-import { createSession, sessionCookie, verifyPassword } from '../../_lib/auth.js'
+import { createSession, sessionCookie } from '../../_lib/auth.js'
 import { json, readJson } from '../../_lib/http.js'
 
 export async function onRequestPost(context) {
@@ -20,10 +20,8 @@ export async function onRequestPost(context) {
         p.full_name,
         p.role,
         p.is_active,
-        c.password_hash,
-        c.password_salt,
-        c.password_iterations,
-        c.locked_until
+        c.locked_until,
+        (c.password_hash = crypt(${password}, c.password_hash)) AS password_valid
       FROM profiles p
       JOIN admin_credentials c ON c.profile_id = p.id
       WHERE lower(p.username) = lower(${username})
@@ -40,14 +38,7 @@ export async function onRequestPost(context) {
       return json({ ok: false, error: 'Login sementara dikunci karena terlalu banyak percobaan. Coba lagi beberapa menit.' }, 429)
     }
 
-    const validPassword = await verifyPassword(
-      password,
-      user.password_hash,
-      user.password_salt,
-      user.password_iterations,
-    )
-
-    if (!validPassword) {
+    if (!user.password_valid) {
       await sql`
         UPDATE admin_credentials
         SET
