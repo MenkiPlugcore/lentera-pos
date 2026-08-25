@@ -91,8 +91,12 @@ export async function onRequestPost(context) {
 
   try {
     const rows = await auth.sql`
-      WITH created AS (
+      WITH generated AS (
+        SELECT 'LP' || lpad(nextval('product_sku_seq')::text, 6, '0') AS sku
+      ),
+      created AS (
         INSERT INTO products(
+          sku,
           name,
           category_id,
           purchase_price,
@@ -106,32 +110,22 @@ export async function onRequestPost(context) {
           description,
           is_active
         )
-        VALUES (
+        SELECT
+          g.sku,
           ${name},
           ${categoryId},
           ${purchasePrice},
           ${sellingPrice},
           ${stock},
           ${minimumStock},
-          ${barcode},
-          ${barcode ? barcodeType : 'CODE128'},
+          COALESCE(${barcode}, g.sku),
+          CASE WHEN ${barcode} IS NULL THEN 'CODE128' ELSE ${barcodeType} END,
           ${!barcode},
           ${imageUrl},
           ${description},
           true
-        )
+        FROM generated g
         RETURNING *
-      ),
-      tagged AS (
-        UPDATE products p
-        SET
-          barcode = COALESCE(p.barcode, p.sku),
-          barcode_type = CASE WHEN p.barcode IS NULL THEN 'CODE128' ELSE p.barcode_type END,
-          barcode_generated = CASE WHEN p.barcode IS NULL THEN true ELSE p.barcode_generated END,
-          updated_at = now()
-        FROM created c
-        WHERE p.id = c.id
-        RETURNING p.*
       ),
       movement AS (
         INSERT INTO stock_movements(
@@ -151,18 +145,23 @@ export async function onRequestPost(context) {
           0,
           stock,
           'Stok awal produk'
-        FROM tagged
+        FROM created
         WHERE stock > 0
-        RETURNING id
+        RETURNING product_id
       )
       SELECT
-        t.*,
-        c.name AS category_name
-      FROM tagged t
-      LEFT JOIN categories c ON c.id = t.category_id
+        c.*,
+        cat.name AS category_name
+      FROM created c
+      LEFT JOIN categories cat ON cat.id = c.category_id
     `
 
-    return json({ ok: true, product: rows[0] }, 201)
+    const product = rows[0]
+    if (!product) {
+      throw new Error('Created product was not returned by database.')
+    }
+
+    return json({ ok: true, product }, 201)
   } catch (error) {
     console.error('Create product failed', error)
 
