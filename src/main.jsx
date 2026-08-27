@@ -5,6 +5,7 @@ import './responsive.css'
 import './cashier-universal.css'
 import './barcodeDetectorPolyfill.js'
 import App from './App.jsx'
+import AdminCashierShortcut from './AdminCashierShortcut.jsx'
 import CashierPage from './CashierPage.jsx'
 import HardDeletePanel from './HardDeletePanel.jsx'
 import ReportsPanel from './ReportsPanel.jsx'
@@ -30,6 +31,7 @@ function RootRoute() {
     return (
       <>
         <App />
+        <AdminCashierShortcut />
         <HardDeletePanel />
         <ReportsPanel />
       </>
