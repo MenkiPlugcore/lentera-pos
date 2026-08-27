@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import POSPanel from './POSPanel.jsx'
 
 function findButton(label) {
@@ -9,7 +9,31 @@ function findButton(label) {
 }
 
 export default function CashierPage() {
+  const [authorized, setAuthorized] = useState(null)
+
   useEffect(() => {
+    let active = true
+
+    fetch('/api/auth/status')
+      .then((response) => response.json())
+      .then((data) => {
+        if (!active) return
+        if (!data?.authenticated) {
+          window.location.replace('/admin')
+          return
+        }
+        setAuthorized(true)
+      })
+      .catch(() => {
+        if (active) window.location.replace('/admin')
+      })
+
+    return () => { active = false }
+  }, [])
+
+  useEffect(() => {
+    if (!authorized) return undefined
+
     document.documentElement.dataset.route = 'kasir'
     document.body.dataset.route = 'kasir'
 
@@ -48,7 +72,17 @@ export default function CashierPage() {
       delete document.documentElement.dataset.route
       delete document.body.dataset.route
     }
-  }, [])
+  }, [authorized])
+
+  if (!authorized) {
+    return (
+      <main className="grid min-h-screen place-items-center bg-slate-50 px-4 text-slate-700">
+        <div className="rounded-2xl border border-slate-200 bg-white px-5 py-4 text-sm font-bold shadow-sm">
+          Memuat POS Kasir...
+        </div>
+      </main>
+    )
+  }
 
   return <POSPanel />
 }
