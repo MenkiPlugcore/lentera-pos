@@ -1,0 +1,241 @@
+/* Universal cashier layout: product area + cart remain visible at every viewport size. */
+body[data-route="kasir"] {
+  overflow-x: hidden;
+  background: #f8fafc;
+}
+
+body[data-route="kasir"] button.fixed.bottom-5.left-5 {
+  display: none !important;
+}
+
+body[data-route="kasir"] .fixed.inset-0.z-50 {
+  width: 100vw;
+  max-width: 100vw;
+  overflow-x: hidden !important;
+}
+
+@media (max-width: 1279px) {
+  body[data-route="kasir"] .fixed.inset-0.z-50 > header > div {
+    flex-wrap: nowrap !important;
+    padding: 8px 10px !important;
+    gap: 8px !important;
+  }
+
+  body[data-route="kasir"] .fixed.inset-0.z-50 > header h2 {
+    font-size: 1rem !important;
+    line-height: 1.15rem !important;
+  }
+
+  body[data-route="kasir"] .fixed.inset-0.z-50 > header p {
+    font-size: 9px !important;
+    line-height: 0.9rem !important;
+  }
+
+  body[data-route="kasir"] .fixed.inset-0.z-50 > header button {
+    min-height: 34px !important;
+    padding: 6px 9px !important;
+    font-size: 10px !important;
+    white-space: nowrap;
+  }
+
+  body[data-route="kasir"] .fixed.inset-0.z-50 > div.grid.max-w-7xl {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) minmax(132px, 38vw) !important;
+    align-items: start !important;
+    gap: 8px !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 10px 8px 16px !important;
+  }
+
+  body[data-route="kasir"] .fixed.inset-0.z-50 section,
+  body[data-route="kasir"] .fixed.inset-0.z-50 aside {
+    min-width: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  body[data-route="kasir"] .fixed.inset-0.z-50 aside {
+    display: block !important;
+    position: sticky !important;
+    top: 58px !important;
+    align-self: start !important;
+  }
+
+  body[data-route="kasir"] .fixed.inset-0.z-50 section > div.rounded-3xl,
+  body[data-route="kasir"] .fixed.inset-0.z-50 aside > div.rounded-3xl {
+    border-radius: 14px !important;
+  }
+
+  body[data-route="kasir"] .fixed.inset-0.z-50 section > div.rounded-3xl {
+    padding: 8px !important;
+    margin-bottom: 8px !important;
+  }
+
+  body[data-route="kasir"] .fixed.inset-0.z-50 section label,
+  body[data-route="kasir"] .fixed.inset-0.z-50 section p.text-xs {
+    font-size: 9px !important;
+  }
+
+  body[data-route="kasir"] .fixed.inset-0.z-50 section .input {
+    min-height: 36px !important;
+    padding: 7px 8px !important;
+    border-radius: 9px !important;
+  }
+
+  body[data-route="kasir"] .fixed.inset-0.z-50 section .primary-button,
+  body[data-route="kasir"] .fixed.inset-0.z-50 section .secondary-button {
+    min-height: 36px !important;
+    padding: 7px 9px !important;
+    border-radius: 9px !important;
+    font-size: 10px !important;
+  }
+
+  body[data-route="kasir"] .fixed.inset-0.z-50 section > div.mb-5 {
+    margin-bottom: 8px !important;
+  }
+
+  body[data-route="kasir"] .fixed.inset-0.z-50 section > div.grid.grid-cols-2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 7px !important;
+  }
+
+  body[data-route="kasir"] .fixed.inset-0.z-50 section > div.grid.grid-cols-2 > button {
+    padding: 7px !important;
+    border-radius: 13px !important;
+  }
+
+  body[data-route="kasir"] .fixed.inset-0.z-50 section > div.grid.grid-cols-2 > button img,
+  body[data-route="kasir"] .fixed.inset-0.z-50 section > div.grid.grid-cols-2 > button > div:first-child {
+    border-radius: 10px !important;
+  }
+
+  body[data-route="kasir"] .fixed.inset-0.z-50 section > div.grid.grid-cols-2 > button p {
+    line-height: 1.05rem !important;
+  }
+
+  body[data-route="kasir"] .fixed.inset-0.z-50 section > div.grid.grid-cols-2 > button p.font-black {
+    font-size: 11px !important;
+  }
+
+  body[data-route="kasir"] .fixed.inset-0.z-50 section > div.grid.grid-cols-2 > button p.text-lg {
+    margin-top: 5px !important;
+    font-size: 12px !important;
+  }
+
+  body[data-route="kasir"] .fixed.inset-0.z-50 section > div.grid.grid-cols-2 > button p.text-xs {
+    font-size: 8px !important;
+  }
+
+  /* Compact cart, but preserve all checkout controls. */
+  body[data-route="kasir"] .fixed.inset-0.z-50 aside > div:first-child {
+    padding: 9px !important;
+    border-radius: 14px !important;
+    box-shadow: 0 8px 22px rgb(15 23 42 / 0.08) !important;
+  }
+
+  body[data-route="kasir"] .fixed.inset-0.z-50 aside .mb-4 {
+    margin-bottom: 7px !important;
+  }
+
+  body[data-route="kasir"] .fixed.inset-0.z-50 aside p,
+  body[data-route="kasir"] .fixed.inset-0.z-50 aside span,
+  body[data-route="kasir"] .fixed.inset-0.z-50 aside label {
+    font-size: 9px !important;
+  }
+
+  body[data-route="kasir"] .fixed.inset-0.z-50 aside h3 {
+    margin-top: 2px !important;
+    font-size: 14px !important;
+    line-height: 1rem !important;
+  }
+
+  body[data-route="kasir"] .fixed.inset-0.z-50 aside .max-h-\[38vh\] {
+    max-height: 28vh !important;
+  }
+
+  body[data-route="kasir"] .fixed.inset-0.z-50 aside .max-h-\[38vh\] > div {
+    padding: 7px !important;
+    border-radius: 10px !important;
+  }
+
+  body[data-route="kasir"] .fixed.inset-0.z-50 aside img.h-12,
+  body[data-route="kasir"] .fixed.inset-0.z-50 aside div.h-12 {
+    width: 30px !important;
+    height: 30px !important;
+    border-radius: 8px !important;
+  }
+
+  body[data-route="kasir"] .fixed.inset-0.z-50 aside .gap-3 {
+    gap: 5px !important;
+  }
+
+  body[data-route="kasir"] .fixed.inset-0.z-50 aside .mt-3 {
+    margin-top: 5px !important;
+  }
+
+  body[data-route="kasir"] .fixed.inset-0.z-50 aside .my-5 {
+    margin-top: 8px !important;
+    margin-bottom: 8px !important;
+  }
+
+  body[data-route="kasir"] .fixed.inset-0.z-50 aside .text-3xl {
+    font-size: 18px !important;
+    line-height: 1.15rem !important;
+  }
+
+  body[data-route="kasir"] .fixed.inset-0.z-50 aside .input {
+    min-height: 34px !important;
+    padding: 5px 6px !important;
+    border-radius: 8px !important;
+    font-size: 16px !important;
+  }
+
+  body[data-route="kasir"] .fixed.inset-0.z-50 aside .table-button {
+    min-height: 28px !important;
+    padding: 4px 5px !important;
+    border-radius: 7px !important;
+    font-size: 8px !important;
+  }
+
+  body[data-route="kasir"] .fixed.inset-0.z-50 aside .primary-button {
+    min-height: 36px !important;
+    margin-top: 8px !important;
+    padding: 7px 5px !important;
+    border-radius: 9px !important;
+    font-size: 9px !important;
+  }
+
+  body[data-route="kasir"] .fixed.inset-0.z-50 aside .grid.grid-cols-3 {
+    gap: 3px !important;
+    margin-top: 7px !important;
+  }
+}
+
+@media (max-width: 479px) {
+  body[data-route="kasir"] .fixed.inset-0.z-50 > div.grid.max-w-7xl {
+    grid-template-columns: minmax(0, 1fr) minmax(118px, 37vw) !important;
+    gap: 6px !important;
+    padding-left: 5px !important;
+    padding-right: 5px !important;
+  }
+
+  body[data-route="kasir"] .fixed.inset-0.z-50 section .flex.gap-2 {
+    gap: 4px !important;
+  }
+
+  body[data-route="kasir"] .fixed.inset-0.z-50 section .primary-button,
+  body[data-route="kasir"] .fixed.inset-0.z-50 section .secondary-button {
+    padding-left: 6px !important;
+    padding-right: 6px !important;
+    font-size: 9px !important;
+  }
+
+  body[data-route="kasir"] .fixed.inset-0.z-50 aside > div:first-child {
+    padding: 7px !important;
+  }
+
+  body[data-route="kasir"] .fixed.inset-0.z-50 aside .text-3xl {
+    font-size: 15px !important;
+  }
+}
