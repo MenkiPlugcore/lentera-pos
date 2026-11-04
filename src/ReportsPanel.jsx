@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
+import { apiFetch } from './localPos.js'
 
 function formatRupiah(value) {
   return new Intl.NumberFormat('id-ID', {
@@ -37,13 +38,6 @@ function currentMonthRange() {
   }
 }
 
-async function apiFetch(url) {
-  const response = await fetch(url, { headers: { 'Content-Type': 'application/json' } })
-  const data = await response.json().catch(() => ({}))
-  if (!response.ok) throw new Error(data?.error || 'Permintaan gagal diproses.')
-  return data
-}
-
 function statusLabel(status) {
   if (status === 'completed') return 'Selesai'
   if (status === 'cancelled') return 'Dibatalkan'
@@ -73,7 +67,6 @@ function SummaryCard({ label, value, note }) {
 
 export default function ReportsPanel() {
   const initialRange = useMemo(() => currentMonthRange(), [])
-  const [authorized, setAuthorized] = useState(false)
   const [open, setOpen] = useState(false)
   const [tab, setTab] = useState('report')
   const [from, setFrom] = useState(initialRange.from)
@@ -84,12 +77,6 @@ export default function ReportsPanel() {
   const [expandedId, setExpandedId] = useState(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-
-  useEffect(() => {
-    apiFetch('/api/auth/status')
-      .then((data) => setAuthorized(Boolean(data.authenticated)))
-      .catch(() => setAuthorized(false))
-  }, [])
 
   async function loadData(nextFrom = from, nextTo = to, nextQuery = query) {
     setLoading(true)
@@ -139,8 +126,6 @@ export default function ReportsPanel() {
     event.preventDefault()
     await loadData(from, to, query)
   }
-
-  if (!authorized) return null
 
   const summary = report.summary || {}
   const daily = report.daily || []
