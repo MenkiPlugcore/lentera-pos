@@ -1,45 +1,12 @@
-import { useEffect, useState } from 'react'
-
-async function requestJson(url, options = {}) {
-  const response = await fetch(url, {
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...(options.headers || {}),
-    },
-  })
-
-  const data = await response.json().catch(() => ({}))
-  if (!response.ok) {
-    throw new Error(data?.error || 'Permintaan gagal diproses.')
-  }
-
-  return data
-}
+import { useState } from 'react'
+import { apiFetch as requestJson } from './localPos.js'
 
 export default function HardDeletePanel() {
-  const [authorized, setAuthorized] = useState(false)
   const [open, setOpen] = useState(false)
   const [products, setProducts] = useState([])
   const [loading, setLoading] = useState(false)
   const [deletingId, setDeletingId] = useState(null)
   const [message, setMessage] = useState(null)
-
-  useEffect(() => {
-    let cancelled = false
-
-    requestJson('/api/auth/status')
-      .then((data) => {
-        if (!cancelled) setAuthorized(Boolean(data.authenticated))
-      })
-      .catch(() => {
-        if (!cancelled) setAuthorized(false)
-      })
-
-    return () => {
-      cancelled = true
-    }
-  }, [])
 
   async function loadProducts() {
     setLoading(true)
@@ -72,7 +39,7 @@ export default function HardDeletePanel() {
     }
 
     const confirmed = window.confirm(
-      `Produk ${product.name} (${product.sku}) akan dihapus permanen dari database beserta riwayat stoknya. Tindakan ini tidak dapat dibatalkan. Lanjutkan?`,
+      `Produk ${product.name} (${product.sku}) akan dihapus permanen dari penyimpanan lokal. Tindakan ini tidak dapat dibatalkan. Lanjutkan?`,
     )
     if (!confirmed) return
 
@@ -97,8 +64,6 @@ export default function HardDeletePanel() {
     }
   }
 
-  if (!authorized) return null
-
   return (
     <>
       <button
@@ -117,7 +82,7 @@ export default function HardDeletePanel() {
                 <p className="text-xs font-bold uppercase tracking-[0.2em] text-rose-300">Danger Zone</p>
                 <h2 className="mt-2 text-2xl font-black">Hapus Produk Permanen</h2>
                 <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-400">
-                  Produk yang belum pernah dipakai dalam transaksi dapat dihapus total dari database. Riwayat stok produk tersebut ikut terhapus. Produk yang sudah pernah masuk transaksi wajib diarsipkan agar laporan kasir tetap konsisten.
+                  Produk yang belum pernah dipakai dalam transaksi dapat dihapus total dari browser. Riwayat stok produk tersebut ikut terhapus. Produk yang sudah pernah masuk transaksi wajib diarsipkan agar laporan kasir tetap konsisten.
                 </p>
               </div>
               <button
