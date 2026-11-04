@@ -1,3 +1,4 @@
+import { apiFetch } from './localPos.js'
 import { useEffect, useMemo, useRef, useState } from 'react'
 
 function formatRupiah(value) {
@@ -6,19 +7,6 @@ function formatRupiah(value) {
     currency: 'IDR',
     maximumFractionDigits: 0,
   }).format(Number(value || 0))
-}
-
-async function apiFetch(url, options = {}) {
-  const response = await fetch(url, {
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...(options.headers || {}),
-    },
-  })
-  const data = await response.json().catch(() => ({}))
-  if (!response.ok) throw new Error(data?.error || 'Permintaan gagal diproses.')
-  return data
 }
 
 function escapeHtml(value) {
@@ -66,9 +54,8 @@ function ProductImage({ product, compact = false }) {
   )
 }
 
-export default function POSPanel() {
-  const [authenticated, setAuthenticated] = useState(false)
-  const [open, setOpen] = useState(false)
+export default function POSPanel({ initialOpen = false }) {
+  const [open, setOpen] = useState(initialOpen)
   const [products, setProducts] = useState([])
   const [cart, setCart] = useState([])
   const [search, setSearch] = useState('')
@@ -99,12 +86,6 @@ export default function POSPanel() {
   useEffect(() => {
     productsRef.current = products
   }, [products])
-
-  useEffect(() => {
-    apiFetch('/api/auth/status')
-      .then((data) => setAuthenticated(Boolean(data.authenticated)))
-      .catch(() => setAuthenticated(false))
-  }, [])
 
   async function loadProducts() {
     setLoading(true)
@@ -452,8 +433,6 @@ export default function POSPanel() {
     popup.document.close()
   }
 
-  if (!authenticated) return null
-
   return (
     <>
       <button
@@ -473,7 +452,7 @@ export default function POSPanel() {
                 <h2 className="text-xl font-black">POS Kasir v0.6</h2>
                 <p className="mt-1 text-xs text-slate-500">Global scanner listener aktif selama halaman POS terbuka.</p>
               </div>
-              <button type="button" className="secondary-button" onClick={() => setOpen(false)}>Kembali ke Admin</button>
+              <button type="button" className="secondary-button" onClick={() => initialOpen ? window.location.assign("/admin") : setOpen(false)}>Kembali ke Admin</button>
             </div>
           </header>
 
