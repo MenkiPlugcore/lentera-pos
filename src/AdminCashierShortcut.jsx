@@ -1,17 +1,4 @@
-import { useEffect, useState } from 'react'
-
 export default function AdminCashierShortcut() {
-  const [visible, setVisible] = useState(false)
-
-  useEffect(() => {
-    fetch('/api/auth/status')
-      .then((response) => response.json())
-      .then((data) => setVisible(Boolean(data?.authenticated)))
-      .catch(() => setVisible(false))
-  }, [])
-
-  if (!visible) return null
-
   return (
     <a
       href="/kasir"

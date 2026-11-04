@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import ProductBarcodeActions from './ProductBarcodeActions.jsx'
+import LocalBackupPanel from './LocalBackupPanel.jsx'
+import { apiFetch, imageFileToDataUrl } from './localPos.js'
 
 const emptyProduct = {
   name: '',
@@ -15,20 +17,6 @@ const emptyProduct = {
   isActive: true,
 }
 
-async function apiFetch(url, options = {}) {
-  const response = await fetch(url, {
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...(options.headers || {}),
-    },
-  })
-
-  const data = await response.json().catch(() => ({}))
-  if (!response.ok) throw new Error(data?.error || 'Permintaan gagal diproses.')
-  return data
-}
-
 function formatRupiah(value) {
   return new Intl.NumberFormat('id-ID', {
     style: 'currency',
@@ -38,30 +26,7 @@ function formatRupiah(value) {
 }
 
 export default function App() {
-  const [auth, setAuth] = useState({ loading: true, error: '', setupRequired: false, user: null })
-
-  async function refreshAuth() {
-    setAuth((current) => ({ ...current, loading: true, error: '' }))
-    try {
-      const data = await apiFetch('/api/auth/status')
-      setAuth({
-        loading: false,
-        error: '',
-        setupRequired: data.setupRequired,
-        user: data.authenticated ? data.user : null,
-      })
-    } catch (error) {
-      setAuth({ loading: false, error: error.message, setupRequired: false, user: null })
-    }
-  }
-
-  useEffect(() => { refreshAuth() }, [])
-
-  if (auth.loading) return <CenteredMessage title="LENTERA POS" message="Memuat sistem admin..." />
-  if (auth.error) return <CenteredMessage title="Koneksi admin gagal" message={auth.error} action="Coba Lagi" onAction={refreshAuth} />
-  if (auth.setupRequired) return <SetupAdmin onSuccess={refreshAuth} />
-  if (!auth.user) return <Login onSuccess={refreshAuth} />
-  return <AdminApp user={auth.user} onLogout={refreshAuth} />
+  return <AdminApp />
 }
 
 function Brand() {
@@ -74,140 +39,21 @@ function Brand() {
   )
 }
 
-function SetupAdmin({ onSuccess }) {
-  const [form, setForm] = useState({ fullName: '', username: 'admin', password: '', confirmPassword: '' })
-  const [busy, setBusy] = useState(false)
-  const [error, setError] = useState('')
-
-  async function submit(event) {
-    event.preventDefault()
-    setError('')
-    if (form.password !== form.confirmPassword) {
-      setError('Konfirmasi password tidak sama.')
-      return
-    }
-
-    setBusy(true)
-    try {
-      await apiFetch('/api/auth/setup', {
-        method: 'POST',
-        body: JSON.stringify({ fullName: form.fullName, username: form.username, password: form.password }),
-      })
-      await onSuccess()
-    } catch (submitError) {
-      setError(submitError.message)
-    } finally {
-      setBusy(false)
-    }
-  }
-
-  return (
-    <AuthLayout>
-      <div className="rounded-3xl border border-slate-800 bg-slate-900/80 p-7 shadow-2xl shadow-black/30">
-        <div className="mb-6">
-          <span className="rounded-full border border-cyan-900 bg-cyan-950/40 px-3 py-1 text-xs font-bold text-cyan-300">SETUP PERTAMA</span>
-          <h2 className="mt-4 text-2xl font-black">Buat Admin Pertama</h2>
-          <p className="mt-2 text-sm leading-6 text-slate-400">Akun ini akan mengelola produk, stok, transaksi, laporan, dan akun kasir. Setup hanya dapat dilakukan satu kali.</p>
-        </div>
-
-        <form className="space-y-4" onSubmit={submit}>
-          <Field label="Nama Admin"><input className="input" value={form.fullName} onChange={(event) => setForm({ ...form, fullName: event.target.value })} placeholder="Contoh: Admin Lentera" required /></Field>
-          <Field label="Username"><input className="input" value={form.username} onChange={(event) => setForm({ ...form, username: event.target.value })} autoComplete="username" required /></Field>
-          <Field label="Password"><input className="input" type="password" value={form.password} onChange={(event) => setForm({ ...form, password: event.target.value })} autoComplete="new-password" minLength={10} required /></Field>
-          <Field label="Ulangi Password"><input className="input" type="password" value={form.confirmPassword} onChange={(event) => setForm({ ...form, confirmPassword: event.target.value })} autoComplete="new-password" minLength={10} required /></Field>
-          {error && <Alert tone="error">{error}</Alert>}
-          <button className="primary-button w-full" type="submit" disabled={busy}>{busy ? 'Membuat admin...' : 'Buat Admin & Masuk'}</button>
-        </form>
-      </div>
-    </AuthLayout>
-  )
-}
-
-function Login({ onSuccess }) {
-  const [form, setForm] = useState({ username: '', password: '' })
-  const [busy, setBusy] = useState(false)
-  const [error, setError] = useState('')
-
-  async function submit(event) {
-    event.preventDefault()
-    setBusy(true)
-    setError('')
-    try {
-      await apiFetch('/api/auth/login', { method: 'POST', body: JSON.stringify(form) })
-      await onSuccess()
-    } catch (submitError) {
-      setError(submitError.message)
-    } finally {
-      setBusy(false)
-    }
-  }
-
-  return (
-    <AuthLayout>
-      <div className="rounded-3xl border border-slate-800 bg-slate-900/80 p-7 shadow-2xl shadow-black/30">
-        <h2 className="text-2xl font-black">Login Admin</h2>
-        <p className="mt-2 text-sm text-slate-400">Masuk untuk mengelola LENTERA POS.</p>
-        <form className="mt-6 space-y-4" onSubmit={submit}>
-          <Field label="Username"><input className="input" value={form.username} onChange={(event) => setForm({ ...form, username: event.target.value })} autoComplete="username" required autoFocus /></Field>
-          <Field label="Password"><input className="input" type="password" value={form.password} onChange={(event) => setForm({ ...form, password: event.target.value })} autoComplete="current-password" required /></Field>
-          {error && <Alert tone="error">{error}</Alert>}
-          <button className="primary-button w-full" type="submit" disabled={busy}>{busy ? 'Memverifikasi...' : 'Masuk'}</button>
-        </form>
-      </div>
-    </AuthLayout>
-  )
-}
-
-function AuthLayout({ children }) {
-  return (
-    <main className="min-h-screen bg-slate-950 px-5 py-10 text-slate-100">
-      <div className="mx-auto grid min-h-[80vh] max-w-5xl items-center gap-10 lg:grid-cols-[1fr_440px]">
-        <div className="hidden lg:block">
-          <Brand />
-          <div className="mt-8 grid max-w-xl gap-3 sm:grid-cols-2">
-            <Feature text="Neon PostgreSQL" />
-            <Feature text="Cloudflare Pages" />
-            <Feature text="Kode LP000001" />
-            <Feature text="Stok & laporan otomatis" />
-          </div>
-        </div>
-        <div><div className="mb-6 lg:hidden"><Brand /></div>{children}</div>
-      </div>
-    </main>
-  )
-}
-
-function Feature({ text }) {
-  return <div className="rounded-2xl border border-slate-800 bg-slate-900/60 px-4 py-3 text-sm text-slate-300">✓ {text}</div>
-}
-
-function AdminApp({ user, onLogout }) {
-  const [loggingOut, setLoggingOut] = useState(false)
-
-  async function logout() {
-    setLoggingOut(true)
-    try { await apiFetch('/api/auth/logout', { method: 'POST', body: '{}' }) }
-    finally {
-      setLoggingOut(false)
-      await onLogout()
-    }
-  }
-
+function AdminApp() {
   return (
     <main className="min-h-screen bg-slate-950 text-slate-100">
       <header className="border-b border-slate-800 bg-slate-950/95">
         <div className="mx-auto flex max-w-7xl flex-col gap-4 px-5 py-5 sm:flex-row sm:items-center sm:justify-between">
           <Brand />
           <div className="flex items-center gap-3">
-            <div className="rounded-2xl border border-slate-800 bg-slate-900 px-4 py-2 text-right">
-              <p className="text-sm font-bold text-white">{user.fullName}</p>
-              <p className="text-xs text-slate-500">@{user.username} · Admin</p>
+            <div className="rounded-2xl border border-cyan-900 bg-slate-900 px-4 py-2 text-right">
+              <p className="text-sm font-bold text-cyan-300">MODE LOKAL</p>
+              <p className="text-xs text-slate-500">Tanpa akun & server</p>
             </div>
-            <button type="button" className="secondary-button" onClick={logout} disabled={loggingOut}>{loggingOut ? 'Keluar...' : 'Logout'}</button>
           </div>
         </div>
       </header>
-      <div className="mx-auto max-w-7xl px-5 py-7"><ProductManager /></div>
+      <div className="mx-auto max-w-7xl px-5 py-7"><LocalBackupPanel /><ProductManager /></div>
     </main>
   )
 }
@@ -336,6 +182,18 @@ function ProductManager() {
     }
   }
 
+  async function uploadImage(event) {
+    const file = event.target.files?.[0]
+    if (!file) return
+    try {
+      const data = await imageFileToDataUrl(file)
+      setForm((current) => ({ ...current, imageUrl: data }))
+      setNotice({ tone: 'success', text: 'Gambar lokal siap disimpan bersama produk.' })
+    } catch (error) {
+      setNotice({ tone: 'error', text: error.message })
+    }
+  }
+
   return (
     <>
       <section className="mb-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
@@ -367,7 +225,13 @@ function ProductManager() {
             </div>
             <Field label="Barcode / Kode Eksternal" hint="Kosongkan agar otomatis memakai LP000001, LP000002, dst."><input className="input font-mono" value={form.barcode} onChange={(event) => setForm({ ...form, barcode: event.target.value })} placeholder="Kosong = otomatis" /></Field>
             {form.barcode && <Field label="Tipe Barcode"><select className="input" value={form.barcodeType} onChange={(event) => setForm({ ...form, barcodeType: event.target.value })}><option value="CODE128">Code 128</option><option value="EAN13">EAN-13</option><option value="UPC">UPC</option><option value="OTHER">Lainnya</option></select></Field>}
-            <Field label="URL Gambar" hint="Opsional untuk versi awal."><input className="input" type="url" value={form.imageUrl} onChange={(event) => setForm({ ...form, imageUrl: event.target.value })} placeholder="https://..." /></Field>
+            <Field label="Foto Produk Lokal" hint="Opsional. Gambar akan dikompresi dan disimpan di browser.">
+              <input className="input" type="file" accept="image/*" onChange={uploadImage} />
+              {form.imageUrl && <div className="mt-2 flex items-center gap-3">
+                <img src={form.imageUrl} alt="Pratinjau produk" className="h-16 w-16 rounded-lg object-cover" />
+                <button type="button" className="table-button" onClick={() => setForm((current) => ({ ...current, imageUrl: '' }))}>Hapus Gambar</button>
+              </div>}
+            </Field>
             <Field label="Keterangan"><textarea className="input min-h-20 resize-y" value={form.description} onChange={(event) => setForm({ ...form, description: event.target.value })} /></Field>
             {editingId && <label className="flex items-center gap-3 rounded-2xl border border-slate-800 bg-slate-950/60 px-4 py-3 text-sm"><input type="checkbox" checked={form.isActive} onChange={(event) => setForm({ ...form, isActive: event.target.checked })} />Produk aktif dan tampil di kasir</label>}
             <button className="primary-button w-full" type="submit" disabled={busy}>{busy ? 'Menyimpan...' : editingId ? 'Simpan Perubahan' : 'Tambah Produk'}</button>
@@ -407,7 +271,7 @@ function ProductManager() {
                         <td className="px-4 py-4"><p className="font-bold text-white">{product.name}</p><p className="mt-1 text-xs text-slate-500">{product.category_name || 'Tanpa kategori'}</p></td>
                         <td className="px-4 py-4 align-top">
                           <p className="font-mono font-bold text-cyan-300">{product.sku}</p>
-                          <p className="mt-1 max-w-52 truncate font-mono text-xs text-slate-500" title={product.barcode}>Barcode DB: {product.barcode || '-'}</p>
+                          <p className="mt-1 max-w-52 truncate font-mono text-xs text-slate-500" title={product.barcode}>Barcode: {product.barcode || '-'}</p>
                           <ProductBarcodeActions product={product} />
                         </td>
                         <td className="px-4 py-4 text-right font-semibold">{formatRupiah(product.selling_price)}</td>
