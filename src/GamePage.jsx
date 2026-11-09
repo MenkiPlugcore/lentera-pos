@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { cloudApiFetch } from './cloudApi.js'
+import BasketList, { basketLines } from './simulation/BasketList.jsx'
 
 const rupiah = value => new Intl.NumberFormat('id-ID',{style:'currency',currency:'IDR',maximumFractionDigits:0}).format(Number(value)||0)
 
@@ -115,8 +116,8 @@ export default function GamePage() {
             <div className="rounded-3xl bg-slate-950 p-5">
               <p className="font-bold text-cyan-300">Pelanggan virtual datang ke kasir</p>
               <div className="mt-4 rounded-2xl border border-slate-700 p-4">
-                <p className="text-xl font-bold">Pelanggan membeli {challenge.quantity} × {challenge.itemName}</p>
-                <p className="mt-2 text-sm text-slate-400">Harga satuan {rupiah(challenge.unitPrice)}</p>
+                <p className="mb-3 text-lg font-bold">Keranjang pelanggan · Tahap {challenge.round || 1}/5</p>
+                <BasketList items={basketLines(challenge)} variant="drawer"/>
               </div>
               <div className="mt-5 grid gap-3 sm:grid-cols-2">
                 <div className="rounded-2xl bg-slate-800 p-5"><p className="text-sm text-slate-300">Total Belanja</p><p className="mt-2 text-3xl font-black">{rupiah(challenge.totalAmount)}</p></div>

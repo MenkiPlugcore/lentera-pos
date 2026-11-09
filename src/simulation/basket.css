@@ -1,0 +1,125 @@
+/* v1.6 visual shopping basket — small, readable product snapshots */
+.game-basket {min-width:0;}
+.game-basket-heading {
+  display:flex;
+  gap:.4rem;
+  align-items:center;
+  justify-content:space-between;
+  margin-bottom:.45rem;
+}
+.game-basket-heading strong {font-size:.88rem;font-weight:950;}
+.game-basket-heading span {
+  display:inline-block;
+  padding:.2rem .45rem;
+  border-radius:999px;
+  background:#275c56;
+  font-size:.63rem;
+  font-weight:850;
+  white-space:nowrap;
+}
+.game-basket-list {display:grid;gap:.26rem;min-width:0;}
+.game-basket-row {
+  display:grid;
+  grid-template-columns:34px minmax(0,1fr) auto;
+  align-items:center;
+  gap:.43rem;
+  min-width:0;
+  padding:.27rem;
+  border:1px solid #3e635e;
+  border-radius:9px;
+  background:#223b44;
+}
+.game-basket-thumb {
+  display:grid;
+  place-items:center;
+  overflow:hidden;
+  width:34px;height:34px;
+  border-radius:7px;
+  background:#e4f6e7;
+  color:#206748;
+  flex-shrink:0;
+}
+.game-basket-thumb img {width:100%;height:100%;object-fit:contain;}
+.game-basket-thumb span {font-size:1.25rem;}
+.game-basket-info {display:grid;gap:.1rem;min-width:0;}
+.game-basket-info strong {
+  display:-webkit-box;
+  -webkit-box-orient:vertical;
+  -webkit-line-clamp:2;
+  overflow:hidden;
+  font-size:.7rem;
+  line-height:1.2;
+  font-weight:850;
+  overflow-wrap:anywhere;
+}
+.game-basket-info small {color:#c1d8d3;font-size:.59rem;white-space:nowrap;}
+.game-basket-subtotal {font-size:.69rem;font-weight:900;white-space:nowrap;}
+.game-basket-more {display:none;}
+.game-basket--drawer .game-basket-heading {margin-bottom:.35rem;}
+.game-basket--drawer .game-basket-heading strong {color:#184f34;}
+.game-basket--drawer .game-basket-heading span {background:#e0f4e5;color:#187044;}
+.game-basket--drawer .game-basket-list {gap:.35rem;}
+.game-basket--drawer .game-basket-row {
+  grid-template-columns:42px minmax(0,1fr) auto;
+  gap:.55rem;
+  border:1px solid #d4ebd9;
+  background:#f7fdf8;
+  color:#21543a;
+  padding:.42rem;
+}
+.game-basket--drawer .game-basket-thumb {width:42px;height:42px;}
+.game-basket--drawer .game-basket-info strong {font-size:.8rem;}
+.game-basket--drawer .game-basket-info small {font-size:.7rem;color:#527461;}
+.game-basket--drawer .game-basket-subtotal {font-size:.78rem;}
+/* The order floats over the store, so cap its height and preserve the scene. */
+.arcade-play-layout .arcade-order-board {
+  max-height:67%;
+  overflow-y:auto;
+  overscroll-behavior:contain;
+  scrollbar-width:thin;
+}
+.arcade-play-layout .arcade-order-board .arcade-order-money {margin-top:.6rem;}
+.arcade-play-layout .arcade-order-board .arcade-order-money strong {white-space:nowrap;}
+.arcade-drawer-basket {
+  grid-column:1/-1;
+  padding:.5rem;
+  border:1px solid #cbe8d2;
+  border-radius:11px;
+  background:white;
+}
+.arcade-basket-stage {
+  display:inline-flex;
+  align-items:center;
+  gap:.35rem;
+  margin-bottom:.32rem;
+  color:#b3ffca;
+  font-size:.64rem;
+  font-weight:900;
+}
+@media(max-width:960px) {
+  .arcade-play-layout .arcade-order-board {
+    max-height:calc(100% - 190px);
+    overflow-y:auto;
+  }
+  .arcade-play-layout .arcade-order-board .game-basket-row:nth-child(n+3) {display:none;}
+  .arcade-play-layout .arcade-order-board .game-basket-more {
+    display:block;
+    margin-top:.4rem;
+    color:#c6f9da;
+    font-size:.67rem;
+    font-weight:850;
+  }
+}
+@media(max-width:520px) {
+  .arcade-play-layout .arcade-order-board {max-height:calc(100% - 195px);}
+  .game-basket--scene .game-basket-heading strong {font-size:.78rem;}
+  .game-basket--scene .game-basket-subtotal {font-size:.64rem;}
+  .game-basket--drawer .game-basket-row {grid-template-columns:36px minmax(0,1fr) auto;}
+  .game-basket--drawer .game-basket-thumb {width:36px;height:36px;}
+  .game-basket--drawer .game-basket-subtotal {font-size:.72rem;}
+}
+@media(max-width:340px) {
+  .game-basket--scene .game-basket-row {grid-template-columns:28px minmax(0,1fr) auto;gap:.3rem;}
+  .game-basket--scene .game-basket-thumb {width:28px;height:28px;}
+  .game-basket--scene .game-basket-subtotal {font-size:.59rem;}
+}

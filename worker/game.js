@@ -1,4 +1,5 @@
 // Learning Game API. Tidak menulis tabel penjualan dan tidak mengurangi stok.
+import { createPracticeBasket, challengeItems } from './multiItem.js'
 const UUID=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 const response=(data,status=200)=>new Response(JSON.stringify(data),{
   status,headers:{'content-type':'application/json; charset=utf-8','cache-control':'no-store'}
@@ -11,10 +12,11 @@ const body=async request=>{
   if(raw.length>8000)invalid('Permintaan terlalu besar.')
   try{return JSON.parse(raw)}catch{invalid('JSON tidak valid.')}
 }
-const randomInt=(max)=>crypto.getRandomValues(new Uint32Array(1))[0]%max
-const challengeOutput=(row)=>({
+const challengeOutput=(row,round)=>({
   id:row.id,sessionId:row.session_id,itemName:row.item_name,
-  quantity:row.quantity,unitPrice:row.unit_price,totalAmount:row.total_amount,
+  quantity:row.quantity,unitPrice:row.unit_price,
+  items:challengeItems(row),difficulty:round,round,
+  totalAmount:row.total_amount,
   paidAmount:row.paid_amount,attempts:row.attempts,
   resolved:Boolean(row.resolved_at),wasCorrect:row.is_correct,
   expectedChange:row.resolved_at?row.correct_change:null,
@@ -62,23 +64,20 @@ export async function handleGameApi({db,path,method,request,guestId=null,account
       'SELECT count(*)::int solved FROM public.lentera_game_challenges WHERE session_id=$1::uuid AND resolved_at IS NOT NULL',[sessionId])
     const [pending]=await db.query(
       'SELECT * FROM public.lentera_game_challenges WHERE session_id=$1::uuid AND resolved_at IS NULL LIMIT 1',[sessionId])
-    if(pending) return response({ok:true,challenge:{...challengeOutput(pending),round:Math.min(5,progress.solved+1)}})
+    if(pending) return response({ok:true,challenge:challengeOutput(pending,Math.min(5,progress.solved+1))})
     if(progress.solved>=5) return response({ok:false,error:'Semua soal sesi ini sudah selesai.'},409)
     const menu=await db.query(
-      'SELECT name,selling_price FROM public.products WHERE is_active AND selling_price BETWEEN 1000 AND 100000 AND mod(selling_price, 100) = 0 ORDER BY name LIMIT 100')
-    const item=menu.length ? menu[randomInt(menu.length)] : {name:'Roti',selling_price:5000}
-    const unitPrice=Math.round(Number(item.selling_price))
-    const qty=1+randomInt(Math.min(3,Math.max(1,Math.ceil(session.level_no/2))))
-    const total=unitPrice*qty
-    const paid=[10000,20000,50000,100000,200000,500000,1000000].find(v=>v>=total+500)
-      || Math.ceil((total+500)/50000)*50000
+      'SELECT id,name,selling_price,image_url FROM public.products WHERE is_active AND selling_price BETWEEN 100 AND 100000 AND mod(selling_price, 100) = 0 ORDER BY name LIMIT 100')
+    const round=Math.min(5,progress.solved+1)
+    const basket=createPracticeBasket(menu,round)
     const rows=await db.query(
-      'INSERT INTO public.lentera_game_challenges (session_id,item_name,quantity,unit_price,total_amount,paid_amount,correct_change) VALUES ($1,$2,$3,$4,$5,$6,$7) ON CONFLICT DO NOTHING RETURNING *',
-      [sessionId,item.name,qty,unitPrice,total,paid,paid-total])
+      'INSERT INTO public.lentera_game_challenges (session_id,item_name,quantity,unit_price,total_amount,paid_amount,correct_change,items) VALUES ($1,$2,$3,$4,$5,$6,$7,$8::jsonb) ON CONFLICT DO NOTHING RETURNING *',
+      [sessionId,'Keranjang '+basket.items.length+' barang',1,basket.items[0].unitPrice,
+        basket.totalAmount,basket.paidAmount,basket.correctChange,JSON.stringify(basket.items)])
     const challenge=rows[0] || (await db.query(
       'SELECT * FROM public.lentera_game_challenges WHERE session_id=$1::uuid AND resolved_at IS NULL LIMIT 1',[sessionId]))[0]
     if(!challenge)return response({ok:false,error:'Sesi sedang diproses. Coba ulangi.'},409)
-    return response({ok:true,challenge:{...challengeOutput(challenge),round:Math.min(5,progress.solved+1)}})
+    return response({ok:true,challenge:challengeOutput(challenge,round)})
   }
   if(path==='/api/game/answer' && method==='POST'){
     const data=await body(request)

@@ -3,6 +3,7 @@ import { cloudApiFetch } from '../cloudApi.js'
 import StoreScene from './StoreScene.jsx'
 import MoneyTray from './MoneyTray.jsx'
 import SubtractionSlide from './SubtractionSlide.jsx'
+import BasketList, { basketLines } from './BasketList.jsx'
 import { canBuildExactChange, totalCash } from './cashMoney.js'
 import { changeChoices, customerDialogue, customerForChallenge, formatRupiah } from './customerProfiles.js'
 import './simulation.css'
@@ -40,6 +41,7 @@ export default function VisualCustomerPage() {
   const mood = feedback?.correct ? 'happy' : (feedback && !feedback.correct ? 'thinking' : 'neutral')
   const round = challenge?.round || Math.min(5, (session?.completedCount || 0) + 1)
   const completedCount = Math.min(5, Number(session?.completedCount || 0))
+  const items = basketLines(challenge)
 
   async function loadSessions() {
     try {
@@ -272,8 +274,9 @@ export default function VisualCustomerPage() {
                     <span className="arcade-dialogue-name">{customer.name}</span>
                     <p>{feedback ? customerDialogue(customer, challenge, feedback) : customer.greeting}</p>
                   </div>
-                  <div className="arcade-order-board" aria-label="Pesanan pelanggan">
-                    <div className="arcade-order-title">{challenge.quantity} × {challenge.itemName}</div>
+                  <div className="arcade-order-board" aria-label="Keranjang belanja pelanggan">
+                    <div className="arcade-basket-stage">Tahap {round}/5</div>
+                    <BasketList items={items} variant="scene"/>
                     <div className="arcade-order-money">
                       <div><span>Total belanja</span><strong>{formatRupiah(challenge.totalAmount)}</strong></div>
                       <div><span>Uang diterima</span><strong>{formatRupiah(challenge.paidAmount)}</strong></div>
@@ -314,9 +317,8 @@ export default function VisualCustomerPage() {
                 </div>
                 <div className="arcade-answer-area">
                   <div className="arcade-essentials arcade-essentials--mobile-only" aria-label="Ringkasan pesanan saat laci terbuka">
-                    <div className="arcade-essential-product">
-                      <span>Pesanan</span>
-                      <strong>{challenge.quantity} × {challenge.itemName}</strong>
+                    <div className="arcade-drawer-basket">
+                      <BasketList items={items} variant="drawer"/>
                     </div>
                     <div><span>Total belanja</span><strong>{formatRupiah(challenge.totalAmount)}</strong></div>
                     <div><span>Uang pelanggan</span><strong>{formatRupiah(challenge.paidAmount)}</strong></div>
