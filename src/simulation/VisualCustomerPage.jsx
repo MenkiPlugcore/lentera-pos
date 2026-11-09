@@ -1,7 +1,8 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { cloudApiFetch } from '../cloudApi.js'
 import StoreScene from './StoreScene.jsx'
 import MoneyTray from './MoneyTray.jsx'
+import SubtractionSlide from './SubtractionSlide.jsx'
 import { canBuildExactChange, totalCash } from './cashMoney.js'
 import { changeChoices, customerDialogue, customerForChallenge, formatRupiah } from './customerProfiles.js'
 import './simulation.css'
@@ -26,6 +27,8 @@ export default function VisualCustomerPage() {
   const [moneyImages, setMoneyImages] = useState({})
   const [guestReady, setGuestReady] = useState(false)
   const [cashDrawerOpen, setCashDrawerOpen] = useState(false)
+  const [calculatorOpen, setCalculatorOpen] = useState(false)
+  const closeCalculator = useCallback(() => setCalculatorOpen(false), [])
 
   const customer = useMemo(
     () => customerForChallenge(challenge?.id),
@@ -100,6 +103,7 @@ export default function VisualCustomerPage() {
     setHint(false)
     setSelectedCash([])
     setCashDrawerOpen(false)
+    setCalculatorOpen(false)
     const neededChange = Number(result.challenge.paidAmount) - Number(result.challenge.totalAmount)
     if (!canBuildExactChange(neededChange)) setInputMode('choices')
   }
@@ -131,6 +135,7 @@ export default function VisualCustomerPage() {
     setError('')
     setSelectedCash([])
     setCashDrawerOpen(false)
+    setCalculatorOpen(false)
     loadSessions()
   }
 
@@ -142,7 +147,10 @@ export default function VisualCustomerPage() {
       })
       const outcome = result.result
       setFeedback(outcome)
-      if (outcome.status === 'completed') setCashDrawerOpen(false)
+      if (outcome.status === 'completed') {
+        setCashDrawerOpen(false)
+        setCalculatorOpen(false)
+      }
       setChallenge(old => ({
         ...old,
         attempts: outcome.attemptCount,
@@ -276,13 +284,20 @@ export default function VisualCustomerPage() {
                   )}
                 </>
               )}
-              {session.status === 'active' && challenge && (
-                <button type="button" className="arcade-open-drawer"
-                  aria-controls="arcade-money" aria-expanded={cashDrawerOpen}
-                  onClick={() => setCashDrawerOpen(true)}>
-                  <span>💵 Buka Laci Uang</span>
-                  <strong>{formatRupiah(totalCash(selectedCash))}</strong>
-                </button>
+              {session.status === 'active' && challenge && !challenge.resolved && (
+                <div className="arcade-scene-actions">
+                  <button type="button" className="arcade-open-drawer"
+                    aria-controls="arcade-money" aria-expanded={cashDrawerOpen}
+                    onClick={() => setCashDrawerOpen(true)}>
+                    <span>💵 Laci Uang</span>
+                    <strong>{formatRupiah(totalCash(selectedCash))}</strong>
+                  </button>
+                  <button type="button" className="arcade-open-calculator"
+                    aria-controls="arcade-subtraction-slide" aria-haspopup="dialog"
+                    aria-expanded={calculatorOpen} onClick={() => setCalculatorOpen(true)}>
+                    − Kalkulator
+                  </button>
+                </div>
               )}
             </section>
             {cashDrawerOpen && session.status === 'active' && challenge && (
@@ -325,6 +340,11 @@ export default function VisualCustomerPage() {
                           <button type="button" className="arcade-focus-toggle" aria-label={focusMode ? 'Nonaktifkan mode fokus' : 'Aktifkan mode fokus'} aria-pressed={focusMode}
                             onClick={() => { setFocusMode(mode => !mode); setHint(false) }}>
                             {focusMode ? '✓ Fokus' : 'Fokus'}
+                          </button>
+                          <button type="button" className="arcade-calculator-trigger"
+                            aria-controls="arcade-subtraction-slide" aria-haspopup="dialog"
+                            aria-expanded={calculatorOpen} onClick={() => setCalculatorOpen(true)}>
+                            <span aria-hidden="true">−</span> Kalkulator
                           </button>
                           <div className="arcade-mode-switch" role="group" aria-label="Cara menjawab">
                           <button type="button" aria-pressed={inputMode === 'cash'} onClick={() => setInputMode('cash')}
@@ -384,6 +404,11 @@ export default function VisualCustomerPage() {
               </section>
             )}
             </div>
+            {session.status === 'active' && challenge && (
+              <SubtractionSlide open={calculatorOpen} onClose={closeCalculator}
+                challengeId={challenge.id} paidAmount={challenge.paidAmount}
+                totalAmount={challenge.totalAmount}/>
+            )}
           </>
         )}
       </div>

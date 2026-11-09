@@ -1,0 +1,326 @@
+/* LENTERA POS — subtraction calculator in a sliding assistance panel */
+.subtraction-slide-layer {
+  position:fixed;
+  inset:0;
+  z-index:240;
+  visibility:hidden;
+  pointer-events:none;
+  transition:visibility 0s linear .26s;
+}
+.subtraction-slide-layer--open {
+  visibility:visible;
+  pointer-events:auto;
+  transition:visibility 0s;
+}
+.subtraction-slide-backdrop {
+  position:absolute;
+  inset:0;
+  display:block;
+  width:100%;
+  height:100%;
+  border:0;
+  padding:0;
+  background:rgba(10,34,25,.58);
+  opacity:0;
+  cursor:pointer;
+  transition:opacity .26s ease;
+}
+.subtraction-slide-layer--open .subtraction-slide-backdrop {opacity:1;}
+.subtraction-slide-panel {
+  position:absolute;
+  right:0;
+  top:0;
+  width:min(435px,100vw);
+  height:100dvh;
+  padding:clamp(1rem,3vw,1.5rem);
+  overflow-y:auto;
+  overscroll-behavior:contain;
+  background:linear-gradient(180deg,#f0fbf2 0%,#fff 50%,#f8fdf9 100%);
+  box-shadow:-15px 0 46px rgba(11,45,29,.23);
+  color:#1d4b31;
+  transform:translateX(103%);
+  transition:transform .26s cubic-bezier(.2,.7,.2,1);
+}
+.subtraction-slide-layer--open .subtraction-slide-panel { transform:translateX(0); }
+.subtraction-slide-head {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:1rem;
+  border-bottom:1px solid #cfe7d5;
+  padding-bottom:1rem;
+}
+.subtraction-slide-title {display:flex; align-items:center; gap:.75rem;}
+.subtraction-slide-icon {
+  display:grid;
+  place-items:center;
+  width:50px;
+  height:50px;
+  flex-shrink:0;
+  border-radius:16px;
+  background:#d8f3e0;
+  color:#167046;
+  font-size:2rem;
+  font-weight:950;
+}
+.subtraction-slide-title h2 {
+  margin:0;
+  font-size:1.33rem;
+  font-weight:950;
+  color:#164b30;
+  letter-spacing:-.025em;
+}
+.subtraction-slide-title p {margin:.15rem 0 0; font-size:.76rem; color:#5c7e67;}
+.subtraction-slide-close {
+  min-width:46px;
+  min-height:46px;
+  background:#fff;
+  color:#276548;
+  border:1px solid #a8d7b9;
+  border-radius:13px;
+  font-weight:900;
+  font-size:1.15rem;
+  cursor:pointer;
+}
+.subtraction-slide-content {padding-top:1.3rem;}
+.subtraction-slide-equation {
+  display:grid;
+  gap:.5rem;
+}
+.subtraction-slide-equation label {
+  font-size:.83rem;
+  font-weight:900;
+  color:#3c6d51;
+}
+.subtraction-slide-equation input {
+  display:block;
+  width:100%;
+  min-height:62px;
+  padding:.65rem 1rem;
+  border:2px solid #b8dec4;
+  border-radius:15px;
+  background:#fff;
+  color:#155b36;
+  font-size:clamp(1.35rem,3vw,1.8rem);
+  line-height:1.2;
+  font-weight:950;
+  text-align:right;
+  font-variant-numeric:tabular-nums;
+  outline:none;
+}
+.subtraction-slide-equation input:focus {
+  border-color:#139657;
+  box-shadow:0 0 0 3px rgba(24,121,78,.16);
+}
+.subtraction-slide-symbol {
+  display:grid;
+  place-items:center;
+  color:#186b42;
+  font-size:2.5rem;
+  font-weight:950;
+  line-height:1.2;
+}
+.subtraction-slide-action-row {
+  display:grid;
+  grid-template-columns:1.3fr .7fr;
+  gap:.65rem;
+  margin-top:1.25rem;
+}
+.subtraction-slide-action-row button,
+.subtraction-slide-return {
+  min-height:52px;
+  border-radius:13px;
+  padding:.65rem;
+  font-size:.91rem;
+  font-weight:900;
+  cursor:pointer;
+}
+.subtraction-slide-calculate {
+  background:#147746;
+  color:white;
+  border:2px solid #147746;
+  box-shadow:0 6px 16px #146e4322;
+}
+.subtraction-slide-calculate:hover {background:#0c613a;}
+.subtraction-slide-reset {
+  background:#f5fcf7;
+  color:#236344;
+  border:1px solid #b7d8c3;
+}
+.subtraction-slide-result {
+  margin-top:1.4rem;
+  padding:1.15rem;
+  min-height:155px;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
+  gap:.55rem;
+  background:#e5f8ea;
+  border:2px solid #b3e1c0;
+  border-radius:17px;
+  text-align:center;
+}
+.subtraction-slide-result-label {
+  font-size:.82rem;
+  color:#2e7450;
+  font-weight:850;
+}
+.subtraction-slide-result > strong {
+  font-weight:950;
+  font-size:clamp(1.8rem,4vw,2.45rem);
+  letter-spacing:-.035em;
+  color:#116b3a;
+  font-variant-numeric:tabular-nums;
+}
+.subtraction-slide-formula {
+  font-size:.85rem;
+  color:#24583d;
+  font-weight:850;
+  line-height:1.4;
+  overflow-wrap:anywhere;
+}
+.subtraction-slide-result > p {
+  font-size:.81rem;
+  line-height:1.55;
+  color:#52765e;
+  margin:0;
+}
+.subtraction-slide-result .subtraction-slide-error {
+  color:#a22534;
+  font-weight:850;
+}
+.subtraction-slide-placeholder span {
+  display:block;
+  color:#8ab69a;
+  font-size:2.3rem;
+  font-weight:950;
+}
+.subtraction-slide-placeholder p {
+  margin:.35rem 0 0;
+  color:#658775;
+  font-size:.83rem;
+  line-height:1.5;
+}
+.subtraction-slide-return {
+  display:block;
+  margin-top:1rem;
+  width:100%;
+  background:#fff;
+  color:#1a6841;
+  border:1px solid #b5dbc3;
+}
+.subtraction-slide-return:hover,
+.subtraction-slide-close:hover,
+.subtraction-slide-reset:hover {background:#dff4e5;}
+.subtraction-slide-panel button:focus-visible {
+  outline:3px solid #15864c;
+  outline-offset:3px;
+}
+
+/* Controls in both cash drawer and the scene on narrower viewports. */
+.arcade-calculator-trigger {
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:.3rem;
+  min-height:38px;
+  padding:.5rem .65rem;
+  background:#edf9ef;
+  border:1px solid #93cba6;
+  border-radius:9px;
+  color:#16663f;
+  font-size:.76rem;
+  font-weight:900;
+  cursor:pointer;
+  white-space:nowrap;
+}
+.arcade-calculator-trigger span {font-size:1.13rem; line-height:0;}
+.arcade-calculator-trigger:hover {background:#d7f3df;}
+.arcade-scene-actions {display:none;}
+@media (max-width:960px) {
+  .arcade-scene-actions {
+    position:absolute;
+    z-index:10;
+    left:1rem;
+    right:1rem;
+    bottom:.7rem;
+    display:flex;
+    gap:.5rem;
+    align-items:stretch;
+  }
+  .arcade-scene-actions .arcade-open-drawer,
+  .arcade-scene-actions .arcade-open-calculator {
+    position:static;
+    inset:auto;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    min-width:0;
+    min-height:60px;
+    border:2px solid #c8f3d6;
+    border-radius:14px;
+    background:#126b41;
+    box-shadow:0 5px 22px #10251c8a;
+    color:#fff;
+    cursor:pointer;
+    font-size:.91rem;
+    font-weight:900;
+    gap:.35rem;
+    padding:.6rem .7rem;
+  }
+  .arcade-scene-actions .arcade-open-drawer {
+    flex:1 1 56%;
+    justify-content:space-between;
+    flex-wrap:wrap;
+  }
+  .arcade-scene-actions .arcade-open-drawer strong {color:#e4ffe9; font-size:.84rem;}
+  .arcade-scene-actions .arcade-open-calculator {
+    flex:0 1 39%;
+    background:#fff;
+    color:#12643d;
+    border-color:#8ac5a0;
+  }
+  .arcade-scene-actions .arcade-open-calculator:hover {background:#e1f8e8;}
+}
+@media (max-width:640px) {
+  .subtraction-slide-panel {
+    top:auto;
+    right:0;
+    bottom:0;
+    width:100%;
+    height:min(86dvh,800px);
+    max-height:86dvh;
+    border:2px solid #b0d8be;
+    border-bottom:0;
+    border-radius:22px 22px 0 0;
+    padding:1rem max(1rem,env(safe-area-inset-right)) max(1rem,env(safe-area-inset-bottom)) max(1rem,env(safe-area-inset-left));
+    box-shadow:0 -14px 40px #0b2d1b42;
+    transform:translateY(103%);
+  }
+  .subtraction-slide-layer--open .subtraction-slide-panel {transform:translateY(0);}
+  .subtraction-slide-head {padding-bottom:.75rem;}
+  .subtraction-slide-content {padding-top:1rem;}
+  .subtraction-slide-equation input {min-height:58px; font-size:1.6rem;}
+  .subtraction-slide-result {min-height:132px;}
+}
+@media (max-width:520px) {
+  .arcade-scene-actions {left:.5rem;right:.5rem;bottom:.5rem;gap:.35rem;}
+  .arcade-scene-actions .arcade-open-drawer,
+  .arcade-scene-actions .arcade-open-calculator {
+    min-height:58px;
+    padding:.45rem .6rem;
+    font-size:.81rem;
+  }
+  .arcade-scene-actions .arcade-open-drawer strong {font-size:.76rem;}
+  .arcade-controls .arcade-calculator-trigger {min-height:40px;}
+}
+@media (max-width:360px) {
+  .arcade-scene-actions .arcade-open-drawer {flex-direction:column;gap:.08rem;align-items:flex-start;}
+  .arcade-scene-actions .arcade-open-calculator {font-size:.75rem;}
+}
+@media (prefers-reduced-motion:reduce) {
+  .subtraction-slide-layer,
+  .subtraction-slide-backdrop,
+  .subtraction-slide-panel {transition:none !important;}
+}
