@@ -120,10 +120,13 @@ async function getSession(db, request) {
   return account || null
 }
 async function handleApi(request, env) {
-  if (!env.DATABASE_URL) return fail('DATABASE_URL belum diatur di Worker.', 503)
   const url = new URL(request.url)
   const path = url.pathname.replace(/\/+$/, '') || '/'
   const method = request.method.toUpperCase()
+  if (path === '/api/health' && method === 'GET') {
+    return json({ ok: true, mode: 'cloud', databaseConfigured: Boolean(env.DATABASE_URL) })
+  }
+  if (!env.DATABASE_URL) return fail('DATABASE_URL belum diatur di Worker.', 503)
   const db = neon(env.DATABASE_URL)
 
   if (['POST','PATCH','PUT','DELETE'].includes(method)) {
@@ -132,7 +135,6 @@ async function handleApi(request, env) {
     const site = request.headers.get('sec-fetch-site')
     if (site === 'cross-site') return fail('Permintaan lintas situs ditolak.', 403)
   }
-  if (path === '/api/health' && method === 'GET') return json({ ok: true, mode: 'cloud' })
   if (path === '/api/auth/login' && method === 'POST') {
     const data = await bodyJson(request)
     const username = requiredText(data.username, 'Username', 1, 100)
