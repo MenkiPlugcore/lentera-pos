@@ -1,5 +1,7 @@
 import { neon } from '@neondatabase/serverless'
 import bcrypt from 'bcryptjs'
+import { handleCafeApi } from './cafe.js'
+import { handleGameApi } from './game.js'
 
 const COOKIE = '__Host-lentera_session'
 const SESSION_AGE = 12 * 60 * 60
@@ -242,6 +244,11 @@ async function handleApi(request, env) {
   if (!account) return fail('Silakan login terlebih dahulu.', 401)
   if (account.role !== 'admin') return fail('Akses admin diperlukan.', 403)
 
+  const cafeResponse = await handleCafeApi({ db, path, method, request, account })
+  if (cafeResponse) return cafeResponse
+  const gameResponse = await handleGameApi({ db, path, method, request, account })
+  if (gameResponse) return gameResponse
+
 
   if (path === '/api/media/status' && method === 'GET') {
     const legacy = await db.query(
@@ -446,6 +453,7 @@ export default {
       if (error?.code === '23503') return fail('Kategori atau data terkait tidak ditemukan.',409)
       if (error?.code === '22P02') return fail('Format ID tidak valid.',400)
       if (error?.code === '23514') return fail('Data melanggar aturan validasi.',400)
+      if (error?.code === 'P0001') return fail(String(error.message || 'Transaksi tidak dapat diproses.').slice(0,200),409)
       console.error('LENTERA POS API error',error?.code || error?.name || 'unknown')
       return fail('Terjadi kesalahan server. Coba lagi atau periksa log Worker.',500)
     }

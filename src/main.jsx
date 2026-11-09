@@ -10,6 +10,8 @@ import AdminCashierShortcut from './AdminCashierShortcut.jsx'
 import CashierPage from './CashierPage.jsx'
 import HardDeletePanel from './HardDeletePanel.jsx'
 import ReportsPanel from './ReportsPanel.jsx'
+import CafePage from './CafePage.jsx'
+import GamePage from './GamePage.jsx'
 
 function normalizePath(pathname) {
   const cleaned = String(pathname || '/').replace(/\/+$/, '')
@@ -82,9 +84,15 @@ function CloudGate({ children }) {
 
   return (
     <>
-      <div className="sticky top-0 z-[70] flex items-center justify-between gap-3 border-b border-cyan-900 bg-slate-950 px-4 py-2 text-xs text-slate-200">
+      <div className="sticky top-0 z-[70] flex flex-wrap items-center justify-between gap-3 border-b border-cyan-900 bg-slate-950 px-4 py-2 text-xs text-slate-200">
         <span>☁️ Neon Cloud · {state.user.fullName || state.user.username}</span>
-        <button type="button" className="rounded-lg border border-slate-700 px-3 py-1.5 hover:bg-slate-800" onClick={logout}>Keluar</button>
+        <nav className="flex flex-wrap items-center gap-2" aria-label="Navigasi LENTERA POS">
+          <a href="/kasir" className="rounded-lg border border-slate-700 px-3 py-1.5 hover:bg-slate-800">Kasir</a>
+          <a href="/admin" className="rounded-lg border border-slate-700 px-3 py-1.5 hover:bg-slate-800">Admin</a>
+          <a href="/cafe" className="rounded-lg border border-cyan-700 px-3 py-1.5 text-cyan-200 hover:bg-cyan-900">Smart Cafe</a>
+          <a href="/game" className="rounded-lg border border-cyan-700 px-3 py-1.5 text-cyan-200 hover:bg-cyan-900">Mode Game</a>
+          <button type="button" className="rounded-lg border border-slate-700 px-3 py-1.5 hover:bg-slate-800" onClick={logout}>Keluar</button>
+        </nav>
       </div>
       {children}
     </>
@@ -103,6 +111,9 @@ function RootRoute() {
   if (path === '/kasir') {
     return <CashierPage />
   }
+
+  if (path === '/cafe' && IS_CLOUD) return <CafePage />
+  if (path === '/game' && IS_CLOUD) return <GamePage />
 
   if (path === '/admin') {
     return (
