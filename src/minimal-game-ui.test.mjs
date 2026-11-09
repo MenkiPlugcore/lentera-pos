@@ -9,7 +9,7 @@ const css = readFileSync(new URL('./simulation/arcade.css',import.meta.url),'utf
 test('gameplay shows only compact critical information and keeps screen-reader heading',()=>{
   assert.match(visual, /\{!session && <header className="arcade-page-heading">/)
   assert.match(visual, /session && <h1 className="sr-only">Simulasi Pelanggan<\/h1>/)
-  assert.match(visual, /<div className="arcade-order-title">/)
+  assert.match(visual, /<BasketList items=\{items\} variant="scene"\/>/)
   assert.match(visual, /Total belanja/)
   assert.match(visual, /Uang diterima/)
   assert.doesNotMatch(visual, /LANGKAH 1 · LIHAT PESANAN|SUDUT PANDANG KASIR · TOKO LENTERA|Mode latihan saja\. Tidak ada pengurangan stok/)
