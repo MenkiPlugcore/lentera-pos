@@ -53,7 +53,7 @@ export async function handleGameApi({db,path,method,request}) {
     if(pending) return response({ok:true,challenge:{...challengeOutput(pending),round:Math.min(5,progress.solved+1)}})
     if(progress.solved>=5) return response({ok:false,error:'Semua soal sesi ini sudah selesai.'},409)
     const menu=await db.query(
-      'SELECT name,selling_price FROM public.products WHERE is_active AND selling_price BETWEEN 1000 AND 100000 ORDER BY name LIMIT 100')
+      'SELECT name,selling_price FROM public.products WHERE is_active AND selling_price BETWEEN 1000 AND 100000 AND mod(selling_price, 100) = 0 ORDER BY name LIMIT 100')
     const item=menu.length ? menu[randomInt(menu.length)] : {name:'Roti',selling_price:5000}
     const unitPrice=Math.round(Number(item.selling_price))
     const qty=1+randomInt(Math.min(3,Math.max(1,Math.ceil(session.level_no/2))))

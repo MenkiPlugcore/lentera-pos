@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import { cloudApiFetch } from '../cloudApi.js'
 import CustomerAvatar from './CustomerAvatar.jsx'
+import MoneyTray from './MoneyTray.jsx'
+import { canBuildExactChange } from './cashMoney.js'
 import { changeChoices, customerDialogue, customerForChallenge, formatRupiah } from './customerProfiles.js'
 import './simulation.css'
 
@@ -14,6 +16,8 @@ export default function VisualCustomerPage() {
   const [challenge, setChallenge] = useState(null)
   const [feedback, setFeedback] = useState(null)
   const [hint, setHint] = useState(true)
+  const [inputMode, setInputMode] = useState('cash')
+  const [selectedCash, setSelectedCash] = useState([])
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
 
@@ -58,6 +62,9 @@ export default function VisualCustomerPage() {
     setChallenge(result.challenge)
     setFeedback(null)
     setHint(true)
+    setSelectedCash([])
+    const neededChange = Number(result.challenge.paidAmount) - Number(result.challenge.totalAmount)
+    if (!canBuildExactChange(neededChange)) setInputMode('choices')
   }
 
   function start() {
@@ -85,11 +92,12 @@ export default function VisualCustomerPage() {
     setChallenge(null)
     setFeedback(null)
     setError('')
+    setSelectedCash([])
     loadSessions()
   }
 
   function answer(value) {
-    if (!challenge || challenge.resolved || busy) return
+    if (!challenge || challenge.resolved || busy || !Number.isSafeInteger(value) || value < 0) return
     request(async () => {
       const result = await post('/api/game/answer', {
         challengeId: challenge.id, answer: value,
@@ -153,8 +161,8 @@ export default function VisualCustomerPage() {
                 <div>
                   <h2 className="text-2xl font-black">Selamat datang di toko!</h2>
                   <p className="mt-2 text-slate-300">
-                    Satu sesi terdiri dari 5 pelanggan. Pilih uang kembalian yang tepat
-                    dan kumpulkan poin. Guru dapat mendampingi setiap langkah.
+                    Satu sesi terdiri dari 5 pelanggan. Susun uang kembalian dengan
+                    memilih pecahan rupiah, lalu kumpulkan poin. Guru dapat mendampingi setiap langkah.
                   </p>
                   <label className="mt-5 block max-w-md font-bold">
                     Nama panggilan peserta
@@ -263,9 +271,27 @@ export default function VisualCustomerPage() {
                   </div>
 
                   <p className="mt-7 text-xs font-black uppercase tracking-widest text-cyan-300">
-                    Langkah 2 · Pilih Jawaban
+                    Langkah 2 · Siapkan Uang Kembalian
                   </p>
                   <h3 className="mt-2 text-xl font-black">Berapa uang kembalian?</h3>
+                  {!challenge.resolved && (
+                    <div className="simulation-mode-switch" role="group" aria-label="Cara menjawab soal">
+                      <button type="button" aria-pressed={inputMode === 'cash'}
+                        className="simulation-mode-button" onClick={() => setInputMode('cash')}
+                        disabled={busy || !canBuildExactChange(Number(challenge.paidAmount) - Number(challenge.totalAmount))}>
+                        Susun Uang
+                      </button>
+                      <button type="button" aria-pressed={inputMode === 'choices'}
+                        className="simulation-mode-button" onClick={() => setInputMode('choices')} disabled={busy}>
+                        Pilihan Cepat
+                      </button>
+                    </div>
+                  )}
+                  {!challenge.resolved && !canBuildExactChange(Number(challenge.paidAmount) - Number(challenge.totalAmount)) && (
+                    <p className="mt-3 text-sm text-amber-200">
+                      Nominal soal ini tidak cocok dengan pecahan latihan. Gunakan Pilihan Cepat.
+                    </p>
+                  )}
                   {challenge.resolved ? (
                     <div className="mt-4 rounded-2xl border border-emerald-700 bg-emerald-950 p-5">
                       <p className="font-bold text-emerald-200">
@@ -286,19 +312,32 @@ export default function VisualCustomerPage() {
                     </div>
                   ) : (
                     <>
-                      <div className="mt-4 grid gap-3 sm:grid-cols-3" role="group" aria-label="Pilihan uang kembalian">
-                        {options.map(value => (
-                          <button key={value} type="button" disabled={busy}
-                            className="simulation-answer"
-                            onClick={() => answer(value)}>
-                            {formatRupiah(value)}
-                          </button>
-                        ))}
-                      </div>
+                      {inputMode === 'cash' && canBuildExactChange(Number(challenge.paidAmount) - Number(challenge.totalAmount)) ? (
+                        <MoneyTray
+                          selected={selectedCash}
+                          paidAmount={Number(challenge.paidAmount)}
+                          busy={busy}
+                          onChange={nextSelection => {
+                            setSelectedCash(nextSelection)
+                            if (feedback?.correct === false) setFeedback(null)
+                          }}
+                          onConfirm={answer}
+                        />
+                      ) : (
+                        <div className="mt-4 grid gap-3 sm:grid-cols-3" role="group" aria-label="Pilihan uang kembalian">
+                          {options.map(value => (
+                            <button key={value} type="button" disabled={busy}
+                              className="simulation-answer"
+                              onClick={() => answer(value)}>
+                              {formatRupiah(value)}
+                            </button>
+                          ))}
+                        </div>
+                      )}
                       <p className="mt-3 text-sm text-slate-300" aria-live="polite">
                         {feedback?.correct === false
-                          ? 'Belum tepat. Kamu masih boleh mencoba lagi.'
-                          : 'Pilih satu jawaban di atas.'}
+                          ? 'Belum tepat. Perbaiki uangnya dan coba lagi.'
+                          : inputMode === 'cash' ? 'Susun uang, lalu tekan Serahkan Kembalian untuk memeriksa jawaban.' : 'Pilih satu jawaban di atas.'}
                         {' '}Percobaan {challenge.attempts || 0} dari 3.
                       </p>
                     </>
@@ -316,7 +355,7 @@ export default function VisualCustomerPage() {
                         <p className="mt-2 text-base font-black">
                           {formatRupiah(challenge.paidAmount)} − {formatRupiah(challenge.totalAmount)} = ?
                         </p>
-                        <p className="mt-2">Tidak perlu terburu-buru. Hitung perlahan.</p>
+                        <p className="mt-2">Tidak perlu terburu-buru. Hitung perlahan. Mulai dari lembar besar, lalu gunakan koin untuk nominal kecil.</p>
                       </div>
                     )}
                   </div>
