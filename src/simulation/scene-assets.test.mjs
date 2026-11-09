@@ -20,3 +20,12 @@ test('store scene layers desk in front of customer instead of flattening the art
   assert.match(stylesheet, /\.game-store-art--custom \.game-store-character img\s*\{[\s\S]*?mix-blend-mode: normal/)
   assert.match(stylesheet, /\.game-store-art--custom \.game-store-foreground\s*\{/)
 })
+
+test('customer is positioned behind the foreground counter on desktop and mobile', () => {
+  const stylesheet=readFileSync(new URL('./arcade.css', import.meta.url), 'utf8')
+  assert.match(stylesheet, /v1\.3\.2 — Customer stands BEHIND the checkout counter/)
+  const tail=stylesheet.split('v1.3.2 — Customer stands BEHIND the checkout counter')[1]
+  assert.match(tail, /\.arcade-play-layout \.game-store-art--custom \.game-store-character\s*\{[^}]*bottom:\s*25%;[^}]*height:\s*55%/s)
+  assert.match(tail, /\.game-store-art--custom \.game-store-foreground\s*\{[^}]*mask-image:\s*linear-gradient\(to bottom,[^;]*transparent 59%, black 70%/s)
+  assert.match(tail, /@media \(max-width:\s*520px\)/)
+})

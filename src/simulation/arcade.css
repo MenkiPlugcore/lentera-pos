@@ -1099,3 +1099,47 @@
     mask-image: linear-gradient(to bottom, transparent 0%, transparent 75%, black 88%);
   }
 }
+
+
+/* v1.3.2 — Customer stands BEHIND the checkout counter.
+   Source artwork is portrait; previously bottom:13%/height:70% put its
+   lower torso over the register. Reduce scale, anchor farther back, and
+   bring forward the store's original counter/monitor/keyboard layer. */
+.arcade-play-layout .game-store-art--custom .game-store-character {
+  left: 51%;
+  bottom: 25%;
+  width: 64%;
+  height: 55%;
+  transform: translateX(-50%);
+}
+.game-store-art--custom .game-store-foreground {
+  /* The same source image is perfectly registered over its background.
+     Reintroduce the counter from roughly 60% down so checkout equipment
+     occludes the guest, instead of the guest standing on top of it. */
+  -webkit-mask-image: linear-gradient(to bottom,
+    transparent 0%, transparent 59%, black 70%, black 100%);
+  mask-image: linear-gradient(to bottom,
+    transparent 0%, transparent 59%, black 70%, black 100%);
+}
+@media (max-width: 960px) {
+  .arcade-play-layout .game-store-art--custom .game-store-character {
+    left: 51%;
+    bottom: 25%;
+    width: 90%;
+    height: 53%;
+  }
+}
+@media (max-width: 520px) {
+  .arcade-play-layout .game-store-art--custom .game-store-character {
+    left: 51%;
+    bottom: 27%;
+    width: 94%;
+    height: 51%;
+  }
+  .game-store-art--custom .game-store-foreground {
+    -webkit-mask-image: linear-gradient(to bottom,
+      transparent 0%, transparent 56%, black 68%, black 100%);
+    mask-image: linear-gradient(to bottom,
+      transparent 0%, transparent 56%, black 68%, black 100%);
+  }
+}
