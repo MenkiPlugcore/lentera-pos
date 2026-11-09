@@ -1143,3 +1143,63 @@
       transparent 0%, transparent 56%, black 68%, black 100%);
   }
 }
+
+
+/* v1.4 Minimal Gameplay — teks seperlunya, informasi penting tetap jelas. */
+.arcade-page--playing { padding-top: .65rem; }
+.arcade-page--playing .arcade-play-layout { margin-top: 0; }
+.arcade-play-layout .arcade-essentials--mobile-only { display: none; }
+.arcade-play-layout .arcade-order-board { padding: .72rem; }
+.arcade-play-layout .arcade-order-board .arcade-order-title { margin-top: 0; }
+.arcade-play-layout .arcade-order-board .arcade-order-money { margin-top: .5rem; }
+.arcade-play-layout .arcade-answer-area { padding: .75rem; }
+.arcade-play-layout .arcade-answer-top { align-items: center; }
+.arcade-play-layout .arcade-answer-top h3 { font-size: 1.02rem; margin-top: 0; }
+.arcade-play-layout .arcade-answer-top .arcade-controls { gap: .35rem; }
+.arcade-play-layout .arcade-focus-toggle,
+.arcade-play-layout .arcade-mode-switch button { min-height: 38px; }
+.arcade-workspace .cash-tray--arcade .cash-pocket-summary {
+  background: #e8f8eb;
+  border-color: #83ce9b;
+}
+.arcade-workspace .cash-tray--arcade .cash-pocket-summary > div:first-child span {
+  font-size: .7rem;
+}
+.arcade-workspace .cash-tray--arcade .cash-pocket-actions .cash-pocket-submit {
+  min-width: 88px;
+}
+.arcade-workspace .cash-tray--arcade .cash-pocket-actions .cash-pocket-zero {
+  min-width: 48px;
+}
+.arcade-workspace .cash-tray--arcade .cash-counting-area--compact {
+  margin-top: .45rem;
+}
+.arcade-workspace .cash-tray--arcade .cash-compact-empty { display:none; }
+.arcade-workspace .arcade-learning-help { display:flex; flex-wrap:wrap; align-items:center; gap:.35rem; }
+.arcade-workspace .arcade-learning-help .arcade-hint-toggle { margin: 0; }
+.arcade-page--focus .arcade-learning-help { display: none; }
+
+@media (max-width: 960px) {
+  .arcade-page--playing { padding-top: .35rem; }
+  .arcade-play-layout .arcade-essentials--mobile-only {
+    display: grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:.35rem;
+    margin-bottom:.55rem;
+  }
+  .arcade-play-layout .arcade-essentials--mobile-only > div { padding:.45rem .6rem; }
+  .arcade-play-layout .arcade-essentials--mobile-only .arcade-essential-product {
+    grid-column:1/-1;
+  }
+  .arcade-play-layout .arcade-answer-area { padding:.65rem; }
+  .arcade-drawer-heading strong { font-size:.9rem; }
+}
+@media (max-width: 520px) {
+  .arcade-play-layout .arcade-answer-top h3 { font-size:.95rem; }
+  .arcade-play-layout .arcade-hud { top: .45rem; }
+  .arcade-play-layout .arcade-hud-score { padding:.4rem .52rem; }
+  .arcade-play-layout .arcade-hud-score strong { font-size:.85rem; }
+  .arcade-play-layout .arcade-order-board .arcade-order-title { font-size: 1.02rem; }
+  .arcade-play-layout .cash-tray--arcade > p { margin-top: .45rem; }
+  .arcade-workspace .cash-tray--arcade .cash-pocket-summary { top: 48px; }
+}

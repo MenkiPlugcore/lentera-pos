@@ -62,20 +62,20 @@ export default function MoneyTray({ selected, paidAmount, busy, onChange, onConf
       {compact && (
         <div className="cash-pocket-summary">
           <div>
-            <span>Total kembalian disiapkan</span>
+            <span>Kembalian</span>
             <strong aria-live="polite">{formatRupiah(total)}</strong>
           </div>
           <div className="cash-pocket-actions">
             <button type="button" className="cash-pocket-submit" disabled={busy || count === 0} onClick={() => onConfirm(total)}>
-              {busy ? 'Memeriksa...' : 'Serahkan Uang'}
+              {busy ? 'Memeriksa...' : 'Serahkan'}
             </button>
             <button type="button" disabled={busy} className="cash-pocket-zero"
-              onClick={() => onConfirm(0)}>Uang pas (Rp0)</button>
+              onClick={() => onConfirm(0)} aria-label="Uang pas tanpa kembalian, Rp0">Uang pas</button>
           </div>
         </div>
       )}
 
-      <p className="mt-5 text-sm font-bold text-slate-200">Uang kertas</p>
+      <p className="mt-5 text-sm font-bold text-slate-200">{compact ? 'Kertas' : 'Uang kertas'}</p>
       <div className="cash-piece-grid mt-3" role="group" aria-label="Pilih pecahan uang kertas">
         {available.filter(d => d.type === 'note').map(d => (
           <MoneyPiece key={d.value} denomination={d} imageUrl={images[d.value]}
@@ -84,7 +84,7 @@ export default function MoneyTray({ selected, paidAmount, busy, onChange, onConf
         ))}
       </div>
 
-      <p className="mt-5 text-sm font-bold text-slate-200">Uang logam</p>
+      <p className="mt-5 text-sm font-bold text-slate-200">{compact ? 'Koin' : 'Uang logam'}</p>
       <div className="cash-piece-grid cash-piece-grid--coins mt-3" role="group" aria-label="Pilih pecahan uang logam">
         {available.filter(d => d.type === 'coin').map(d => (
           <MoneyPiece key={d.value} denomination={d} imageUrl={images[d.value]}
@@ -93,11 +93,11 @@ export default function MoneyTray({ selected, paidAmount, busy, onChange, onConf
         ))}
       </div>
 
-      <section className={"cash-counting-area mt-6" + (compact ? " cash-counting-area--compact" : "")} aria-label="Baki uang kembalian">
+      {(!compact || count > 0) && <section className={"cash-counting-area mt-6" + (compact ? " cash-counting-area--compact" : "")} aria-label="Baki uang kembalian">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="cash-counting-caption">
             {compact ? (
-              <p className="text-sm font-bold text-slate-200">{count} uang dipilih</p>
+              <p className="text-sm font-bold text-slate-200">{count} dipilih</p>
             ) : (
               <>
                 <p className="text-sm font-bold text-slate-200">Uang yang kamu siapkan</p>
@@ -109,10 +109,11 @@ export default function MoneyTray({ selected, paidAmount, busy, onChange, onConf
           <div className="flex flex-wrap gap-2">
             <button type="button" className="cash-small-button"
               disabled={busy || count === 0}
-              onClick={() => onChange(removeLastCash(selected))}>Batalkan Terakhir</button>
+              onClick={() => onChange(removeLastCash(selected))}
+              aria-label="Batalkan pilihan uang terakhir">{compact ? 'Urungkan' : 'Batalkan Terakhir'}</button>
             <button type="button" className="cash-small-button"
               disabled={busy || count === 0}
-              onClick={() => onChange([])}>Kosongkan Baki</button>
+              onClick={() => onChange([])}>{compact ? 'Kosongkan' : 'Kosongkan Baki'}</button>
           </div>
         </div>
 
@@ -153,7 +154,7 @@ export default function MoneyTray({ selected, paidAmount, busy, onChange, onConf
           onClick={() => onConfirm(0)}>
           Uang Pas — Tidak Perlu Kembalian (Rp0)
         </button>
-      </section>
+      </section>}
       {!compact && (
         <p className="mt-4 text-center text-xs text-slate-500">
           Gambar uang dan koin bisa diganti admin. Jika belum ada foto, tampil ilustrasi latihan bawaan.

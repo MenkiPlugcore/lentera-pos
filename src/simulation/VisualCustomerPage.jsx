@@ -169,14 +169,15 @@ export default function VisualCustomerPage() {
   return (
     <main className={'arcade-page' + (session ? ' arcade-page--playing' : '') + (focusMode ? ' arcade-page--focus' : '')}>
       <div className="arcade-container">
-        <header className="arcade-page-heading">
+        {!session && <header className="arcade-page-heading">
           <div>
             <p className="arcade-kicker">LENTERA POS · SIMULASI INTERAKTIF</p>
             <h1>Simulasi Pelanggan</h1>
             <p>Jadilah kasir, layani pelanggan, dan siapkan uang kembalian. Tanpa timer atau transaksi sungguhan.</p>
           </div>
           <a href="/" className="arcade-back-link">← Beranda</a>
-        </header>
+        </header>}
+        {session && <h1 className="sr-only">Simulasi Pelanggan</h1>}
 
         {error && (
           <div className="arcade-error" role="alert">
@@ -233,13 +234,11 @@ export default function VisualCustomerPage() {
 
               <div className="arcade-hud">
                 <div className="arcade-hud-score" aria-label={'Kasir '+session.playerLabel+', level '+(session.level||1)+', '+(session.score||0)+' poin, '+(session.xp||0)+' XP'}>
-                  <span className="arcade-hud-user">KASIR · {session.playerLabel}</span>
-                  <strong>Level {session.level || 1} · {session.score || 0} poin</strong>
-                  <span className="arcade-hud-xp">XP {session.xp || 0}</span>
+                  <strong>Lv {session.level || 1} · {session.score || 0} poin</strong>
                 </div>
                 <div className="arcade-hud-right">
                   <div className="arcade-hud-progress">
-                    <span>Pelanggan {Math.min(round, 5)} dari 5</span>
+                    <span aria-label={'Pelanggan '+Math.min(round,5)+' dari 5'}>{Math.min(round, 5)}/5 pelanggan</span>
                     <div className="arcade-progress-track" role="progressbar"
                       aria-label="Pelanggan yang sudah selesai dilayani" aria-valuemin={0} aria-valuemax={5}
                       aria-valuenow={session.status === 'completed' ? 5 : completedCount}>
@@ -262,20 +261,15 @@ export default function VisualCustomerPage() {
               ) : (
                 <>
                   <div className="arcade-dialogue" role="status" aria-live="polite">
-                    <span className="arcade-dialogue-name">{customer.name} · {customer.label}</span>
-                    <p>{customerDialogue(customer, challenge, feedback)}</p>
+                    <span className="arcade-dialogue-name">{customer.name}</span>
+                    <p>{feedback ? customerDialogue(customer, challenge, feedback) : customer.greeting}</p>
                   </div>
-                  <div className="arcade-order-board">
-                    <div className="arcade-order-label">LANGKAH 1 · LIHAT PESANAN</div>
+                  <div className="arcade-order-board" aria-label="Pesanan pelanggan">
                     <div className="arcade-order-title">{challenge.quantity} × {challenge.itemName}</div>
-                    <p>Harga satuan: {formatRupiah(challenge.unitPrice)}</p>
                     <div className="arcade-order-money">
                       <div><span>Total belanja</span><strong>{formatRupiah(challenge.totalAmount)}</strong></div>
                       <div><span>Uang diterima</span><strong>{formatRupiah(challenge.paidAmount)}</strong></div>
                     </div>
-                    <button type="button" className="arcade-order-jump" onClick={() => setCashDrawerOpen(true)} aria-controls="arcade-money">
-                      Buka laci uang
-                    </button>
                   </div>
                   {feedback?.correct && (
                     <div className="arcade-reward" aria-live="polite">★ Jawaban benar!</div>
@@ -290,7 +284,6 @@ export default function VisualCustomerPage() {
                   <strong>{formatRupiah(totalCash(selectedCash))}</strong>
                 </button>
               )}
-              <div className="arcade-scene-caption">SUDUT PANDANG KASIR · TOKO LENTERA</div>
             </section>
             {cashDrawerOpen && session.status === 'active' && challenge && (
               <button type="button" className="arcade-drawer-backdrop" aria-label="Tutup laci uang"
@@ -305,7 +298,7 @@ export default function VisualCustomerPage() {
                   <button type="button" ref={drawerCloseRef} onClick={() => setCashDrawerOpen(false)} aria-label="Tutup laci uang">✕ Tutup</button>
                 </div>
                 <div className="arcade-answer-area">
-                  <div className="arcade-essentials" aria-label="Ringkasan transaksi">
+                  <div className="arcade-essentials arcade-essentials--mobile-only" aria-label="Ringkasan pesanan saat laci terbuka">
                     <div className="arcade-essential-product">
                       <span>Pesanan</span>
                       <strong>{challenge.quantity} × {challenge.itemName}</strong>
@@ -317,31 +310,29 @@ export default function VisualCustomerPage() {
                     <div className="arcade-result" role="status">
                       <span className="arcade-result-star" aria-hidden="true">{feedback?.correct ? '★' : '✦'}</span>
                       <h3>{feedback?.correct ? 'Bagus! Kembalianmu tepat.' : 'Soal selesai. Yuk belajar lagi!'}</h3>
-                      <p>Jawaban kembalian: <strong>{formatRupiah(challenge.expectedChange)}</strong></p>
-                      {feedback?.correct && <p>+ Poin dan XP sudah tersimpan otomatis.</p>}
+                      <p>Kembalian: <strong>{formatRupiah(challenge.expectedChange)}</strong></p>
                       <button type="button" className="arcade-primary-button" onClick={next} disabled={busy}>
-                        {busy ? 'Menyiapkan pelanggan...' : 'Pelanggan Berikutnya →'}
+                        {busy ? 'Memuat...' : 'Lanjut →'}
                       </button>
                     </div>
                   ) : (
                     <>
                       <div className="arcade-answer-top">
                         <div>
-                          <span className="arcade-panel-kicker">LANGKAH 3 · BERIKAN KEMBALIAN</span>
-                          <h3>Pilih uang yang akan diberikan</h3>
+                          <h3>Siapkan Kembalian</h3>
                         </div>
                         <div className="arcade-controls">
-                          <button type="button" className="arcade-focus-toggle" aria-pressed={focusMode}
+                          <button type="button" className="arcade-focus-toggle" aria-label={focusMode ? 'Nonaktifkan mode fokus' : 'Aktifkan mode fokus'} aria-pressed={focusMode}
                             onClick={() => { setFocusMode(mode => !mode); setHint(false) }}>
-                            {focusMode ? '✓ Mode Fokus' : 'Mode Fokus'}
+                            {focusMode ? '✓ Fokus' : 'Fokus'}
                           </button>
                           <div className="arcade-mode-switch" role="group" aria-label="Cara menjawab">
                           <button type="button" aria-pressed={inputMode === 'cash'} onClick={() => setInputMode('cash')}
                             disabled={busy || !canBuildExactChange(Number(challenge.paidAmount) - Number(challenge.totalAmount))}>
-                            Susun uang
+                            Uang
                           </button>
                           <button type="button" aria-pressed={inputMode === 'choices'} onClick={() => setInputMode('choices')} disabled={busy}>
-                            Pilihan cepat
+                            Pilihan
                           </button>
                           </div>
                         </div>
@@ -361,26 +352,26 @@ export default function VisualCustomerPage() {
                             </button>
                           ))}
                           {!canBuildExactChange(Number(challenge.paidAmount) - Number(challenge.totalAmount)) && (
-                            <p>Nominal latihan ini belum tersedia pada gambar uang. Gunakan pilihan cepat.</p>
+                            <p>Gunakan pilihan angka.</p>
                           )}
                         </div>
                       )}
                       {feedback?.correct === false && !challenge.resolved && (
-                        <p role="status" className="arcade-tryagain">Belum tepat. Coba periksa kembali uangnya. Percobaan {feedback.attemptCount} dari 3.</p>
+                        <p role="status" className="arcade-tryagain">Belum tepat. Coba lagi ({feedback.attemptCount}/3).</p>
                       )}
                       {!challenge.resolved && (
                         <div className="arcade-learning-help">
-                          <span>Percobaan {challenge.attempts || 0} dari 3 · Tanpa batas waktu</span>
+                          {Number(challenge.attempts || 0) > 0 && !feedback && <span>Percobaan {challenge.attempts}/3</span>}
                           {!focusMode && (
                             <>
                               <button type="button" className="arcade-hint-toggle"
                                 aria-expanded={hint} aria-controls="arcade-hint-content"
                                 onClick={() => setHint(current => !current)}>
-                                {hint ? 'Tutup bantuan' : 'Butuh bantuan?'}
+                                {hint ? 'Tutup bantuan' : 'Bantuan'}
                               </button>
                               {hint && (
                                 <p id="arcade-hint-content" className="arcade-hint">
-                                  <strong>Petunjuk:</strong> Uang pelanggan dikurangi total belanja. Coba mulai dari pecahan besar, lalu koin kecil.
+                                  Uang pelanggan − total belanja = kembalian. Pilih uang besar dahulu, lalu koin.
                                 </p>
                               )}
                             </>
@@ -393,7 +384,6 @@ export default function VisualCustomerPage() {
               </section>
             )}
             </div>
-            <p className="arcade-disclaimer">Mode latihan saja. Tidak ada pengurangan stok, pembayaran asli, atau perubahan omzet.</p>
           </>
         )}
       </div>
