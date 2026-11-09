@@ -87,6 +87,7 @@ export default function GamePage() {
         <p className="text-xs font-black uppercase tracking-[0.2em] text-cyan-300">LENTERA · GAME EDUKASI</p>
         <h1 className="mt-2 text-3xl font-black">Kasir Pintar</h1>
         <p className="mt-2 text-sm leading-6 text-slate-400">Simulasi pelanggan virtual dengan 5 soal menghitung kembalian. XP dan nilai tersimpan di Neon. Tidak ada uang, stok, atau transaksi asli yang berubah.</p>
+        <a href="/simulasi" className="primary-button mt-4 inline-block px-5 py-3">Coba Simulasi Pelanggan Visual</a>
       </header>
       {error && <div role="alert" className="mb-5 rounded-2xl border border-rose-700 bg-rose-950 p-4 text-rose-200">{error}</div>}
       {!session && <section className="rounded-3xl border border-cyan-900 bg-slate-900 p-6">

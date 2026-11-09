@@ -1,0 +1,98 @@
+/* Accessible customer simulation. Contrast and layout intentionally simple. */
+.simulation-customer-card {
+  border: 1px solid rgba(8, 145, 178, .35);
+  background: #0f172a;
+  border-radius: 1.5rem;
+  padding: 1.25rem;
+}
+.simulation-customer-frame {
+  border-radius: 1.25rem;
+  background: linear-gradient(155deg, #164e63 0%, #172554 100%);
+  padding: 1.25rem;
+  text-align: center;
+  display: grid;
+  justify-items: center;
+}
+.simulation-speech {
+  position: relative;
+  background: #f8fafc;
+  color: #0f172a;
+  border-radius: 1.25rem;
+  padding: 1.25rem;
+  border: 2px solid #67e8f9;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, .15);
+}
+.simulation-speech::before {
+  content: '';
+  position: absolute;
+  top: -12px;
+  left: 48px;
+  width: 18px;
+  height: 18px;
+  background: #f8fafc;
+  transform: rotate(45deg);
+  border-top: 2px solid #67e8f9;
+  border-left: 2px solid #67e8f9;
+}
+.simulation-money-card {
+  min-width: 0;
+  border: 2px solid #475569;
+  background: #1e293b;
+  border-radius: 1rem;
+  padding: 1.25rem;
+}
+.simulation-money-card strong { overflow-wrap: anywhere; }
+.simulation-money-highlight {
+  background: #155e75;
+  border-color: #67e8f9;
+}
+.simulation-main-button {
+  min-height: 56px;
+  padding: .95rem 1.4rem;
+  font-size: 1.05rem;
+}
+.simulation-answer {
+  min-height: 86px;
+  padding: 1rem .55rem;
+  font-size: 1.1rem;
+  font-weight: 900;
+  border: 2px solid #22d3ee;
+  color: #f8fafc;
+  background: #164e63;
+  border-radius: 1rem;
+  overflow-wrap: anywhere;
+  transition: background-color .12s ease, border-color .12s ease;
+  cursor: pointer;
+}
+.simulation-answer:hover:not(:disabled) {
+  background: #0e7490;
+  border-color: #a5f3fc;
+}
+.simulation-answer:disabled, .simulation-main-button:disabled {
+  opacity: .6;
+  cursor: not-allowed;
+}
+.simulation-answer:focus-visible, .simulation-session-card:focus-visible,
+.simulation-main-button:focus-visible {
+  outline: 4px solid #facc15;
+  outline-offset: 3px;
+}
+.simulation-session-card {
+  display: grid;
+  gap: .5rem;
+  border: 1px solid #475569;
+  background: #020617;
+  padding: 1rem;
+  border-radius: 1rem;
+  text-align: left;
+  cursor: pointer;
+}
+.simulation-session-card:hover:not(:disabled) { border-color: #22d3ee; }
+.simulation-session-card:disabled { cursor: not-allowed; opacity: .65; }
+@media (max-width: 380px) {
+  .simulation-answer { font-size: 1rem; }
+  .simulation-money-card { padding: .9rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .simulation-answer { transition: none; }
+}

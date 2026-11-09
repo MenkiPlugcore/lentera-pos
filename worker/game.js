@@ -27,7 +27,7 @@ export async function handleGameApi({db,path,method,request}) {
   }
   if (path==='/api/game/sessions' && method==='GET') {
     const rows=await db.query(
-      'SELECT id,player_label AS "playerLabel",role,level_no AS level,score,experience AS xp,status,created_at AS "createdAt",completed_at AS "completedAt" FROM public.lentera_game_sessions ORDER BY created_at DESC LIMIT 50')
+      'SELECT s.id,s.player_label AS "playerLabel",s.role,s.level_no AS level,s.score,s.experience AS xp,s.status,s.created_at AS "createdAt",s.completed_at AS "completedAt",(SELECT count(*)::int FROM public.lentera_game_challenges c WHERE c.session_id=s.id AND c.resolved_at IS NOT NULL) AS "completedCount" FROM public.lentera_game_sessions s ORDER BY s.created_at DESC LIMIT 50')
     return response({ok:true,sessions:rows})
   }
   if (path==='/api/game/sessions' && method==='POST') {
@@ -35,7 +35,7 @@ export async function handleGameApi({db,path,method,request}) {
     const playerLabel=String(data?.playerLabel||'').trim()
     if(playerLabel.length<2||playerLabel.length>60)invalid('Nama panggilan 2–60 karakter.')
     const [session]=await db.query(
-      'INSERT INTO public.lentera_game_sessions(player_label,role) VALUES($1,\'kasir\') RETURNING id,player_label AS "playerLabel",role,level_no AS level,score,experience AS xp,status',
+      'INSERT INTO public.lentera_game_sessions(player_label,role) VALUES($1,\'kasir\') RETURNING id,player_label AS "playerLabel",role,level_no AS level,score,experience AS xp,status,0 AS "completedCount"',
       [playerLabel])
     return response({ok:true,session},201)
   }
@@ -46,11 +46,11 @@ export async function handleGameApi({db,path,method,request}) {
       'SELECT id,level_no,status FROM public.lentera_game_sessions WHERE id=$1::uuid',[sessionId])
     if(!session) return response({ok:false,error:'Sesi latihan tidak ditemukan.'},404)
     if(session.status!=='active') return response({ok:false,error:'Sesi latihan sudah selesai.'},409)
-    const [pending]=await db.query(
-      'SELECT * FROM public.lentera_game_challenges WHERE session_id=$1::uuid AND resolved_at IS NULL LIMIT 1',[sessionId])
-    if(pending) return response({ok:true,challenge:challengeOutput(pending)})
     const [progress]=await db.query(
       'SELECT count(*)::int solved FROM public.lentera_game_challenges WHERE session_id=$1::uuid AND resolved_at IS NOT NULL',[sessionId])
+    const [pending]=await db.query(
+      'SELECT * FROM public.lentera_game_challenges WHERE session_id=$1::uuid AND resolved_at IS NULL LIMIT 1',[sessionId])
+    if(pending) return response({ok:true,challenge:{...challengeOutput(pending),round:Math.min(5,progress.solved+1)}})
     if(progress.solved>=5) return response({ok:false,error:'Semua soal sesi ini sudah selesai.'},409)
     const menu=await db.query(
       'SELECT name,selling_price FROM public.products WHERE is_active AND selling_price BETWEEN 1000 AND 100000 ORDER BY name LIMIT 100')
@@ -66,7 +66,7 @@ export async function handleGameApi({db,path,method,request}) {
     const challenge=rows[0] || (await db.query(
       'SELECT * FROM public.lentera_game_challenges WHERE session_id=$1::uuid AND resolved_at IS NULL LIMIT 1',[sessionId]))[0]
     if(!challenge)return response({ok:false,error:'Sesi sedang diproses. Coba ulangi.'},409)
-    return response({ok:true,challenge:challengeOutput(challenge)})
+    return response({ok:true,challenge:{...challengeOutput(challenge),round:Math.min(5,progress.solved+1)}})
   }
   if(path==='/api/game/answer' && method==='POST'){
     const data=await body(request)

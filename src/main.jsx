@@ -12,6 +12,7 @@ import HardDeletePanel from './HardDeletePanel.jsx'
 import ReportsPanel from './ReportsPanel.jsx'
 import CafePage from './CafePage.jsx'
 import GamePage from './GamePage.jsx'
+import VisualCustomerPage from './simulation/VisualCustomerPage.jsx'
 
 function normalizePath(pathname) {
   const cleaned = String(pathname || '/').replace(/\/+$/, '')
@@ -91,6 +92,7 @@ function CloudGate({ children }) {
           <a href="/admin" className="rounded-lg border border-slate-700 px-3 py-1.5 hover:bg-slate-800">Admin</a>
           <a href="/cafe" className="rounded-lg border border-cyan-700 px-3 py-1.5 text-cyan-200 hover:bg-cyan-900">Smart Cafe</a>
           <a href="/game" className="rounded-lg border border-cyan-700 px-3 py-1.5 text-cyan-200 hover:bg-cyan-900">Mode Game</a>
+          <a href="/simulasi" className="rounded-lg border border-cyan-700 px-3 py-1.5 text-cyan-200 hover:bg-cyan-900">Pelanggan Virtual</a>
           <button type="button" className="rounded-lg border border-slate-700 px-3 py-1.5 hover:bg-slate-800" onClick={logout}>Keluar</button>
         </nav>
       </div>
@@ -114,6 +116,7 @@ function RootRoute() {
 
   if (path === '/cafe' && IS_CLOUD) return <CafePage />
   if (path === '/game' && IS_CLOUD) return <GamePage />
+  if (path === '/simulasi' && IS_CLOUD) return <VisualCustomerPage />
 
   if (path === '/admin') {
     return (
