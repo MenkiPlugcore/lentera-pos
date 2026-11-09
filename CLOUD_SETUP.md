@@ -57,3 +57,45 @@ Fase 4: pelanggan virtual, XP, level, latihan berhitung dan kembalian, bantuan v
 Fase 5: profil siswa, penilaian guru, laporan pembelajaran, dan backup otomatis.
 
 Mode game harus terisolasi dari tabel transaksi dan pengurangan stok nyata.
+
+## Cloudinary Media Upload (LENTERA POS 2.1)
+
+Koneksi Cloudinary yang terhubung memakai Cloud Name publik `dvds41ivm`, sudah dicatat sebagai
+`CLOUDINARY_CLOUD_NAME` di `wrangler.jsonc` (vars, bukan rahasia). Folder Cloudinary
+`lentera-pos/products` sudah dibuat.
+
+**Wajib diselesaikan di Cloudflare Worker `lentera-pos` sebelum upload gambar:**
+
+1. Buka Cloudinary Console > Settings > API Keys untuk melihat API Key dan API Secret milik environment `dvds41ivm`.
+2. Buka Cloudflare Dashboard > Workers & Pages > `lentera-pos` > Settings > Variables and Secrets.
+3. Buat **Secret** `CLOUDINARY_API_KEY` dan **Secret** `CLOUDINARY_API_SECRET`.
+   Jangan masukkan ke GitHub, `.env` yang ter-commit, `VITE_` variable, atau chat.
+4. Deploy ulang Worker yang sama dengan `npm run deploy:cloud` dari terminal di folder repository
+   (atau build command `npm run build:cloud` / deploy command `npx wrangler deploy` pada Cloudflare Git integration).
+5. Kunjungi `https://pos.cadera.site/api/health`, verifikasi `cloudinaryConfigured: true`.
+   Jika false, cek secret dan nama Worker. `databaseConfigured: true` hanya menunjukkan secret Neon ada.
+6. Login `https://pos.cadera.site/admin`, pilih produk > unggah foto > Simpan.
+   Di mode cloud, foto dikompresi di browser, dikirim ke Worker yang memeriksa sesi admin,
+   lalu Worker mengunggahnya ke Cloudinary dengan signature rahasia di sisi server.
+   Kolom `products.image_url` di Neon hanya menerima URL hasil Cloudinary untuk foto baru.
+
+**Migrasi foto lama tanpa menghapus produk:**
+
+- Database Neon semula memiliki 6 foto Base64 dan 1 foto dari URL eksternal.
+- Di `/admin` akan muncul panel **Cloudinary · Foto Produk**.
+- Pastikan `Cloudinary` tertulis terhubung; gunakan tombol **Migrasikan Foto Lama ke Cloudinary**.
+- Setiap foto Base64 diunggah satu per satu. URL baru disimpan dengan update kondisional
+  hanya jika upload berhasil; Base64 lama tetap ada jika unggahan gagal.
+- Foto URL pihak ketiga (bukan Base64) tidak otomatis disalin. Buka produknya lalu
+  pilih unggah ulang gambar yang memang boleh digunakan.
+- Jangan hapus backup Neon sebelum audit foto hasil migrasi. Menekan **Hapus Gambar**
+  pada produk menghapus referensi di Neon, bukan aset fisik di Cloudinary.
+
+**Keamanan:** Cloudinary API Secret tidak pernah dikirim ke browser. Upload harus lewat
+session admin yang sudah login; Cloudflare Worker melakukan signing dan validasi MIME,
+ukuran foto kompresi serta folder target. Lindungi endpoint dengan Cloudflare WAF rate
+limits jika aplikasi makin ramai. Mode lokal (`npm run dev`) tetap menyimpan Base64 di browser.
+
+Testing: `npm test` juga menjalankan tes signing dan validasi Cloudinary menggunakan
+mock (tanpa mengunggah foto nyata). Tes live upload perlu dijalankan setelah secret Worker
+ditambahkan. Konfigurasi Cloudinary tidak memengaruhi kasir/checkout saat belum aktif.

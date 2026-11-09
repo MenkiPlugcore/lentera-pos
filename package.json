@@ -10,7 +10,7 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "test": "node --test src/localPos.test.mjs",
+    "test": "node --test src/*.test.mjs",
     "build:cloud": "VITE_POS_MODE=cloud vite build",
     "deploy:cloud": "npm run build:cloud && wrangler deploy",
     "dev:cloud": "npm run build:cloud && wrangler dev"

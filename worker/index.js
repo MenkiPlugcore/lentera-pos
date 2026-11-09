@@ -55,14 +55,81 @@ function requiredText(value, label, min, max) {
   if (text.length < min || text.length > max) bad(label + ' harus ' + min + '-' + max + ' karakter.')
   return text
 }
-function productPayload(body) {
+
+const PRODUCT_MEDIA_FOLDER = 'lentera-pos/products'
+const INLINE_IMAGE_RE = /^data:image\/(?:jpeg|png|webp);base64,[A-Za-z0-9+/]+={0,2}$/i
+
+function cloudinaryConfigured(env) {
+  return Boolean(
+    /^[a-z0-9_-]+$/i.test(String(env.CLOUDINARY_CLOUD_NAME || '')) &&
+    env.CLOUDINARY_API_KEY && env.CLOUDINARY_API_SECRET
+  )
+}
+
+function verifyProductImageUrl(image, env, existingImage = null) {
+  if (!image) return null
+  if (existingImage && image === existingImage) return image // preserve legacy external link unchanged
+  if (image.length <= 250000 && INLINE_IMAGE_RE.test(image)) return image // legacy Base64
+  if (!env.CLOUDINARY_CLOUD_NAME) bad('Cloudinary belum dikonfigurasi.', 503)
+  try {
+    const parsed = new URL(image)
+    const prefix = '/' + env.CLOUDINARY_CLOUD_NAME + '/image/upload/'
+    const imagePath = parsed.pathname.slice(prefix.length)
+    if (parsed.protocol === 'https:' && parsed.hostname === 'res.cloudinary.com' &&
+        !parsed.username && !parsed.password && !parsed.port && !parsed.search && !parsed.hash &&
+        parsed.pathname.startsWith(prefix) &&
+        /^v\d+\/lentera-pos\/products\/[a-zA-Z0-9_./%-]+$/.test(imagePath) &&
+        !imagePath.includes('..') && image.length <= 800) return image
+  } catch { /* not a Cloudinary URL */ }
+  bad('Gambar harus berasal dari Cloudinary LENTERA POS atau data lama yang valid.')
+}
+
+async function cloudinaryUpload(env, image) {
+  if (!cloudinaryConfigured(env)) {
+    bad('Cloudinary belum siap. Atur CLOUDINARY_API_KEY dan CLOUDINARY_API_SECRET pada Worker.', 503)
+  }
+  if (typeof image !== 'string' || image.length > 250000 || !INLINE_IMAGE_RE.test(image)) {
+    bad('Foto tidak valid. Pilih JPEG/PNG/WebP maksimal sekitar 180 KB setelah kompresi.')
+  }
+  const timestamp = String(Math.floor(Date.now() / 1000))
+  const fields = {
+    folder: PRODUCT_MEDIA_FOLDER,
+    overwrite: 'false',
+    timestamp,
+    unique_filename: 'true',
+  }
+  const toSign = Object.keys(fields).sort().map(key => key + '=' + fields[key]).join('&') +
+    env.CLOUDINARY_API_SECRET
+  const digest = await crypto.subtle.digest('SHA-1', new TextEncoder().encode(toSign))
+  const signature = [...new Uint8Array(digest)].map(v => v.toString(16).padStart(2,'0')).join('')
+  const form = new FormData()
+  form.set('file',image)
+  for (const [key,value] of Object.entries(fields)) form.set(key,value)
+  form.set('api_key',env.CLOUDINARY_API_KEY)
+  form.set('signature',signature)
+  let response
+  try {
+    response = await fetch(
+      'https://api.cloudinary.com/v1_1/' + encodeURIComponent(env.CLOUDINARY_CLOUD_NAME) + '/image/upload',
+      { method:'POST',body:form,signal:AbortSignal.timeout(20000) })
+  } catch {
+    bad('Tidak bisa menghubungi Cloudinary. Coba lagi.', 502)
+  }
+  if (!response.ok) {
+    console.error('Cloudinary upload rejected',response.status)
+    bad('Upload Cloudinary gagal (' + response.status + '). Periksa Cloud Name, API Key dan API Secret.', 502)
+  }
+  const result = await response.json()
+  const url = verifyProductImageUrl(String(result.secure_url || ''),env)
+  return { imageUrl:url, publicId:result.public_id }
+}
+
+function productPayload(body, env, existingImage = null) {
   if (!body || typeof body !== 'object' || Array.isArray(body)) bad('Data produk tidak valid.')
   const external = String(body.barcode || '').trim()
   if (external.length > 100) bad('Barcode maksimal 100 karakter.')
   const image = String(body.imageUrl || '').trim() || null
-  if (image && (image.length > 250000 || !/^data:image\/(?:jpeg|png|webp);base64,/i.test(image))) {
-    bad('Gambar harus JPEG, PNG, atau WebP kecil.')
-  }
+  const validatedImage = verifyProductImageUrl(image,env,existingImage)
   const category = body.categoryId || null
   if (category && !uuidRE.test(category)) bad('Kategori tidak valid.')
   const barcodeType = String(body.barcodeType || 'CODE128')
@@ -73,7 +140,7 @@ function productPayload(body) {
     selling: money(body.sellingPrice, 'Harga jual'),
     stock: nonnegativeInteger(body.stock, 'Stok'),
     minimum: nonnegativeInteger(body.minimumStock, 'Stok minimum'),
-    image, description: String(body.description || '').slice(0, 1000),
+    image:validatedImage, description: String(body.description || '').slice(0, 1000),
     external, barcodeType, active: body.isActive !== false,
   }
 }
@@ -124,7 +191,7 @@ async function handleApi(request, env) {
   const path = url.pathname.replace(/\/+$/, '') || '/'
   const method = request.method.toUpperCase()
   if (path === '/api/health' && method === 'GET') {
-    return json({ ok: true, mode: 'cloud', databaseConfigured: Boolean(env.DATABASE_URL) })
+    return json({ ok: true, mode: 'cloud', databaseConfigured: Boolean(env.DATABASE_URL), cloudinaryConfigured: cloudinaryConfigured(env) })
   }
   if (!env.DATABASE_URL) return fail('DATABASE_URL belum diatur di Worker.', 503)
   const db = neon(env.DATABASE_URL)
@@ -175,6 +242,41 @@ async function handleApi(request, env) {
   if (!account) return fail('Silakan login terlebih dahulu.', 401)
   if (account.role !== 'admin') return fail('Akses admin diperlukan.', 403)
 
+
+  if (path === '/api/media/status' && method === 'GET') {
+    const legacy = await db.query(
+      "SELECT id FROM public.products WHERE image_url LIKE 'data:image/%' ORDER BY created_at LIMIT 500"
+    )
+    const [counts] = await db.query(
+      "SELECT COUNT(*) FILTER (WHERE image_url LIKE 'data:image/%')::int legacy_count, COUNT(*) FILTER (WHERE image_url LIKE 'https://res.cloudinary.com/%')::int cloud_count, COUNT(*) FILTER (WHERE image_url LIKE 'https://%' AND image_url NOT LIKE 'https://res.cloudinary.com/%')::int external_count FROM public.products"
+    )
+    return json({ ok:true, cloudName:env.CLOUDINARY_CLOUD_NAME || null,
+      configured:cloudinaryConfigured(env), legacyCount:counts.legacy_count,
+      cloudCount:counts.cloud_count, externalCount:counts.external_count, legacyIds:legacy.map(p=>p.id) })
+  }
+  if (path === '/api/media/upload' && method === 'POST') {
+    const payload = await bodyJson(request)
+    const result = await cloudinaryUpload(env,payload?.image)
+    return json({ ok:true,...result },201)
+  }
+  if (path === '/api/media/migrate' && method === 'POST') {
+    const payload = await bodyJson(request)
+    const id = String(payload?.productId || '')
+    if (!uuidRE.test(id)) bad('ID produk tidak valid.')
+    const [product] = await db.query(
+      "SELECT id,image_url FROM public.products WHERE id=$1::uuid", [id])
+    if (!product) return fail('Produk tidak ditemukan.',404)
+    if (!product.image_url?.startsWith('data:image/')) {
+      return json({ok:true,skipped:true})
+    }
+    const {imageUrl}=await cloudinaryUpload(env,product.image_url)
+    const changed=await db.query(
+      "UPDATE public.products SET image_url=$1,updated_at=now() WHERE id=$2::uuid AND image_url=$3 RETURNING id",
+      [imageUrl,id,product.image_url])
+    if (!changed.length) return fail('Gambar telah diubah saat migrasi. Ulangi pemuatan data.',409)
+    return json({ok:true,migrated:true,imageUrl})
+  }
+
   if (path === '/api/dashboard' && method === 'GET') {
     const [info] = await db.query(
       "SELECT (SELECT count(*) FROM public.products WHERE is_active) products, (SELECT count(*) FROM public.categories) categories, (SELECT count(*) FROM public.transactions WHERE status='completed') transactions, (SELECT count(*) FROM public.products WHERE is_active AND stock<=minimum_stock) low_stock, (SELECT count(*) FROM public.lentera_game_sessions) game_sessions")
@@ -203,7 +305,7 @@ async function handleApi(request, env) {
       return json({ ok: true, products: rows.map(normalizedProduct) })
     }
     if (method === 'POST') {
-      const product = await insertProduct(db, productPayload(await bodyJson(request)))
+      const product = await insertProduct(db, productPayload(await bodyJson(request),env))
       return json({ ok: true, product }, 201)
     }
   }
@@ -211,7 +313,9 @@ async function handleApi(request, env) {
   if (productMatch && uuidRE.test(productMatch[1])) {
     const id = productMatch[1]
     if (method === 'PATCH') {
-      const p = productPayload(await bodyJson(request))
+      const [existing] = await db.query('SELECT image_url FROM public.products WHERE id=$1::uuid',[id])
+      if (!existing) return fail('Produk tidak ditemukan.',404)
+      const p = productPayload(await bodyJson(request),env,existing.image_url)
       const [row] = await db.query(
         "UPDATE public.products SET name=$1,category_id=$2::uuid,purchase_price=$3,selling_price=$4,stock=$5,minimum_stock=$6,image_url=$7,description=$8,barcode=COALESCE($9,sku),barcode_generated=($9 IS NULL),barcode_type=$10,is_active=$11,updated_at=now() WHERE id=$12::uuid RETURNING *",
         [p.name,p.category,p.purchase,p.selling,p.stock,p.minimum,p.image,p.description,p.external||null,p.barcodeType,p.active,id])
@@ -319,7 +423,7 @@ async function handleApi(request, env) {
         stock:old.stock, minimumStock:old.minimum_stock, barcode:old.barcode_generated ? '' : old.barcode,
         barcodeType:old.barcode_type, imageUrl:old.image_url, description:old.description,
         isActive:old.is_active,
-      })
+      },env)
       await insertProduct(db,p)
       productsAdded++
     }
@@ -347,3 +451,6 @@ export default {
     }
   },
 }
+
+// Pure helpers exported for automated verification of the Cloudinary upload contract.
+export { cloudinaryUpload, verifyProductImageUrl }

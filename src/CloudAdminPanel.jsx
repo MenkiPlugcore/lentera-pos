@@ -7,12 +7,42 @@ export default function CloudAdminPanel() {
   const [notice, setNotice] = useState('')
   const [busy, setBusy] = useState(false)
   const [localStats, setLocalStats] = useState(null)
+  const [media, setMedia] = useState(null)
+  const [migrating, setMigrating] = useState(false)
+  const [mediaNotice, setMediaNotice] = useState('')
   const picker = useRef(null)
 
   useEffect(() => {
     cloudApiFetch('/api/dashboard').then(result => setStats(result.stats)).catch(error => setNotice(error.message))
+    cloudApiFetch('/api/media/status').then(result => setMedia(result)).catch(error => setMediaNotice(error.message))
     try { setLocalStats(getLocalStats()) } catch { /* belum ada data lokal */ }
   }, [])
+
+  async function migrateMedia() {
+    if (!media?.configured || !media.legacyIds?.length) return
+    if (!window.confirm('Pindahkan ' + media.legacyCount + ' foto Base64 dari Neon ke Cloudinary? Foto lama hanya diganti URL setelah upload berhasil.')) return
+    setMigrating(true)
+    setMediaNotice('Menyiapkan migrasi...')
+    let completed = 0
+    try {
+      for (const productId of media.legacyIds) {
+        await cloudApiFetch('/api/media/migrate', {
+          method: 'POST',
+          body: JSON.stringify({ productId }),
+        })
+        completed++
+        setMediaNotice('Memindahkan foto ' + completed + ' dari ' + media.legacyIds.length + '...')
+      }
+      const latest = await cloudApiFetch('/api/media/status')
+      setMedia(latest)
+      setMediaNotice('Selesai: ' + completed + ' foto diproses. Muat ulang halaman untuk melihat gambar terbaru.')
+    } catch (error) {
+      setMediaNotice('Migrasi berhenti setelah ' + completed + ' foto. ' + error.message + '. Data foto lama yang gagal diproses tetap ada.')
+      try { setMedia(await cloudApiFetch('/api/media/status')) } catch { /* no-op */ }
+    } finally {
+      setMigrating(false)
+    }
+  }
 
   function downloadLocalBackup() {
     const data = exportBackup()
@@ -70,6 +100,27 @@ export default function CloudAdminPanel() {
             <p className="mt-1 text-2xl font-black">{value ?? '—'}</p>
           </div>
         ))}
+      </div>
+      <div className="mt-5 border-t border-slate-800 pt-4">
+        <h3 className="font-black">Cloudinary · Foto Produk</h3>
+        <p className="mt-1 text-sm text-slate-400">
+          {media
+            ? (media.configured
+                ? 'Terhubung ke Cloudinary ' + media.cloudName + '. Foto baru disimpan di Cloudinary; Neon menyimpan URL saja.'
+                : 'Cloudinary belum lengkap. Tambahkan CLOUDINARY_API_KEY dan CLOUDINARY_API_SECRET di Secrets Worker.')
+            : 'Memeriksa konfigurasi penyimpanan gambar...'}
+        </p>
+        {media && <p className="mt-2 text-sm text-slate-300">
+          {media.cloudCount} foto Cloudinary · {media.legacyCount} foto Base64 lama
+          {media.externalCount ? ' · ' + media.externalCount + ' foto URL luar (unggah ulang manual)' : ''}
+        </p>}
+        <div className="mt-3 flex flex-wrap items-center gap-2">
+          <button type="button" className="secondary-button" disabled={!media?.configured || !media?.legacyIds?.length || migrating || busy} onClick={migrateMedia}>
+            {migrating ? 'Memindahkan foto...' : 'Migrasikan Foto Lama ke Cloudinary'}
+          </button>
+          {media?.legacyCount > 0 && <span className="text-xs text-slate-500">Tidak menghapus produk atau transaksi.</span>}
+        </div>
+        {mediaNotice && <p role="status" className="mt-2 text-sm text-cyan-300">{mediaNotice}</p>}
       </div>
       <div className="mt-5 border-t border-slate-800 pt-4">
         <h3 className="font-black">Migrasi menu dari browser lama</h3>

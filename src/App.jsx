@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import ProductBarcodeActions from './ProductBarcodeActions.jsx'
 import LocalBackupPanel from './LocalBackupPanel.jsx'
 import CloudAdminPanel from './CloudAdminPanel.jsx'
-import { IS_CLOUD } from './cloudApi.js'
+import { IS_CLOUD, cloudApiFetch } from './cloudApi.js'
 import { apiFetch, imageFileToDataUrl } from './localPos.js'
 
 const emptyProduct = {
@@ -65,6 +65,7 @@ function ProductManager() {
   const [categories, setCategories] = useState([])
   const [form, setForm] = useState(emptyProduct)
   const [editingId, setEditingId] = useState(null)
+  const [pendingCloudImage, setPendingCloudImage] = useState(false)
   const [search, setSearch] = useState('')
   const [categoryName, setCategoryName] = useState('')
   const [loading, setLoading] = useState(true)
@@ -101,11 +102,13 @@ function ProductManager() {
 
   function resetForm() {
     setEditingId(null)
+    setPendingCloudImage(false)
     setForm(emptyProduct)
   }
 
   function editProduct(product) {
     setEditingId(product.id)
+    setPendingCloudImage(false)
     setForm({
       name: product.name || '',
       categoryId: product.category_id || '',
@@ -136,6 +139,13 @@ function ProductManager() {
     }
 
     try {
+      if (IS_CLOUD && pendingCloudImage && payload.imageUrl) {
+        const upload = await cloudApiFetch('/api/media/upload', {
+          method: 'POST',
+          body: JSON.stringify({ image:payload.imageUrl }),
+        })
+        payload.imageUrl = upload.imageUrl
+      }
       if (editingId) {
         await apiFetch(`/api/products/${editingId}`, { method: 'PATCH', body: JSON.stringify(payload) })
         setNotice({ tone: 'success', text: 'Produk berhasil diperbarui.' })
@@ -186,11 +196,15 @@ function ProductManager() {
 
   async function uploadImage(event) {
     const file = event.target.files?.[0]
+    event.target.value = ''
     if (!file) return
     try {
       const data = await imageFileToDataUrl(file)
       setForm((current) => ({ ...current, imageUrl: data }))
-      setNotice({ tone: 'success', text: 'Gambar lokal siap disimpan bersama produk.' })
+      setPendingCloudImage(IS_CLOUD)
+      setNotice({ tone: 'success', text: IS_CLOUD
+        ? 'Foto dikompresi dan siap diunggah ke Cloudinary saat produk disimpan.'
+        : 'Gambar lokal siap disimpan bersama produk.' })
     } catch (error) {
       setNotice({ tone: 'error', text: error.message })
     }
@@ -227,11 +241,14 @@ function ProductManager() {
             </div>
             <Field label="Barcode / Kode Eksternal" hint="Kosongkan agar otomatis memakai LP000001, LP000002, dst."><input className="input font-mono" value={form.barcode} onChange={(event) => setForm({ ...form, barcode: event.target.value })} placeholder="Kosong = otomatis" /></Field>
             {form.barcode && <Field label="Tipe Barcode"><select className="input" value={form.barcodeType} onChange={(event) => setForm({ ...form, barcodeType: event.target.value })}><option value="CODE128">Code 128</option><option value="EAN13">EAN-13</option><option value="UPC">UPC</option><option value="OTHER">Lainnya</option></select></Field>}
-            <Field label="Foto Produk Lokal" hint="Opsional. Gambar akan dikompresi dan disimpan di browser.">
+            <Field label={IS_CLOUD ? 'Foto Produk · Cloudinary' : 'Foto Produk Lokal'}
+              hint={IS_CLOUD
+                ? 'Opsional. Foto dikompresi di browser, diunggah ke Cloudinary saat Simpan, lalu hanya URL-nya disimpan di Neon.'
+                : 'Opsional. Gambar akan dikompresi dan disimpan di browser.'}>
               <input className="input" type="file" accept="image/*" onChange={uploadImage} />
               {form.imageUrl && <div className="mt-2 flex items-center gap-3">
                 <img src={form.imageUrl} alt="Pratinjau produk" className="h-16 w-16 rounded-lg object-cover" />
-                <button type="button" className="table-button" onClick={() => setForm((current) => ({ ...current, imageUrl: '' }))}>Hapus Gambar</button>
+                <button type="button" className="table-button" onClick={() => { setForm((current) => ({ ...current, imageUrl: '' })); setPendingCloudImage(false) }}>Hapus Gambar</button>
               </div>}
             </Field>
             <Field label="Keterangan"><textarea className="input min-h-20 resize-y" value={form.description} onChange={(event) => setForm({ ...form, description: event.target.value })} /></Field>
