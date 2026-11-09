@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useState } from 'react'
 import { cloudApiFetch } from '../cloudApi.js'
-import CustomerAvatar from './CustomerAvatar.jsx'
+import StoreScene from './StoreScene.jsx'
 import MoneyTray from './MoneyTray.jsx'
 import { canBuildExactChange } from './cashMoney.js'
 import { changeChoices, customerDialogue, customerForChallenge, formatRupiah } from './customerProfiles.js'
 import './simulation.css'
+import './arcade.css'
 
 const STATUS = {active: 'Sedang latihan', completed: 'Selesai'}
 const post = (path, data) => cloudApiFetch(path, { method: 'POST', body: JSON.stringify(data) })
@@ -138,241 +139,210 @@ export default function VisualCustomerPage() {
   }
 
   return (
-    <main className="min-h-screen bg-slate-950 px-4 py-8 text-slate-100">
-      <div className="mx-auto max-w-6xl">
-        <header className="mb-6">
-          <p className="text-xs font-black uppercase tracking-[0.2em] text-cyan-300">
-            LENTERA POS · Game Edukasi
-          </p>
-          <h1 className="mt-2 text-3xl font-black sm:text-4xl">Simulasi Pelanggan Visual</h1>
-          <p className="mt-2 text-sm leading-6 text-slate-400">
-            Belajar menerima pesanan dan menghitung kembalian bersama pelanggan virtual.
-            Tanpa batas waktu, tanpa mengurangi stok atau pendapatan toko.
-          </p>
-          <div className="mt-4 flex flex-wrap gap-2">
-            <a href="/game" className="secondary-button">Kasir Pintar</a>
-            <a href="/cafe" className="secondary-button">Smart Cafe</a>
+    <main className="arcade-page">
+      <div className="arcade-container">
+        <header className="arcade-page-heading">
+          <div>
+            <p className="arcade-kicker">LENTERA POS · SIMULASI INTERAKTIF</p>
+            <h1>Simulasi Pelanggan</h1>
+            <p>Jadilah kasir, layani pelanggan, dan siapkan uang kembalian. Tanpa timer atau transaksi sungguhan.</p>
           </div>
+          <a href="/" className="arcade-back-link">← Beranda</a>
         </header>
 
         {error && (
-          <p role="alert" className="mb-4 rounded-2xl border border-rose-800 bg-rose-950 p-4 font-semibold text-rose-200">
-            {error}
-          </p>
+          <div className="arcade-error" role="alert">
+            <strong>Ada kendala:</strong> {error}
+          </div>
         )}
 
         {!session ? (
-          <>
-            <section className="rounded-3xl border border-cyan-900 bg-slate-900 p-5 sm:p-7">
-              <div className="grid items-center gap-6 md:grid-cols-[220px_1fr]">
-                <div className="simulation-customer-frame">
-                  <CustomerAvatar customer={customerForChallenge('welcome')} size={190}/>
-                </div>
-                <div>
-                  <h2 className="text-2xl font-black">Selamat datang di toko!</h2>
-                  <p className="mt-2 text-slate-300">
-                    Satu sesi terdiri dari 5 pelanggan. Susun uang kembalian dengan
-                    memilih pecahan rupiah, lalu kumpulkan poin. Guru dapat mendampingi setiap langkah.
-                  </p>
-                  <label className="mt-5 block max-w-md font-bold">
-                    Nama panggilan peserta
-                    <input
-                      className="input mt-2 w-full text-lg"
-                      value={nickname}
-                      maxLength={60}
-                      onChange={event => setNickname(event.target.value)}
-                      placeholder="Contoh: Siswa A"
-                      autoComplete="off"
-                    />
-                  </label>
-                  <p className="mt-2 text-xs text-slate-400">Gunakan nama panggilan saja, tidak perlu data pribadi.</p>
-                  <button type="button" onClick={start} disabled={busy || !guestReady || nickname.trim().length < 2}
-                    className="primary-button simulation-main-button mt-5">
-                    {busy ? 'Menyiapkan toko...' : 'Mulai Simulasi'}
-                  </button>
-                </div>
+          <div className="arcade-lobby">
+            <div className="arcade-lobby-stage">
+              <StoreScene customer={customerForChallenge('welcome')} mood="happy"/>
+              <div className="arcade-lobby-stage-label">SELAMAT DATANG DI TOKO LENTERA!</div>
+            </div>
+            <section className="arcade-lobby-panel" aria-labelledby="arcade-start-title">
+              <div className="arcade-lobby-icon" aria-hidden="true">✦</div>
+              <span className="arcade-panel-kicker">SIAP MENJADI KASIR?</span>
+              <h2 id="arcade-start-title">Ayo layani 5 pelanggan!</h2>
+              <p>Ikuti pesanan pelanggan, hitung kembalian, lalu pilih uang kertas dan koin. Setiap jawaban benar menambah poin dan XP.</p>
+              <label className="arcade-label" htmlFor="arcade-nickname">Nama panggilan pemain</label>
+              <input id="arcade-nickname" className="arcade-input" value={nickname}
+                maxLength={60} placeholder="Misalnya: Siswa A" autoComplete="off"
+                onChange={event => setNickname(event.target.value)}/>
+              <p className="arcade-input-caption">Cukup nama panggilan, tidak perlu nama lengkap.</p>
+              <button type="button" className="arcade-primary-button"
+                disabled={busy || !guestReady || nickname.trim().length < 2}
+                onClick={start}>
+                {busy ? 'Menyiapkan game...' : 'Mulai Bermain →'}
+              </button>
+              <div className="arcade-lobby-guarantee">✓ Tidak mengurangi stok & omzet asli</div>
+              <div className="arcade-lobby-history">
+                <h3>Lanjutkan permainan sebelumnya</h3>
+                {sessions.length ? (
+                  <div className="arcade-session-list">
+                    {sessions.map(item => (
+                      <button type="button" className="arcade-session" key={item.id}
+                        disabled={busy} onClick={() => resume(item)}>
+                        <span><strong>{item.playerLabel}</strong><small>{STATUS[item.status] || item.status} · Level {item.level}</small></span>
+                        <span className="arcade-session-points">{item.score || 0} poin →</span>
+                      </button>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="arcade-history-empty">Belum ada permainan tersimpan pada perangkat ini.</p>
+                )}
               </div>
             </section>
-            <section className="mt-6 rounded-3xl border border-slate-800 bg-slate-900 p-5">
-              <h2 className="text-xl font-black">Lanjutkan Sesi Sebelumnya</h2>
-              <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                {sessions.map(item => (
-                  <button key={item.id} type="button" disabled={busy}
-                    className="simulation-session-card"
-                    onClick={() => resume(item)}>
-                    <span className="font-black">{item.playerLabel}</span>
-                    <span className="text-sm text-slate-300">
-                      {STATUS[item.status] || item.status} · {item.score} poin · Level {item.level}
-                    </span>
-                    <span className="text-sm text-cyan-300">
-                      {item.status === 'completed' ? 'Lihat hasil' : 'Lanjutkan latihan'}
-                    </span>
-                  </button>
-                ))}
-                {!sessions.length && <p className="text-sm text-slate-400">Belum ada sesi latihan.</p>}
-              </div>
-            </section>
-          </>
+          </div>
         ) : (
           <>
-            <section className="mb-5 flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-slate-800 bg-slate-900 p-4">
-              <div>
-                <p className="text-xs text-cyan-300">{session.playerLabel}</p>
-                <h2 className="text-xl font-black">Level {session.level || 1} · {session.score || 0} poin</h2>
-                <p className="mt-1 text-sm text-slate-400">XP {session.xp || 0}</p>
-              </div>
-              <div className="flex items-center gap-3">
-                <div className="min-w-36">
-                  <p className="mb-2 text-sm font-bold">Pelanggan {Math.min(round, 5)} dari 5</p>
-                  <div className="h-3 overflow-hidden rounded-full bg-slate-700"
-                    role="progressbar" aria-label="Progres latihan"
-                    aria-valuenow={session.status === 'completed' ? 5 : completedCount}
-                    aria-valuemin={0} aria-valuemax={5}>
-                    <div className="h-full rounded-full bg-cyan-500"
-                      style={{ width: ((session.status === 'completed' ? 5 : completedCount) / 5 * 100) + '%' }}/>
-                  </div>
+            <section className="arcade-stage" aria-label="Area permainan kasir">
+              <StoreScene customer={customer} mood={session.status === 'completed' ? 'happy' : mood}/>
+              <div className="arcade-scene-vignette" aria-hidden="true"/>
+
+              <div className="arcade-hud">
+                <div className="arcade-hud-player">
+                  <span className="arcade-hud-player-label">PEMAIN</span>
+                  <strong>{session.playerLabel}</strong>
                 </div>
-                <button type="button" className="secondary-button" onClick={leave}>Keluar</button>
+                <div className="arcade-hud-score" aria-label={'Level '+(session.level || 1)+', '+(session.score || 0)+' poin, '+(session.xp || 0)+' XP'}>
+                  <strong>Level {session.level || 1} · {session.score || 0} poin</strong>
+                  <span>XP {session.xp || 0}</span>
+                </div>
+                <div className="arcade-hud-right">
+                  <div className="arcade-hud-progress">
+                    <span>Pelanggan {Math.min(round, 5)} dari 5</span>
+                    <div className="arcade-progress-track" role="progressbar"
+                      aria-label="Pelanggan yang sudah selesai dilayani" aria-valuemin={0} aria-valuemax={5}
+                      aria-valuenow={session.status === 'completed' ? 5 : completedCount}>
+                      <span style={{width:((session.status === 'completed' ? 5 : completedCount) / 5 * 100)+'%'}}/>
+                    </div>
+                  </div>
+                  <button type="button" className="arcade-hud-exit" onClick={leave}>Keluar</button>
+                </div>
               </div>
+
+              {session.status === 'completed' ? (
+                <div className="arcade-finish" role="status">
+                  <div className="arcade-finish-stars" aria-hidden="true">★ ★ ★</div>
+                  <h2>Hebat! Semua pelanggan sudah dilayani.</h2>
+                  <p>Skor akhir <strong>{session.score || 0} poin</strong> · XP {session.xp || 0}</p>
+                  <button type="button" className="arcade-primary-button" onClick={leave}>Main Lagi</button>
+                </div>
+              ) : !challenge ? (
+                <div className="arcade-loading" role="status">Pelanggan sedang datang...</div>
+              ) : (
+                <>
+                  <div className="arcade-dialogue" role="status" aria-live="polite">
+                    <span className="arcade-dialogue-name">{customer.name} · {customer.label}</span>
+                    <p>{customerDialogue(customer, challenge, feedback)}</p>
+                  </div>
+                  <div className="arcade-order-board">
+                    <div className="arcade-order-label">LANGKAH 1 · LIHAT PESANAN</div>
+                    <div className="arcade-order-title">{challenge.quantity} × {challenge.itemName}</div>
+                    <p>Harga satuan: {formatRupiah(challenge.unitPrice)}</p>
+                    <div className="arcade-order-money">
+                      <div><span>Total belanja</span><strong>{formatRupiah(challenge.totalAmount)}</strong></div>
+                      <div><span>Uang diterima</span><strong>{formatRupiah(challenge.paidAmount)}</strong></div>
+                    </div>
+                    <a className="arcade-order-jump" href="#arcade-money">Siapkan kembalian ↓</a>
+                  </div>
+                  {feedback?.correct && (
+                    <div className="arcade-reward" aria-live="polite">★ Jawaban benar!</div>
+                  )}
+                </>
+              )}
+              <div className="arcade-scene-caption">SUDUT PANDANG KASIR · TOKO LENTERA</div>
             </section>
 
-            {session.status === 'completed' ? (
-              <section className="rounded-3xl border border-emerald-700 bg-slate-900 p-8 text-center">
-                <CustomerAvatar customer={customer} mood="happy" size={190}/>
-                <h2 className="mt-3 text-3xl font-black text-emerald-300">Latihan Selesai!</h2>
-                <p className="mt-3 text-lg">Kamu mendapatkan {session.score} poin dan {session.xp} XP.</p>
-                <p className="mt-2 text-slate-300">Terima kasih sudah melayani 5 pelanggan.</p>
-                <button type="button" className="primary-button simulation-main-button mt-6"
-                  onClick={leave}>Kembali ke Daftar</button>
-              </section>
-            ) : !challenge ? (
-              <p role="status" className="rounded-2xl bg-slate-900 p-6">Pelanggan sedang datang...</p>
-            ) : (
-              <div className="grid gap-5 lg:grid-cols-[minmax(280px,0.9fr)_minmax(0,1.2fr)]">
-                <section className="simulation-customer-card">
-                  <p className="text-xs font-black uppercase tracking-widest text-cyan-300">Pelanggan Datang</p>
-                  <div className="simulation-customer-frame mt-4">
-                    <CustomerAvatar customer={customer}
-                      mood={mood} size={228}/>
-                    <p className="mt-2 text-xl font-black">{customer.name}</p>
-                    <p className="text-sm text-slate-300">{customer.label}</p>
-                  </div>
-                  <div className="simulation-speech mt-5" role="status" aria-live="polite">
-                    <strong className="block text-base">{customer.name} berkata:</strong>
-                    <p className="mt-2 text-lg leading-7">
-                      {customerDialogue(customer, challenge, feedback)}
-                    </p>
-                  </div>
-                </section>
-                <section className="rounded-3xl border border-slate-800 bg-slate-900 p-5 sm:p-6">
-                  <p className="text-xs font-black uppercase tracking-widest text-cyan-300">Langkah 1 · Lihat Pesanan</p>
-                  <h2 className="mt-2 text-2xl font-black">{challenge.quantity} × {challenge.itemName}</h2>
-                  <p className="mt-2 text-sm text-slate-300">Harga satuan: {formatRupiah(challenge.unitPrice)}</p>
-
-                  <div className="mt-5 grid gap-3 sm:grid-cols-2">
-                    <div className="simulation-money-card">
-                      <p className="text-sm font-bold text-slate-300">Total belanja</p>
-                      <strong className="mt-2 block text-2xl text-white">{formatRupiah(challenge.totalAmount)}</strong>
-                    </div>
-                    <div className="simulation-money-card simulation-money-highlight">
-                      <p className="text-sm font-bold text-cyan-100">Uang pelanggan</p>
-                      <strong className="mt-2 block text-2xl text-white">{formatRupiah(challenge.paidAmount)}</strong>
-                    </div>
+            {session.status === 'active' && challenge && (
+              <section id="arcade-money" className="arcade-workspace" aria-label="Area menghitung dan menyerahkan kembalian">
+                <div className="arcade-instructions">
+                  <span className="arcade-panel-kicker">LANGKAH 2 · HITUNG KEMBALIAN</span>
+                  <h2>Siapkan uang pelanggan</h2>
+                  <p>Pilih uang kertas atau koin, lalu serahkan jumlah yang menurutmu tepat.</p>
+                  <div className="arcade-calc-card">
+                    <span>Uang pelanggan</span>
+                    <strong>{formatRupiah(challenge.paidAmount)}</strong>
+                    <span>Dikurangi total belanja</span>
+                    <strong>− {formatRupiah(challenge.totalAmount)}</strong>
+                    <div className="arcade-calc-divider"/>
+                    <span>Uang kembalian</span>
+                    <strong className="arcade-calc-question">?</strong>
                   </div>
 
-                  <p className="mt-7 text-xs font-black uppercase tracking-widest text-cyan-300">
-                    Langkah 2 · Siapkan Uang Kembalian
-                  </p>
-                  <h3 className="mt-2 text-xl font-black">Berapa uang kembalian?</h3>
+                  <button type="button" className="arcade-hint-toggle" onClick={() => setHint(value => !value)}
+                    aria-expanded={hint} aria-controls="arcade-hint-content">
+                    {hint ? 'Sembunyikan petunjuk' : 'Butuh bantuan menghitung?'}
+                  </button>
+                  {hint && <div id="arcade-hint-content" className="arcade-hint" role="note">
+                    <strong>Petunjuk:</strong> Kurangi uang yang diberikan pelanggan dengan harga belanja. Mulai dari uang besar, lalu gunakan koin untuk nilai kecil. Tidak perlu terburu-buru.
+                  </div>}
+                  {feedback?.correct === false && !challenge.resolved && (
+                    <div className="arcade-tryagain" role="status">
+                      Belum tepat, coba periksa lagi. Percobaan {feedback.attemptCount} dari 3.
+                    </div>
+                  )}
                   {!challenge.resolved && (
-                    <div className="simulation-mode-switch" role="group" aria-label="Cara menjawab soal">
-                      <button type="button" aria-pressed={inputMode === 'cash'}
-                        className="simulation-mode-button" onClick={() => setInputMode('cash')}
-                        disabled={busy || !canBuildExactChange(Number(challenge.paidAmount) - Number(challenge.totalAmount))}>
-                        Susun Uang
-                      </button>
-                      <button type="button" aria-pressed={inputMode === 'choices'}
-                        className="simulation-mode-button" onClick={() => setInputMode('choices')} disabled={busy}>
-                        Pilihan Cepat
-                      </button>
-                    </div>
+                    <div className="arcade-attempts">Percobaan {challenge.attempts || 0} dari 3 · Tidak ada batas waktu</div>
                   )}
-                  {!challenge.resolved && !canBuildExactChange(Number(challenge.paidAmount) - Number(challenge.totalAmount)) && (
-                    <p className="mt-3 text-sm text-amber-200">
-                      Nominal soal ini tidak cocok dengan pecahan latihan. Gunakan Pilihan Cepat.
-                    </p>
-                  )}
+                </div>
+
+                <div className="arcade-answer-area">
                   {challenge.resolved ? (
-                    <div className="mt-4 rounded-2xl border border-emerald-700 bg-emerald-950 p-5">
-                      <p className="font-bold text-emerald-200">
-                        {feedback?.correct ? 'Hebat, jawabanmu benar!' : 'Latihan soal ini sudah selesai.'}
-                      </p>
-                      <p className="mt-2 text-lg font-black">
-                        Jawaban: {formatRupiah(challenge.expectedChange)}
-                      </p>
-                      <p className="mt-1 text-sm text-emerald-100">
-                        {feedback?.correct ? 'Poin bertambah. Pelanggan senang!' : 'Kita coba pelanggan selanjutnya, ya.'}
-                      </p>
-                      {session.status === 'active' && (
-                        <button type="button" className="primary-button simulation-main-button mt-5"
-                          disabled={busy} onClick={next}>
-                          {busy ? 'Menyiapkan...' : 'Pelanggan Berikutnya'}
-                        </button>
-                      )}
+                    <div className="arcade-result" role="status">
+                      <span className="arcade-result-star" aria-hidden="true">{feedback?.correct ? '★' : '✦'}</span>
+                      <h3>{feedback?.correct ? 'Bagus! Kembalianmu tepat.' : 'Soal selesai. Yuk belajar lagi!'}</h3>
+                      <p>Jawaban kembalian: <strong>{formatRupiah(challenge.expectedChange)}</strong></p>
+                      {feedback?.correct && <p>+ Poin dan XP sudah tersimpan otomatis.</p>}
+                      <button type="button" className="arcade-primary-button" onClick={next} disabled={busy}>
+                        {busy ? 'Menyiapkan pelanggan...' : 'Pelanggan Berikutnya →'}
+                      </button>
                     </div>
                   ) : (
                     <>
+                      <div className="arcade-answer-top">
+                        <div>
+                          <span className="arcade-panel-kicker">LANGKAH 3 · BERIKAN KEMBALIAN</span>
+                          <h3>Pilih uang yang akan diberikan</h3>
+                        </div>
+                        <div className="arcade-mode-switch" role="group" aria-label="Cara menjawab">
+                          <button type="button" aria-pressed={inputMode === 'cash'} onClick={() => setInputMode('cash')}
+                            disabled={busy || !canBuildExactChange(Number(challenge.paidAmount) - Number(challenge.totalAmount))}>
+                            Susun uang
+                          </button>
+                          <button type="button" aria-pressed={inputMode === 'choices'} onClick={() => setInputMode('choices')} disabled={busy}>
+                            Pilihan cepat
+                          </button>
+                        </div>
+                      </div>
                       {inputMode === 'cash' && canBuildExactChange(Number(challenge.paidAmount) - Number(challenge.totalAmount)) ? (
-                        <MoneyTray
-                          images={moneyImages}
-                          selected={selectedCash}
+                        <MoneyTray images={moneyImages} selected={selectedCash}
                           paidAmount={Number(challenge.paidAmount)}
-                          busy={busy}
-                          onChange={nextSelection => {
+                          busy={busy} onChange={nextSelection => {
                             setSelectedCash(nextSelection)
                             if (feedback?.correct === false) setFeedback(null)
-                          }}
-                          onConfirm={answer}
-                        />
+                          }} onConfirm={answer}/>
                       ) : (
-                        <div className="mt-4 grid gap-3 sm:grid-cols-3" role="group" aria-label="Pilihan uang kembalian">
+                        <div className="arcade-quick-choices" role="group" aria-label="Pilih nominal kembalian">
                           {options.map(value => (
-                            <button key={value} type="button" disabled={busy}
-                              className="simulation-answer"
-                              onClick={() => answer(value)}>
+                            <button type="button" key={value} disabled={busy} onClick={() => answer(value)}>
                               {formatRupiah(value)}
                             </button>
                           ))}
+                          {!canBuildExactChange(Number(challenge.paidAmount) - Number(challenge.totalAmount)) && (
+                            <p>Nominal latihan ini belum tersedia pada gambar uang. Gunakan pilihan cepat.</p>
+                          )}
                         </div>
                       )}
-                      <p className="mt-3 text-sm text-slate-300" aria-live="polite">
-                        {feedback?.correct === false
-                          ? 'Belum tepat. Perbaiki uangnya dan coba lagi.'
-                          : inputMode === 'cash' ? 'Susun uang, lalu tekan Serahkan Kembalian untuk memeriksa jawaban.' : 'Pilih satu jawaban di atas.'}
-                        {' '}Percobaan {challenge.attempts || 0} dari 3.
-                      </p>
                     </>
                   )}
-
-                  <div className="mt-6 border-t border-slate-800 pt-4">
-                    <button type="button" className="text-sm font-bold text-cyan-300 underline"
-                      aria-expanded={hint} onClick={() => setHint(value => !value)}>
-                      {hint ? 'Sembunyikan bantuan hitung' : 'Tampilkan bantuan hitung'}
-                    </button>
-                    {hint && (
-                      <div className="mt-3 rounded-2xl bg-slate-950 p-4 text-sm leading-6 text-slate-200">
-                        <p className="font-bold">Langkah 3 · Cara menghitung</p>
-                        <p className="mt-1">Uang pelanggan dikurangi total belanja:</p>
-                        <p className="mt-2 text-base font-black">
-                          {formatRupiah(challenge.paidAmount)} − {formatRupiah(challenge.totalAmount)} = ?
-                        </p>
-                        <p className="mt-2">Tidak perlu terburu-buru. Hitung perlahan. Mulai dari lembar besar, lalu gunakan koin untuk nominal kecil.</p>
-                      </div>
-                    )}
-                  </div>
-                </section>
-              </div>
+                </div>
+              </section>
             )}
+            <p className="arcade-disclaimer">Mode latihan saja. Tidak ada pengurangan stok, pembayaran asli, atau perubahan omzet.</p>
           </>
         )}
       </div>
