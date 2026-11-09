@@ -655,3 +655,278 @@
   .arcade-play-layout--finished { display:block; }
   .arcade-play-layout--finished .arcade-stage { width:100%; }
 }
+
+
+/* UX v1.2 — Compact HUD, always-visible cash action, Focus Mode.
+   CSS overrides deliberately come after v1.1 responsive rules. */
+.arcade-stage { container-type:inline-size; container-name:arcade-stage; }
+.arcade-hud {
+  display:flex;
+  flex-direction:row;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:.65rem;
+}
+.arcade-hud-score {
+  display:grid;
+  flex:0 1 auto;
+  justify-items:start;
+  gap:.14rem;
+  min-width:0;
+  max-width:235px;
+  padding:.66rem .8rem;
+  text-align:left;
+}
+.arcade-hud-score .arcade-hud-user {
+  font-weight:800;
+  font-size:.63rem;
+  color:#c4f2e1;
+  letter-spacing:.02em;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  max-width:100%;
+}
+.arcade-hud-score strong { font-size:1.11rem; }
+.arcade-hud-score .arcade-hud-xp { font-size:.7rem; }
+.arcade-hud-right {
+  display:flex;
+  flex:0 1 auto;
+  gap:.55rem;
+  min-width:0;
+  align-items:center;
+  justify-self:auto;
+}
+.arcade-hud-progress {
+  width:clamp(92px,12vw,140px);
+  min-width:0;
+  white-space:normal;
+  line-height:1.2;
+  font-size:.76rem;
+}
+.arcade-hud-exit { flex-shrink:0; }
+.arcade-play-layout .arcade-order-board {
+  width:min(295px,53%);
+  padding:.77rem;
+  border-radius:13px;
+}
+.arcade-play-layout .arcade-order-board .arcade-order-label { font-size:.57rem; }
+.arcade-play-layout .arcade-order-board .arcade-order-title { font-size:1.1rem; }
+.arcade-play-layout .arcade-order-board .arcade-order-money {
+  gap:.4rem;
+}
+.arcade-play-layout .arcade-order-board .arcade-order-money > div { padding:.47rem; }
+.arcade-play-layout .arcade-order-board .arcade-order-money strong { font-size:.96rem; }
+.arcade-essentials {
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:.45rem;
+  margin-bottom:.75rem;
+}
+.arcade-essentials > div {
+  display:grid;
+  gap:.1rem;
+  min-width:0;
+  border:1px solid #cbe7d4;
+  background:#eefaf1;
+  border-radius:10px;
+  padding:.55rem .65rem;
+}
+.arcade-essentials > div.arcade-essential-product {
+  grid-column:1/-1;
+  background:#f7fcf8;
+}
+.arcade-essentials span { font-size:.67rem; font-weight:800; color:#527360; }
+.arcade-essentials strong {
+  font-size:.93rem;
+  color:#155b36;
+  font-weight:900;
+  line-height:1.3;
+  overflow-wrap:anywhere;
+}
+.arcade-answer-top { gap:.45rem; }
+.arcade-answer-top h3 { font-size:1.05rem; }
+.arcade-answer-top .arcade-panel-kicker { font-size:.58rem; }
+.arcade-controls { display:flex; align-items:center; flex-wrap:wrap; gap:.45rem; }
+.arcade-focus-toggle {
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-height:40px;
+  padding:.5rem .7rem;
+  border:1px solid #93bea2;
+  border-radius:9px;
+  background:#fff;
+  color:#195a36;
+  font-size:.76rem;
+  font-weight:850;
+  cursor:pointer;
+}
+.arcade-focus-toggle[aria-pressed="true"] {
+  background:#145d39;
+  border-color:#145d39;
+  color:#fff;
+}
+.arcade-mode-switch { gap:.3rem; }
+.arcade-mode-switch button {
+  min-height:40px;
+  padding:.5rem .65rem;
+  font-size:.76rem;
+}
+.arcade-page--focus .arcade-dialogue,
+.arcade-page--focus .arcade-scene-caption,
+.arcade-page--focus .arcade-hud-xp { display:none; }
+.arcade-page--focus .arcade-essentials > div { border-color:#59b17c; }
+.arcade-page--focus .arcade-order-board { border-color:#d2ec91; }
+.arcade-page--focus .arcade-answer-top .arcade-panel-kicker { display:none; }
+.arcade-tryagain { font-size:.82rem; margin-top:.5rem; }
+.arcade-learning-help {
+  margin-top:.65rem;
+  border-top:1px solid #e0eee3;
+  padding-top:.5rem;
+  font-size:.73rem;
+  font-weight:700;
+  line-height:1.4;
+  color:#5f7b68;
+}
+.arcade-learning-help .arcade-hint-toggle { display:inline-flex; margin:0 0 0 .65rem; padding:.3rem; font-size:.73rem; }
+.arcade-learning-help .arcade-hint { margin-top:.35rem; padding:.65rem; }
+
+/* Compact tray removes repeated headings and second total box. */
+.arcade-answer-area .cash-tray--arcade {
+  margin-top:.5rem;
+  padding:0;
+  border:0;
+  background:transparent;
+}
+.cash-tray--arcade .cash-tray-heading { display:none; }
+.arcade-answer-area .cash-tray--arcade > p {
+  margin:.58rem 0 .35rem;
+  color:#466956 !important;
+  font-weight:850;
+  font-size:.72rem;
+}
+.arcade-answer-area .cash-tray--arcade > .cash-piece-grid { margin-top:0; }
+.arcade-answer-area .cash-tray--arcade .cash-piece-grid {
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:.4rem;
+}
+.arcade-answer-area .cash-tray--arcade .cash-piece-grid--coins {
+  grid-template-columns:repeat(3,minmax(0,1fr));
+}
+.arcade-answer-area .cash-tray--arcade .cash-piece-button {
+  min-height:76px;
+  gap:.25rem;
+  padding:.25rem;
+  border-radius:9px;
+}
+.arcade-answer-area .cash-tray--arcade .cash-piece--uploaded-note { height:45px; }
+.arcade-answer-area .cash-tray--arcade .cash-piece--note { min-height:42px; padding:.17rem; }
+.arcade-answer-area .cash-tray--arcade .cash-note-middle strong { font-size:.82rem; }
+.arcade-answer-area .cash-tray--arcade .cash-note-flower { font-size:.75rem; }
+.arcade-answer-area .cash-tray--arcade .cash-note-top,
+.arcade-answer-area .cash-tray--arcade .cash-note-bottom { font-size:.36rem; }
+.arcade-answer-area .cash-tray--arcade .cash-piece-caption {
+  font-size:.67rem;
+  line-height:1.2;
+  font-weight:900;
+}
+.arcade-answer-area .cash-tray--arcade .cash-piece--coin,
+.arcade-answer-area .cash-tray--arcade .cash-piece--uploaded-coin {
+  width:52px;
+  height:52px;
+}
+.arcade-answer-area .cash-tray--arcade .cash-coin-face strong { font-size:.78rem; }
+.arcade-answer-area .cash-tray--arcade .cash-coin-mark,
+.arcade-answer-area .cash-tray--arcade .cash-coin-face small { font-size:.33rem; }
+.arcade-workspace .cash-tray--arcade .cash-pocket-summary {
+  position:sticky;
+  top:0;
+  padding:.55rem .65rem;
+  border-radius:10px;
+  z-index:16;
+  box-shadow:0 4px 12px #0f5f3224;
+}
+.cash-tray--arcade .cash-pocket-summary strong { font-size:1.3rem; }
+.cash-tray--arcade .cash-pocket-actions { gap:.4rem; }
+.cash-tray--arcade .cash-pocket-actions button { min-height:40px; font-size:.74rem; padding:.55rem .7rem; }
+.cash-tray--arcade .cash-pocket-actions .cash-pocket-submit:not(:disabled) {
+  background:#0e7b43;
+  border-color:#0c6538;
+  color:white;
+  box-shadow:0 2px 7px #16623c33;
+}
+.cash-tray--arcade .cash-counting-area--compact {
+  border:1px solid #cfe8d6;
+  margin-top:.65rem;
+  padding:.55rem;
+  border-radius:10px;
+  background:#f9fdfa;
+}
+.cash-counting-area--compact > div:first-child { gap:.35rem; }
+.cash-counting-area--compact .cash-counting-caption p { color:#466e54 !important; font-size:.72rem; }
+.cash-counting-area--compact .cash-small-button { min-height:38px; padding:.4rem .6rem; font-size:.69rem; }
+.cash-counting-area--compact .cash-selected-grid { gap:.35rem; margin-top:.5rem; }
+.cash-counting-area--compact .cash-selected-piece { padding:.4rem; }
+.cash-counting-area--compact .cash-remove-button { min-height:36px; }
+.cash-counting-area--compact .cash-compact-empty {
+  color:#64806a;
+  margin-top:.4rem;
+  font-size:.72rem;
+}
+.cash-counting-area--compact .cash-zero-button,
+.cash-counting-area--compact .cash-submit-button { display:none; }
+
+@container arcade-stage (max-width: 720px) {
+  .arcade-hud { top:.6rem; left:.65rem; right:.65rem; gap:.35rem; }
+  .arcade-hud-score {
+    padding:.47rem .55rem;
+    border-width:2px;
+    border-radius:10px;
+    max-width:165px;
+  }
+  .arcade-hud-score strong { font-size:.92rem; }
+  .arcade-hud-score .arcade-hud-user { font-size:.57rem; }
+  .arcade-hud-score .arcade-hud-xp { font-size:.62rem; }
+  .arcade-hud-right { gap:.3rem; }
+  .arcade-hud-progress { width:96px; font-size:.63rem; }
+  .arcade-hud-exit { padding:.45rem .55rem; min-height:38px; border-width:1px; font-size:.7rem; }
+  .arcade-order-board { max-width:300px; }
+}
+@container arcade-stage (max-width: 420px) {
+  .arcade-hud { left:.35rem; right:.35rem; top:.4rem; gap:.25rem; }
+  .arcade-hud-score { padding:.36rem .42rem; max-width:140px; }
+  .arcade-hud-score strong { font-size:.75rem; }
+  .arcade-hud-score .arcade-hud-user { font-size:.51rem; }
+  .arcade-hud-score .arcade-hud-xp { font-size:.55rem; }
+  .arcade-hud-progress { width:72px; font-size:.57rem; }
+  .arcade-hud-exit { padding:.33rem .4rem; min-height:33px; }
+}
+@media (max-width:960px) {
+  .arcade-page--playing .arcade-page-heading { margin-bottom:.45rem; }
+  .arcade-play-layout .arcade-workspace .arcade-answer-area { padding:.7rem; }
+  .arcade-play-layout .arcade-workspace .arcade-essentials { margin-bottom:.65rem; }
+  .arcade-play-layout .arcade-workspace .cash-tray--arcade .cash-pocket-summary { top:48px; }
+  .arcade-drawer-heading { min-height:48px; }
+}
+@media (max-width:520px) {
+  .arcade-controls { width:100%; }
+  .arcade-mode-switch { flex:1 1 auto; }
+  .arcade-mode-switch button { flex:1 1 auto; }
+  .arcade-focus-toggle { flex:0 0 auto; }
+  .arcade-play-layout .arcade-answer-area .cash-tray--arcade .cash-piece-grid {
+    grid-template-columns:repeat(3,minmax(0,1fr));
+  }
+  .arcade-play-layout .arcade-answer-area .cash-tray--arcade .cash-piece-grid--coins {
+    grid-template-columns:repeat(3,minmax(0,1fr));
+  }
+  .arcade-play-layout .arcade-answer-area .cash-tray--arcade .cash-piece-button { min-height:80px; }
+  .cash-pocket-summary .cash-pocket-actions { flex-wrap:wrap; }
+  .cash-pocket-summary .cash-pocket-actions button { font-size:.72rem; min-height:43px; }
+}
+@media (max-width:360px) {
+  .arcade-focus-toggle { width:100%; }
+  .arcade-mode-switch { width:100%; }
+  .arcade-essentials strong { font-size:.85rem; }
+  .cash-pocket-actions { width:100%; }
+}

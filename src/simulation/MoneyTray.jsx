@@ -51,7 +51,7 @@ export default function MoneyTray({ selected, paidAmount, busy, onChange, onConf
 
   return (
     <div className={'cash-tray' + (compact ? ' cash-tray--arcade' : '')}>
-      <div className="flex flex-wrap items-center justify-between gap-2">
+      <div className="cash-tray-heading flex flex-wrap items-center justify-between gap-2">
         <div>
           <h4 className="text-lg font-black">Laci Uang Latihan</h4>
           <p className="mt-1 text-sm text-slate-300">Ketuk uang untuk memasukkannya ke baki kembalian.</p>
@@ -66,7 +66,7 @@ export default function MoneyTray({ selected, paidAmount, busy, onChange, onConf
             <strong aria-live="polite">{formatRupiah(total)}</strong>
           </div>
           <div className="cash-pocket-actions">
-            <button type="button" disabled={busy || count === 0} onClick={() => onConfirm(total)}>
+            <button type="button" className="cash-pocket-submit" disabled={busy || count === 0} onClick={() => onConfirm(total)}>
               {busy ? 'Memeriksa...' : 'Serahkan Uang'}
             </button>
             <button type="button" disabled={busy} className="cash-pocket-zero"
@@ -93,14 +93,18 @@ export default function MoneyTray({ selected, paidAmount, busy, onChange, onConf
         ))}
       </div>
 
-      <section className="cash-counting-area mt-6" aria-label="Baki uang kembalian">
+      <section className={"cash-counting-area mt-6" + (compact ? " cash-counting-area--compact" : "")} aria-label="Baki uang kembalian">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <p className="text-sm font-bold text-slate-200">Uang yang kamu siapkan</p>
-            <p className="mt-1 text-3xl font-black text-emerald-300" aria-live="polite">
-              {formatRupiah(total)}
-            </p>
-            <p className="mt-1 text-sm text-slate-400">{count} lembar atau koin dipilih</p>
+          <div className="cash-counting-caption">
+            {compact ? (
+              <p className="text-sm font-bold text-slate-200">{count} uang dipilih</p>
+            ) : (
+              <>
+                <p className="text-sm font-bold text-slate-200">Uang yang kamu siapkan</p>
+                <p className="mt-1 text-3xl font-black text-emerald-300" aria-live="polite">{formatRupiah(total)}</p>
+                <p className="mt-1 text-sm text-slate-400">{count} lembar atau koin dipilih</p>
+              </>
+            )}
           </div>
           <div className="flex flex-wrap gap-2">
             <button type="button" className="cash-small-button"
@@ -125,17 +129,19 @@ export default function MoneyTray({ selected, paidAmount, busy, onChange, onConf
             ))}
           </div>
         ) : (
-          <p className="mt-4 rounded-xl border border-dashed border-slate-600 p-4 text-center text-sm text-slate-400">
-            Bakimu masih kosong. Pilih uang di atas.
+          <p className={compact ? 'cash-compact-empty' : 'mt-4 rounded-xl border border-dashed border-slate-600 p-4 text-center text-sm text-slate-400'}>
+            {compact ? 'Pilih pecahan uang di atas untuk menyiapkan kembalian.' : 'Bakimu masih kosong. Pilih uang di atas.'}
           </p>
         )}
 
         {atLimit && <p className="mt-3 text-sm text-amber-200" role="status">
           Baki sudah penuh. Coba gunakan pecahan yang lebih besar.
         </p>}
-        <p className="mt-3 text-xs text-slate-400">
-          Pecahan yang melebihi uang pelanggan otomatis tidak dapat dipilih. Kamu bisa menghapus pilihan kapan saja.
-        </p>
+        {!compact && (
+          <p className="mt-3 text-xs text-slate-400">
+            Pecahan yang melebihi uang pelanggan otomatis tidak dapat dipilih. Kamu bisa menghapus pilihan kapan saja.
+          </p>
+        )}
 
         <button type="button" className="primary-button cash-submit-button mt-5"
           disabled={busy || count === 0}
@@ -148,9 +154,11 @@ export default function MoneyTray({ selected, paidAmount, busy, onChange, onConf
           Uang Pas — Tidak Perlu Kembalian (Rp0)
         </button>
       </section>
-      <p className="mt-4 text-center text-xs text-slate-500">
-        Gambar uang dan koin bisa diganti admin. Jika belum ada foto, tampil ilustrasi latihan bawaan.
-      </p>
+      {!compact && (
+        <p className="mt-4 text-center text-xs text-slate-500">
+          Gambar uang dan koin bisa diganti admin. Jika belum ada foto, tampil ilustrasi latihan bawaan.
+        </p>
+      )}
     </div>
   )
 }

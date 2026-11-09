@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { cloudApiFetch } from '../cloudApi.js'
 import StoreScene from './StoreScene.jsx'
 import MoneyTray from './MoneyTray.jsx'
@@ -16,7 +16,9 @@ export default function VisualCustomerPage() {
   const [session, setSession] = useState(null)
   const [challenge, setChallenge] = useState(null)
   const [feedback, setFeedback] = useState(null)
-  const [hint, setHint] = useState(true)
+  const [hint, setHint] = useState(false)
+  const [focusMode, setFocusMode] = useState(false)
+  const drawerCloseRef = useRef(null)
   const [inputMode, setInputMode] = useState('cash')
   const [selectedCash, setSelectedCash] = useState([])
   const [busy, setBusy] = useState(false)
@@ -60,8 +62,21 @@ export default function VisualCustomerPage() {
     const onKeyDown = event => {
       if (event.key === 'Escape') setCashDrawerOpen(false)
     }
+    const mobile = window.matchMedia('(max-width: 960px)').matches
+    const previousFocus = document.activeElement
+    const previousOverflow = document.body.style.overflow
+    if (mobile) {
+      document.body.style.overflow = 'hidden'
+      drawerCloseRef.current?.focus()
+    }
     window.addEventListener('keydown', onKeyDown)
-    return () => window.removeEventListener('keydown', onKeyDown)
+    return () => {
+      window.removeEventListener('keydown', onKeyDown)
+      if (mobile) {
+        document.body.style.overflow = previousOverflow
+        if (previousFocus?.isConnected && typeof previousFocus.focus === 'function') previousFocus.focus()
+      }
+    }
   }, [cashDrawerOpen])
 
   async function request(action) {
@@ -82,7 +97,7 @@ export default function VisualCustomerPage() {
     const result = await post('/api/game/challenge', { sessionId: nextSession.id })
     setChallenge(result.challenge)
     setFeedback(null)
-    setHint(true)
+    setHint(false)
     setSelectedCash([])
     setCashDrawerOpen(false)
     const neededChange = Number(result.challenge.paidAmount) - Number(result.challenge.totalAmount)
@@ -152,7 +167,7 @@ export default function VisualCustomerPage() {
   }
 
   return (
-    <main className={'arcade-page' + (session ? ' arcade-page--playing' : '')}>
+    <main className={'arcade-page' + (session ? ' arcade-page--playing' : '') + (focusMode ? ' arcade-page--focus' : '')}>
       <div className="arcade-container">
         <header className="arcade-page-heading">
           <div>
@@ -217,13 +232,10 @@ export default function VisualCustomerPage() {
               <div className="arcade-scene-vignette" aria-hidden="true"/>
 
               <div className="arcade-hud">
-                <div className="arcade-hud-player">
-                  <span className="arcade-hud-player-label">PEMAIN</span>
-                  <strong>{session.playerLabel}</strong>
-                </div>
-                <div className="arcade-hud-score" aria-label={'Level '+(session.level || 1)+', '+(session.score || 0)+' poin, '+(session.xp || 0)+' XP'}>
+                <div className="arcade-hud-score" aria-label={'Kasir '+session.playerLabel+', level '+(session.level||1)+', '+(session.score||0)+' poin, '+(session.xp||0)+' XP'}>
+                  <span className="arcade-hud-user">KASIR · {session.playerLabel}</span>
                   <strong>Level {session.level || 1} · {session.score || 0} poin</strong>
-                  <span>XP {session.xp || 0}</span>
+                  <span className="arcade-hud-xp">XP {session.xp || 0}</span>
                 </div>
                 <div className="arcade-hud-right">
                   <div className="arcade-hud-progress">
@@ -290,40 +302,17 @@ export default function VisualCustomerPage() {
                 aria-label="Area menghitung dan menyerahkan kembalian">
                 <div className="arcade-drawer-heading">
                   <strong>Laci Uang Kasir</strong>
-                  <button type="button" onClick={() => setCashDrawerOpen(false)} aria-label="Tutup laci uang">✕ Tutup</button>
+                  <button type="button" ref={drawerCloseRef} onClick={() => setCashDrawerOpen(false)} aria-label="Tutup laci uang">✕ Tutup</button>
                 </div>
-                <div className="arcade-instructions">
-                  <span className="arcade-panel-kicker">LANGKAH 2 · HITUNG KEMBALIAN</span>
-                  <h2>Siapkan uang pelanggan</h2>
-                  <p>Pilih uang kertas atau koin, lalu serahkan jumlah yang menurutmu tepat.</p>
-                  <div className="arcade-calc-card">
-                    <span>Uang pelanggan</span>
-                    <strong>{formatRupiah(challenge.paidAmount)}</strong>
-                    <span>Dikurangi total belanja</span>
-                    <strong>− {formatRupiah(challenge.totalAmount)}</strong>
-                    <div className="arcade-calc-divider"/>
-                    <span>Uang kembalian</span>
-                    <strong className="arcade-calc-question">?</strong>
-                  </div>
-
-                  <button type="button" className="arcade-hint-toggle" onClick={() => setHint(value => !value)}
-                    aria-expanded={hint} aria-controls="arcade-hint-content">
-                    {hint ? 'Sembunyikan petunjuk' : 'Butuh bantuan menghitung?'}
-                  </button>
-                  {hint && <div id="arcade-hint-content" className="arcade-hint" role="note">
-                    <strong>Petunjuk:</strong> Kurangi uang yang diberikan pelanggan dengan harga belanja. Mulai dari uang besar, lalu gunakan koin untuk nilai kecil. Tidak perlu terburu-buru.
-                  </div>}
-                  {feedback?.correct === false && !challenge.resolved && (
-                    <div className="arcade-tryagain" role="status">
-                      Belum tepat, coba periksa lagi. Percobaan {feedback.attemptCount} dari 3.
-                    </div>
-                  )}
-                  {!challenge.resolved && (
-                    <div className="arcade-attempts">Percobaan {challenge.attempts || 0} dari 3 · Tidak ada batas waktu</div>
-                  )}
-                </div>
-
                 <div className="arcade-answer-area">
+                  <div className="arcade-essentials" aria-label="Ringkasan transaksi">
+                    <div className="arcade-essential-product">
+                      <span>Pesanan</span>
+                      <strong>{challenge.quantity} × {challenge.itemName}</strong>
+                    </div>
+                    <div><span>Total belanja</span><strong>{formatRupiah(challenge.totalAmount)}</strong></div>
+                    <div><span>Uang pelanggan</span><strong>{formatRupiah(challenge.paidAmount)}</strong></div>
+                  </div>
                   {challenge.resolved ? (
                     <div className="arcade-result" role="status">
                       <span className="arcade-result-star" aria-hidden="true">{feedback?.correct ? '★' : '✦'}</span>
@@ -341,7 +330,12 @@ export default function VisualCustomerPage() {
                           <span className="arcade-panel-kicker">LANGKAH 3 · BERIKAN KEMBALIAN</span>
                           <h3>Pilih uang yang akan diberikan</h3>
                         </div>
-                        <div className="arcade-mode-switch" role="group" aria-label="Cara menjawab">
+                        <div className="arcade-controls">
+                          <button type="button" className="arcade-focus-toggle" aria-pressed={focusMode}
+                            onClick={() => { setFocusMode(mode => !mode); setHint(false) }}>
+                            {focusMode ? '✓ Mode Fokus' : 'Mode Fokus'}
+                          </button>
+                          <div className="arcade-mode-switch" role="group" aria-label="Cara menjawab">
                           <button type="button" aria-pressed={inputMode === 'cash'} onClick={() => setInputMode('cash')}
                             disabled={busy || !canBuildExactChange(Number(challenge.paidAmount) - Number(challenge.totalAmount))}>
                             Susun uang
@@ -349,6 +343,7 @@ export default function VisualCustomerPage() {
                           <button type="button" aria-pressed={inputMode === 'choices'} onClick={() => setInputMode('choices')} disabled={busy}>
                             Pilihan cepat
                           </button>
+                          </div>
                         </div>
                       </div>
                       {inputMode === 'cash' && canBuildExactChange(Number(challenge.paidAmount) - Number(challenge.totalAmount)) ? (
@@ -367,6 +362,28 @@ export default function VisualCustomerPage() {
                           ))}
                           {!canBuildExactChange(Number(challenge.paidAmount) - Number(challenge.totalAmount)) && (
                             <p>Nominal latihan ini belum tersedia pada gambar uang. Gunakan pilihan cepat.</p>
+                          )}
+                        </div>
+                      )}
+                      {feedback?.correct === false && !challenge.resolved && (
+                        <p role="status" className="arcade-tryagain">Belum tepat. Coba periksa kembali uangnya. Percobaan {feedback.attemptCount} dari 3.</p>
+                      )}
+                      {!challenge.resolved && (
+                        <div className="arcade-learning-help">
+                          <span>Percobaan {challenge.attempts || 0} dari 3 · Tanpa batas waktu</span>
+                          {!focusMode && (
+                            <>
+                              <button type="button" className="arcade-hint-toggle"
+                                aria-expanded={hint} aria-controls="arcade-hint-content"
+                                onClick={() => setHint(current => !current)}>
+                                {hint ? 'Tutup bantuan' : 'Butuh bantuan?'}
+                              </button>
+                              {hint && (
+                                <p id="arcade-hint-content" className="arcade-hint">
+                                  <strong>Petunjuk:</strong> Uang pelanggan dikurangi total belanja. Coba mulai dari pecahan besar, lalu koin kecil.
+                                </p>
+                              )}
+                            </>
                           )}
                         </div>
                       )}
