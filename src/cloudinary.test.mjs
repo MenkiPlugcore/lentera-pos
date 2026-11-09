@@ -4,11 +4,11 @@ import { createHash } from 'node:crypto'
 import { cloudinaryUpload, verifyProductImageUrl } from '../worker/index.js'
 
 const env = {
-  CLOUDINARY_CLOUD_NAME: 'dvds41ivm',
+  CLOUDINARY_CLOUD_NAME: 'jwuwqhjv',
   CLOUDINARY_API_KEY: 'test-api-key',
   CLOUDINARY_API_SECRET: 'test-api-secret',
 }
-const mediaUrl = 'https://res.cloudinary.com/dvds41ivm/image/upload/v123456789/lentera-pos/products/example.jpg'
+const mediaUrl = 'https://res.cloudinary.com/jwuwqhjv/image/upload/v123456789/lentera-pos/products/example.jpg'
 
 test('accepts matching Cloudinary product URLs and unchanged legacy images', () => {
   assert.equal(verifyProductImageUrl(mediaUrl, env), mediaUrl)
@@ -19,10 +19,10 @@ test('accepts matching Cloudinary product URLs and unchanged legacy images', () 
 
 test('rejects arbitrary URLs, other Cloudinary clouds and untrusted image protocols', () => {
   for (const url of [
-    'http://res.cloudinary.com/dvds41ivm/image/upload/v123/lentera-pos/products/x.png',
+    'http://res.cloudinary.com/jwuwqhjv/image/upload/v123/lentera-pos/products/x.png',
     'https://example.com/xxx.jpg',
     'https://res.cloudinary.com/othercloud/image/upload/v123/lentera-pos/products/x.jpg',
-    'https://res.cloudinary.com/dvds41ivm/image/upload/v123/other-folder/x.jpg',
+    'https://res.cloudinary.com/jwuwqhjv/image/upload/v123/other-folder/x.jpg',
     'data:image/svg+xml;base64,SGk=',
   ]) assert.throws(() => verifyProductImageUrl(url,env))
 })
@@ -32,7 +32,7 @@ test('creates a signed backend request without revealing API Secret or uploading
   let called = false
   globalThis.fetch = async (url, init) => {
     called = true
-    assert.equal(url,'https://api.cloudinary.com/v1_1/dvds41ivm/image/upload')
+    assert.equal(url,'https://api.cloudinary.com/v1_1/jwuwqhjv/image/upload')
     assert.equal(init.method,'POST')
     assert.equal(init.body.get('file'),'data:image/jpeg;base64,SGVsbG8=')
     assert.equal(init.body.get('api_key'),env.CLOUDINARY_API_KEY)
@@ -60,7 +60,7 @@ test('creates a signed backend request without revealing API Secret or uploading
 
 test('rejects uploads when Cloudinary secrets are missing', async () => {
   await assert.rejects(
-    cloudinaryUpload({ CLOUDINARY_CLOUD_NAME:'dvds41ivm'},'data:image/png;base64,SGk='),
+    cloudinaryUpload({ CLOUDINARY_CLOUD_NAME:'jwuwqhjv'},'data:image/png;base64,SGk='),
     /belum siap/
   )
 })

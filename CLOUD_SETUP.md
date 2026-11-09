@@ -60,13 +60,13 @@ Mode game harus terisolasi dari tabel transaksi dan pengurangan stok nyata.
 
 ## Cloudinary Media Upload (LENTERA POS 2.1)
 
-Koneksi Cloudinary yang terhubung memakai Cloud Name publik `dvds41ivm`, sudah dicatat sebagai
+Koneksi Cloudinary yang terhubung memakai Cloud Name publik `jwuwqhjv`, sudah dicatat sebagai
 `CLOUDINARY_CLOUD_NAME` di `wrangler.jsonc` (vars, bukan rahasia). Folder Cloudinary
 `lentera-pos/products` sudah dibuat.
 
 **Wajib diselesaikan di Cloudflare Worker `lentera-pos` sebelum upload gambar:**
 
-1. Buka Cloudinary Console > Settings > API Keys untuk melihat API Key dan API Secret milik environment `dvds41ivm`.
+1. Buka Cloudinary Console > Settings > API Keys untuk melihat API Key dan API Secret milik environment `jwuwqhjv`.
 2. Buka Cloudflare Dashboard > Workers & Pages > `lentera-pos` > Settings > Variables and Secrets.
 3. Buat **Secret** `CLOUDINARY_API_KEY` dan **Secret** `CLOUDINARY_API_SECRET`.
    Jangan masukkan ke GitHub, `.env` yang ter-commit, `VITE_` variable, atau chat.
