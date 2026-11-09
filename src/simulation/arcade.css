@@ -424,3 +424,234 @@
   72% { opacity:1; transform:translate(-50%,-22px) scale(1.08); }
   100% { opacity:0; transform:translate(-50%,-42px) scale(1.1); }
 }
+
+
+/* Fase 1.1 — Kasir satu layar: scene + laci samping / drawer pada HP. */
+.arcade-page--playing .arcade-page-heading { margin-bottom:.65rem; }
+.arcade-page--playing .arcade-page-heading h1 { font-size:clamp(1.1rem,1.75vw,1.6rem); }
+.arcade-page--playing .arcade-page-heading p:not(.arcade-kicker) { font-size:.78rem; }
+.arcade-play-layout { min-width:0; }
+.arcade-drawer-heading,.arcade-open-drawer,.arcade-drawer-backdrop { display:none; }
+.arcade-order-jump { display:none; }
+.arcade-play-layout .arcade-workspace { scroll-margin-top:0; }
+.arcade-workspace .cash-tray--arcade { padding:.6rem; }
+.cash-tray--arcade .cash-pocket-summary {
+  position:sticky;
+  top:0;
+  z-index:8;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  flex-wrap:wrap;
+  gap:.65rem;
+  padding:.75rem;
+  border:2px solid #92d3ad;
+  border-radius:12px;
+  background:#ebf9ef;
+  box-shadow:0 3px 12px #1b5f3320;
+}
+.cash-pocket-summary > div:first-child { display:grid; gap:.15rem; }
+.cash-pocket-summary > div:first-child span { font-size:.73rem; font-weight:800; color:#386c4d; }
+.cash-pocket-summary strong { color:#0d6337; font-size:clamp(1rem,1.8vw,1.3rem); font-weight:950; }
+.cash-pocket-actions { display:flex; flex-wrap:wrap; gap:.35rem; }
+.cash-pocket-actions button {
+  border:1px solid #12653d;
+  background:#167545;
+  color:#fff;
+  border-radius:9px;
+  padding:.65rem .78rem;
+  min-height:43px;
+  cursor:pointer;
+  font-weight:900;
+  font-size:.8rem;
+}
+.cash-pocket-actions button:disabled { opacity:.4; cursor:not-allowed; }
+.cash-pocket-actions button.cash-pocket-zero { border-color:#a2ceb2; background:#fff; color:#256044; }
+.cash-pocket-actions button:hover:not(:disabled) { filter:brightness(.92); }
+.cash-tray--arcade .cash-counting-area > .cash-submit-button,
+.cash-tray--arcade .cash-counting-area > .cash-zero-button { display:none; }
+.cash-tray--arcade .cash-piece-caption { font-size:.72rem; }
+.cash-tray--arcade .cash-piece-button { min-height:91px; padding:.35rem; }
+.cash-tray--arcade .cash-piece--uploaded-note { height:60px; }
+.cash-tray--arcade .cash-piece--note { min-height:52px; }
+.cash-tray--arcade .cash-piece--coin,
+.cash-tray--arcade .cash-piece--uploaded-coin { width:64px; height:64px; }
+.cash-tray--arcade .cash-counting-area { padding:.85rem; }
+.cash-tray--arcade .cash-counting-area p.text-3xl { font-size:1.4rem; }
+.cash-tray--arcade .cash-piece-grid { gap:.5rem; }
+.cash-tray--arcade .cash-selected-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+.cash-tray--arcade .cash-selected-piece { font-size:.78rem; }
+
+/* Desktop: uang terlihat langsung di samping pelanggan, tanpa scroll panjang halaman. */
+@media (min-width:961px) {
+  .arcade-play-layout {
+    display:grid;
+    grid-template-columns:minmax(0,1.18fr) minmax(365px,.82fr);
+    align-items:stretch;
+    gap:1rem;
+    height:clamp(590px,calc(100dvh - 170px),800px);
+  }
+  .arcade-play-layout .arcade-stage {
+    min-height:0;
+    height:100%;
+    aspect-ratio:auto;
+    align-self:stretch;
+  }
+  .arcade-play-layout .arcade-workspace {
+    display:flex;
+    flex-direction:column;
+    gap:.55rem;
+    overflow-y:auto;
+    overscroll-behavior:contain;
+    scrollbar-width:thin;
+    min-width:0;
+    min-height:0;
+    height:100%;
+    padding:.2rem .35rem .45rem 0;
+    margin:0;
+    background:transparent;
+    border:0;
+  }
+  .arcade-play-layout .arcade-answer-area { order:0; flex:0 0 auto; padding:1rem; }
+  .arcade-play-layout .arcade-instructions { order:1; flex:0 0 auto; padding:1rem; }
+  .arcade-play-layout .arcade-workspace .arcade-calc-card { display:none; }
+  .arcade-play-layout .arcade-workspace .arcade-instructions > p { font-size:.8rem; margin-top:.4rem; }
+  .arcade-play-layout .arcade-workspace .arcade-instructions h2 { font-size:1.1rem; }
+  .arcade-play-layout .arcade-workspace .arcade-instructions .arcade-hint { font-size:.78rem; }
+  .arcade-play-layout .arcade-workspace .arcade-answer-top { display:grid; gap:.55rem; }
+  .arcade-play-layout .arcade-workspace .arcade-answer-top h3 { font-size:1.03rem; }
+  .arcade-play-layout .arcade-order-board { top:auto; right:2%; bottom:2%; width:min(330px,54%); }
+  .arcade-play-layout .arcade-dialogue { top:22%; left:5%; width:min(355px,65%); }
+  .arcade-play-layout .arcade-answer-area .cash-piece-grid { grid-template-columns:repeat(3,minmax(0,1fr)); }
+  .arcade-play-layout .arcade-answer-area .cash-piece-grid--coins { grid-template-columns:repeat(3,minmax(0,1fr)); }
+  .arcade-disclaimer { padding:.5rem; }
+}
+
+/* HP/tablet: game tetap terlihat, ketuk tombol laci uang untuk panel dari bawah. */
+@media (max-width:960px) {
+  .arcade-page--playing { padding-bottom:.5rem; }
+  .arcade-page--playing .arcade-page-heading > div > p:not(.arcade-kicker) { display:none; }
+  .arcade-page--playing .arcade-page-heading h1 { margin-top:.1rem; }
+  .arcade-play-layout { display:block; }
+  .arcade-play-layout .arcade-stage {
+    position:relative;
+    height:calc(100svh - 152px);
+    min-height:460px;
+    max-height:780px;
+    aspect-ratio:auto;
+  }
+  .arcade-open-drawer {
+    display:flex;
+    position:absolute;
+    z-index:9;
+    left:1rem;
+    right:1rem;
+    bottom:.7rem;
+    justify-content:space-between;
+    align-items:center;
+    gap:.5rem;
+    min-height:60px;
+    padding:.75rem 1rem;
+    border:2px solid #c8f3d6;
+    border-radius:14px;
+    background:#126b41;
+    box-shadow:0 5px 22px #10251c8a;
+    color:white;
+    font-size:.95rem;
+    font-weight:900;
+    cursor:pointer;
+  }
+  .arcade-open-drawer strong { color:#e3ffe9; }
+  .arcade-play-layout .arcade-order-board { bottom:86px; }
+  .arcade-drawer-backdrop {
+    display:block;
+    position:fixed;
+    inset:0;
+    z-index:120;
+    border:0;
+    padding:0;
+    background:rgba(9,26,19,.56);
+    cursor:pointer;
+  }
+  .arcade-play-layout .arcade-workspace {
+    position:fixed;
+    display:none;
+    flex-direction:column;
+    gap:.5rem;
+    inset:auto 0 0 0;
+    z-index:121;
+    margin:0;
+    width:100%;
+    height:min(86dvh,840px);
+    max-height:86dvh;
+    min-height:0;
+    overflow-y:auto;
+    overscroll-behavior:contain;
+    border-radius:22px 22px 0 0;
+    border:2px solid #bae1c5;
+    background:#f5fcf6;
+    padding:.65rem .65rem max(.8rem,env(safe-area-inset-bottom));
+    box-shadow:0 -15px 40px #071a1580;
+  }
+  .arcade-play-layout .arcade-workspace--open { display:flex; }
+  .arcade-workspace .arcade-answer-area { order:1; padding:.7rem; flex:0 0 auto; }
+  .arcade-workspace .arcade-instructions { order:2; padding:.7rem; flex:0 0 auto; display:block; }
+  .arcade-play-layout .arcade-workspace .arcade-calc-card { display:none; }
+  .arcade-drawer-heading {
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    position:sticky;
+    z-index:15;
+    top:-.65rem;
+    flex:0 0 auto;
+    gap:.8rem;
+    padding:.6rem .65rem;
+    border-radius:11px;
+    background:#e4f6e9;
+    color:#185f3d;
+    box-shadow:0 2px 10px #20593d16;
+  }
+  .arcade-drawer-heading strong { font-size:1.03rem; font-weight:900; }
+  .arcade-drawer-heading button {
+    min-height:44px;
+    border:1px solid #80bf9b;
+    background:white;
+    border-radius:10px;
+    padding:.55rem .85rem;
+    color:#174c34;
+    font-weight:850;
+    cursor:pointer;
+  }
+  .arcade-workspace .cash-tray--arcade .cash-pocket-summary { top:43px; }
+  .arcade-workspace .arcade-instructions > .arcade-panel-kicker,
+  .arcade-workspace .arcade-instructions h2,
+  .arcade-workspace .arcade-instructions > p { grid-column:auto; }
+  .arcade-play-layout .arcade-answer-area .cash-piece-grid { grid-template-columns:repeat(3,minmax(0,1fr)); }
+  .arcade-play-layout .arcade-answer-area .cash-piece-grid--coins { grid-template-columns:repeat(3,minmax(0,1fr)); }
+  .arcade-play-layout .arcade-answer-area .cash-pocket-actions { flex-wrap:nowrap; }
+  .arcade-disclaimer { padding:.65rem 0; font-size:.7rem; }
+}
+@media (max-width:520px) {
+  .arcade-play-layout .arcade-stage { height:calc(100svh - 140px); min-height:450px; }
+  .arcade-play-layout .arcade-order-board { bottom:85px; }
+  .arcade-play-layout .arcade-hud { top:.5rem; }
+  .arcade-open-drawer { left:.5rem; right:.5rem; bottom:.5rem; min-height:58px; }
+  .arcade-play-layout .arcade-workspace { padding-inline:.4rem; }
+  .arcade-workspace .cash-tray--arcade .cash-pocket-summary { align-items:stretch; }
+  .cash-pocket-summary > div:first-child { flex:1 1 auto; }
+  .cash-pocket-actions button { font-size:.73rem; padding:.55rem .65rem; }
+  .arcade-play-layout .arcade-answer-area .cash-piece-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .arcade-play-layout .arcade-answer-area .cash-piece-grid--coins { grid-template-columns:repeat(3,minmax(0,1fr)); }
+  .cash-tray--arcade .cash-selected-grid { grid-template-columns:1fr; }
+}
+@media (max-width:360px) {
+  .arcade-open-drawer { font-size:.83rem; }
+  .cash-pocket-actions { width:100%; }
+  .cash-pocket-actions button { flex:1 1 0; }
+}
+
+@media (min-width:961px) {
+  .arcade-play-layout--finished { display:block; }
+  .arcade-play-layout--finished .arcade-stage { width:100%; }
+}

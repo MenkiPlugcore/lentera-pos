@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { cloudApiFetch } from '../cloudApi.js'
 import StoreScene from './StoreScene.jsx'
 import MoneyTray from './MoneyTray.jsx'
-import { canBuildExactChange } from './cashMoney.js'
+import { canBuildExactChange, totalCash } from './cashMoney.js'
 import { changeChoices, customerDialogue, customerForChallenge, formatRupiah } from './customerProfiles.js'
 import './simulation.css'
 import './arcade.css'
@@ -23,6 +23,7 @@ export default function VisualCustomerPage() {
   const [error, setError] = useState('')
   const [moneyImages, setMoneyImages] = useState({})
   const [guestReady, setGuestReady] = useState(false)
+  const [cashDrawerOpen, setCashDrawerOpen] = useState(false)
 
   const customer = useMemo(
     () => customerForChallenge(challenge?.id),
@@ -54,6 +55,15 @@ export default function VisualCustomerPage() {
     }).catch(()=>{ /* ilustrasi bawaan tetap tersedia */ })
   }, [])
 
+  useEffect(() => {
+    if (!cashDrawerOpen) return
+    const onKeyDown = event => {
+      if (event.key === 'Escape') setCashDrawerOpen(false)
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [cashDrawerOpen])
+
   async function request(action) {
     if (busy) return
     setBusy(true)
@@ -74,6 +84,7 @@ export default function VisualCustomerPage() {
     setFeedback(null)
     setHint(true)
     setSelectedCash([])
+    setCashDrawerOpen(false)
     const neededChange = Number(result.challenge.paidAmount) - Number(result.challenge.totalAmount)
     if (!canBuildExactChange(neededChange)) setInputMode('choices')
   }
@@ -104,6 +115,7 @@ export default function VisualCustomerPage() {
     setFeedback(null)
     setError('')
     setSelectedCash([])
+    setCashDrawerOpen(false)
     loadSessions()
   }
 
@@ -115,6 +127,7 @@ export default function VisualCustomerPage() {
       })
       const outcome = result.result
       setFeedback(outcome)
+      if (outcome.status === 'completed') setCashDrawerOpen(false)
       setChallenge(old => ({
         ...old,
         attempts: outcome.attemptCount,
@@ -139,7 +152,7 @@ export default function VisualCustomerPage() {
   }
 
   return (
-    <main className="arcade-page">
+    <main className={'arcade-page' + (session ? ' arcade-page--playing' : '')}>
       <div className="arcade-container">
         <header className="arcade-page-heading">
           <div>
@@ -198,6 +211,7 @@ export default function VisualCustomerPage() {
           </div>
         ) : (
           <>
+            <div className={'arcade-play-layout' + (session.status === 'completed' ? ' arcade-play-layout--finished' : '')}>
             <section className="arcade-stage" aria-label="Area permainan kasir">
               <StoreScene customer={customer} mood={session.status === 'completed' ? 'happy' : mood}/>
               <div className="arcade-scene-vignette" aria-hidden="true"/>
@@ -247,18 +261,37 @@ export default function VisualCustomerPage() {
                       <div><span>Total belanja</span><strong>{formatRupiah(challenge.totalAmount)}</strong></div>
                       <div><span>Uang diterima</span><strong>{formatRupiah(challenge.paidAmount)}</strong></div>
                     </div>
-                    <a className="arcade-order-jump" href="#arcade-money">Siapkan kembalian ↓</a>
+                    <button type="button" className="arcade-order-jump" onClick={() => setCashDrawerOpen(true)} aria-controls="arcade-money">
+                      Buka laci uang
+                    </button>
                   </div>
                   {feedback?.correct && (
                     <div className="arcade-reward" aria-live="polite">★ Jawaban benar!</div>
                   )}
                 </>
               )}
+              {session.status === 'active' && challenge && (
+                <button type="button" className="arcade-open-drawer"
+                  aria-controls="arcade-money" aria-expanded={cashDrawerOpen}
+                  onClick={() => setCashDrawerOpen(true)}>
+                  <span>💵 Buka Laci Uang</span>
+                  <strong>{formatRupiah(totalCash(selectedCash))}</strong>
+                </button>
+              )}
               <div className="arcade-scene-caption">SUDUT PANDANG KASIR · TOKO LENTERA</div>
             </section>
+            {cashDrawerOpen && session.status === 'active' && challenge && (
+              <button type="button" className="arcade-drawer-backdrop" aria-label="Tutup laci uang"
+                onClick={() => setCashDrawerOpen(false)}/>
+            )}
 
             {session.status === 'active' && challenge && (
-              <section id="arcade-money" className="arcade-workspace" aria-label="Area menghitung dan menyerahkan kembalian">
+              <section id="arcade-money" className={'arcade-workspace' + (cashDrawerOpen ? ' arcade-workspace--open' : '')}
+                aria-label="Area menghitung dan menyerahkan kembalian">
+                <div className="arcade-drawer-heading">
+                  <strong>Laci Uang Kasir</strong>
+                  <button type="button" onClick={() => setCashDrawerOpen(false)} aria-label="Tutup laci uang">✕ Tutup</button>
+                </div>
                 <div className="arcade-instructions">
                   <span className="arcade-panel-kicker">LANGKAH 2 · HITUNG KEMBALIAN</span>
                   <h2>Siapkan uang pelanggan</h2>
@@ -319,7 +352,7 @@ export default function VisualCustomerPage() {
                         </div>
                       </div>
                       {inputMode === 'cash' && canBuildExactChange(Number(challenge.paidAmount) - Number(challenge.totalAmount)) ? (
-                        <MoneyTray images={moneyImages} selected={selectedCash}
+                        <MoneyTray compact images={moneyImages} selected={selectedCash}
                           paidAmount={Number(challenge.paidAmount)}
                           busy={busy} onChange={nextSelection => {
                             setSelectedCash(nextSelection)
@@ -342,6 +375,7 @@ export default function VisualCustomerPage() {
                 </div>
               </section>
             )}
+            </div>
             <p className="arcade-disclaimer">Mode latihan saja. Tidak ada pengurangan stok, pembayaran asli, atau perubahan omzet.</p>
           </>
         )}

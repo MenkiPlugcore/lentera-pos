@@ -41,15 +41,16 @@ function MoneyPiece({ denomination, disabled, onSelect, imageUrl }) {
   )
 }
 
-export default function MoneyTray({ selected, paidAmount, busy, onChange, onConfirm, images = {} }) {
+export default function MoneyTray({ selected, paidAmount, busy, onChange, onConfirm, images = {}, compact = false }) {
   const total = totalCash(selected)
   const breakdown = cashBreakdown(selected)
   const count = selected.length
   const atLimit = count >= MAX_CASH_PIECES
   const add = amount => onChange(addCash(selected, amount, paidAmount))
+  const available = compact ? CASH_DENOMINATIONS.filter(d => d.value <= paidAmount) : CASH_DENOMINATIONS
 
   return (
-    <div className="cash-tray">
+    <div className={'cash-tray' + (compact ? ' cash-tray--arcade' : '')}>
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
           <h4 className="text-lg font-black">Laci Uang Latihan</h4>
@@ -58,9 +59,25 @@ export default function MoneyTray({ selected, paidAmount, busy, onChange, onConf
         <span className="cash-training-label">Hanya simulasi</span>
       </div>
 
+      {compact && (
+        <div className="cash-pocket-summary">
+          <div>
+            <span>Total kembalian disiapkan</span>
+            <strong aria-live="polite">{formatRupiah(total)}</strong>
+          </div>
+          <div className="cash-pocket-actions">
+            <button type="button" disabled={busy || count === 0} onClick={() => onConfirm(total)}>
+              {busy ? 'Memeriksa...' : 'Serahkan Uang'}
+            </button>
+            <button type="button" disabled={busy} className="cash-pocket-zero"
+              onClick={() => onConfirm(0)}>Uang pas (Rp0)</button>
+          </div>
+        </div>
+      )}
+
       <p className="mt-5 text-sm font-bold text-slate-200">Uang kertas</p>
       <div className="cash-piece-grid mt-3" role="group" aria-label="Pilih pecahan uang kertas">
-        {CASH_DENOMINATIONS.filter(d => d.type === 'note').map(d => (
+        {available.filter(d => d.type === 'note').map(d => (
           <MoneyPiece key={d.value} denomination={d} imageUrl={images[d.value]}
             disabled={busy || !canAddCash(selected, d.value, paidAmount)}
             onSelect={add}/>
@@ -69,7 +86,7 @@ export default function MoneyTray({ selected, paidAmount, busy, onChange, onConf
 
       <p className="mt-5 text-sm font-bold text-slate-200">Uang logam</p>
       <div className="cash-piece-grid cash-piece-grid--coins mt-3" role="group" aria-label="Pilih pecahan uang logam">
-        {CASH_DENOMINATIONS.filter(d => d.type === 'coin').map(d => (
+        {available.filter(d => d.type === 'coin').map(d => (
           <MoneyPiece key={d.value} denomination={d} imageUrl={images[d.value]}
             disabled={busy || !canAddCash(selected, d.value, paidAmount)}
             onSelect={add}/>
