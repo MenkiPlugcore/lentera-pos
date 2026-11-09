@@ -59,7 +59,7 @@ test('game API can return an existing challenge with progress round',async()=>{
     throw new Error('Unexpected query: '+sql)
   }}
   const res=await handleGameApi({
-    db,path:'/api/game/challenge',method:'POST',request:req({sessionId})
+    account:{role:'admin'},db,path:'/api/game/challenge',method:'POST',request:req({sessionId})
   })
   assert.equal(res.status,200)
   const data=await res.json()
@@ -71,7 +71,7 @@ test('game API can return an existing challenge with progress round',async()=>{
 test('invalid UUID session is rejected before database access',async()=>{
   let queried=false
   await assert.rejects(handleGameApi({
-    db:{query:()=>{queried=true}},
+    account:{role:'admin'},db:{query:()=>{queried=true}},
     path:'/api/game/challenge',method:'POST',request:req({sessionId:'not-a-uuid'}),
   }),/ID tidak valid/)
   assert.equal(queried,false)

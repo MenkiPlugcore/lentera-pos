@@ -75,7 +75,7 @@ function cloudinaryConfigured(env) {
 function verifyProductImageUrl(image, env, existingImage = null, folder = PRODUCT_MEDIA_FOLDER) {
   if (!image) return null
   if (existingImage && image === existingImage) return image // preserve legacy external link unchanged
-  if (image.length <= 250000 && INLINE_IMAGE_RE.test(image)) return image // legacy Base64
+  if (folder === PRODUCT_MEDIA_FOLDER && image.length <= 250000 && INLINE_IMAGE_RE.test(image)) return image // legacy Base64 only for products
   if (!env.CLOUDINARY_CLOUD_NAME) bad('Cloudinary belum dikonfigurasi.', 503)
   try {
     const parsed = new URL(image)

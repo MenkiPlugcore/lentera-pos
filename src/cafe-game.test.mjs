@@ -56,7 +56,7 @@ test('game validates answer and returns server-issued score',async()=>{
   session_score:20,session_xp:20,session_level:1,session_status:'active',
  }]}
  const res=await handleGameApi({
-  db,path:'/api/game/answer',method:'POST',
+  account:{role:'admin'},db,path:'/api/game/answer',method:'POST',
   request:jsonRequest({challengeId:uid,answer:2000})
  })
  const {result}=await res.json()
@@ -67,7 +67,7 @@ test('game validates answer and returns server-issued score',async()=>{
 test('game rejects noninteger answers',async()=>{
  let touched=false
  await assert.rejects(handleGameApi({
-  db:{query:()=>{touched=true;return []}},
+  account:{role:'admin'},db:{query:()=>{touched=true;return []}},
   path:'/api/game/answer',method:'POST',
   request:jsonRequest({challengeId:uid,answer:'2.5'})
  }),/Jawaban harus nominal/)

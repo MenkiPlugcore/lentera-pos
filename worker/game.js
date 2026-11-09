@@ -19,7 +19,7 @@ const challengeOutput=(row)=>({
   resolved:Boolean(row.resolved_at),wasCorrect:row.is_correct,
   expectedChange:row.resolved_at?row.correct_change:null,
 })
-export async function handleGameApi({db,path,method,request,guestId=null,account={role:'admin'}}) {
+export async function handleGameApi({db,path,method,request,guestId=null,account=null}) {
   // In production the Worker always passes an explicit account or a verified guest cookie.
   if (!account && !guestId) return response({ok:false,error:'Sesi pengunjung diperlukan. Muat ulang halaman.'},401)
   if (!path.startsWith('/api/game/')) return null
