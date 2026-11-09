@@ -8,6 +8,7 @@ const TABS = [{id:'kasir',name:'Kasir / Pesanan'},{id:'barista',name:'Barista / 
 export default function CafePage() {
   const [tab,setTab] = useState('kasir')
   const [products,setProducts] = useState([])
+  const [autoRefill,setAutoRefill] = useState(false)
   const [orders,setOrders] = useState([])
   const [tableLabel,setTableLabel] = useState('Meja 1')
   const [notes,setNotes] = useState('')
@@ -19,10 +20,12 @@ export default function CafePage() {
 
   async function reload(quiet=false) {
     try {
-      const [p,o] = await Promise.all([
+      const [p,o,settings] = await Promise.all([
         cloudApiFetch('/api/products'),
-        cloudApiFetch('/api/cafe/orders')
+        cloudApiFetch('/api/cafe/orders'),
+        cloudApiFetch('/api/stock-policy'),
       ])
+      setAutoRefill(Boolean(settings.policy?.enabled))
       setProducts(p.products || [])
       setOrders(o.orders || [])
       setError('')
@@ -35,7 +38,7 @@ export default function CafePage() {
     return ()=>clearInterval(timer)
   },[])
 
-  const available = useMemo(()=>products.filter(p=>p.is_active && Number(p.stock)>0),[products])
+  const available = useMemo(()=>products.filter(p=>p.is_active && (Number(p.stock)>0 || autoRefill)),[products,autoRefill])
   const sum = useMemo(()=>available.reduce((s,p)=>s+Number(p.selling_price)*(cart[p.id]||0),0),[available,cart])
   const selected = useMemo(()=>orders.filter(o=>tab==='kasir' ? o.status==='pending'
     :tab==='barista' ? ['pending','preparing'].includes(o.status) && Boolean(o.transactionId)
@@ -43,7 +46,7 @@ export default function CafePage() {
   const history = useMemo(()=>orders.filter(o=>o.status==='cancelled' || o.status==='served'),[orders])
   function add(p,diff) {
     setCart(old=>{
-      const quantity=Math.min(Number(p.stock),Math.max(0,(old[p.id]||0)+diff))
+      const quantity=Math.min(autoRefill?999:Number(p.stock),Math.max(0,(old[p.id]||0)+diff))
       return {...old,[p.id]:quantity}
     })
   }
@@ -107,7 +110,7 @@ export default function CafePage() {
                 <div className="min-w-0 flex-1">
                   <p className="font-bold">{p.name}</p>
                   <p className="text-sm text-cyan-300">{rupiah(p.selling_price)}</p>
-                  <p className="text-xs text-slate-500">Stok {p.stock}</p>
+                  <p className="text-xs text-slate-500">Stok {p.stock}{autoRefill?' · Isi ulang otomatis aktif':''}</p>
                   <div className="mt-2 flex items-center gap-3">
                     <button type="button" onClick={()=>add(p,-1)} aria-label={'Kurangi '+p.name} className="rounded-lg bg-slate-700 px-3 py-2 font-black">−</button>
                     <span className="min-w-5 text-center font-bold">{cart[p.id]||0}</span>

@@ -20,6 +20,8 @@ export default function VisualCustomerPage() {
   const [selectedCash, setSelectedCash] = useState([])
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
+  const [moneyImages, setMoneyImages] = useState({})
+  const [guestReady, setGuestReady] = useState(false)
 
   const customer = useMemo(
     () => customerForChallenge(challenge?.id),
@@ -38,10 +40,18 @@ export default function VisualCustomerPage() {
       setSessions(result.sessions || [])
     } catch (problem) {
       setError(problem.message)
+    } finally {
+      setGuestReady(true)
     }
   }
 
-  useEffect(() => { loadSessions() }, [])
+  useEffect(() => {
+    loadSessions()
+    cloudApiFetch('/api/public/money').then(data => {
+      const entries=(data.denominations||[]).filter(d=>d.imageUrl).map(d=>[d.value,d.imageUrl])
+      setMoneyImages(Object.fromEntries(entries))
+    }).catch(()=>{ /* ilustrasi bawaan tetap tersedia */ })
+  }, [])
 
   async function request(action) {
     if (busy) return
@@ -68,7 +78,7 @@ export default function VisualCustomerPage() {
   }
 
   function start() {
-    if (nickname.trim().length < 2) return
+    if (!guestReady || nickname.trim().length < 2) return
     request(async () => {
       const { session: created } = await post('/api/game/sessions', { playerLabel: nickname.trim() })
       setSession(created)
@@ -176,7 +186,7 @@ export default function VisualCustomerPage() {
                     />
                   </label>
                   <p className="mt-2 text-xs text-slate-400">Gunakan nama panggilan saja, tidak perlu data pribadi.</p>
-                  <button type="button" onClick={start} disabled={busy || nickname.trim().length < 2}
+                  <button type="button" onClick={start} disabled={busy || !guestReady || nickname.trim().length < 2}
                     className="primary-button simulation-main-button mt-5">
                     {busy ? 'Menyiapkan toko...' : 'Mulai Simulasi'}
                   </button>
@@ -314,6 +324,7 @@ export default function VisualCustomerPage() {
                     <>
                       {inputMode === 'cash' && canBuildExactChange(Number(challenge.paidAmount) - Number(challenge.totalAmount)) ? (
                         <MoneyTray
+                          images={moneyImages}
                           selected={selectedCash}
                           paidAmount={Number(challenge.paidAmount)}
                           busy={busy}

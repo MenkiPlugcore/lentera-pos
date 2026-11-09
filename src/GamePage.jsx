@@ -13,10 +13,12 @@ export default function GamePage() {
   const [busy,setBusy] = useState(false)
   const [error,setError] = useState('')
   const [guide,setGuide] = useState(true)
+  const [guestReady,setGuestReady] = useState(false)
 
   async function loadSessions(){
     try { const result=await cloudApiFetch('/api/game/sessions');setSessions(result.sessions||[]) }
     catch(e){setError(e.message)}
+    finally{setGuestReady(true)}
   }
   useEffect(()=>{loadSessions()},[])
 
@@ -38,6 +40,7 @@ export default function GamePage() {
   }
 
   function newSession(){
+    if(!guestReady)return
     act(async()=>{
       const data=await cloudApiFetch('/api/game/sessions',{
         method:'POST',body:JSON.stringify({playerLabel})
@@ -86,7 +89,7 @@ export default function GamePage() {
       <header className="mb-7">
         <p className="text-xs font-black uppercase tracking-[0.2em] text-cyan-300">LENTERA · GAME EDUKASI</p>
         <h1 className="mt-2 text-3xl font-black">Kasir Pintar</h1>
-        <p className="mt-2 text-sm leading-6 text-slate-400">Simulasi pelanggan virtual dengan 5 soal menghitung kembalian. XP dan nilai tersimpan di Neon. Tidak ada uang, stok, atau transaksi asli yang berubah.</p>
+        <p className="mt-2 text-sm leading-6 text-slate-400">Simulasi pelanggan virtual dengan 5 soal menghitung kembalian. Bisa dimainkan tanpa login. XP dan nilai tersimpan di Neon. Tidak ada uang, stok, atau transaksi asli yang berubah.</p>
         <a href="/simulasi" className="primary-button mt-4 inline-block px-5 py-3">Coba Simulasi Pelanggan Visual</a>
       </header>
       {error && <div role="alert" className="mb-5 rounded-2xl border border-rose-700 bg-rose-950 p-4 text-rose-200">{error}</div>}
@@ -96,7 +99,7 @@ export default function GamePage() {
         <label className="mt-5 block text-base font-bold">Nama panggilan peserta
           <input className="input mt-2 w-full max-w-md" maxLength={60} value={playerLabel} onChange={e=>setPlayerLabel(e.target.value)} placeholder="Contoh: Siswa A" />
         </label>
-        <button className="primary-button mt-5 px-6 py-4 text-lg" disabled={busy || playerLabel.trim().length<2} onClick={newSession}>Mulai Game</button>
+        <button className="primary-button mt-5 px-6 py-4 text-lg" disabled={busy || !guestReady || playerLabel.trim().length<2} onClick={newSession}>Mulai Game</button>
       </section>}
       {session && <section className="rounded-3xl border border-slate-800 bg-slate-900 p-5">
         <div className="mb-4 flex flex-wrap items-center justify-between gap-4">

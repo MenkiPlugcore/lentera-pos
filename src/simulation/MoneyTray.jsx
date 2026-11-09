@@ -1,7 +1,7 @@
 import { CASH_DENOMINATIONS, MAX_CASH_PIECES, addCash, canAddCash, cashBreakdown, removeCashValue, removeLastCash, totalCash } from './cashMoney.js'
 import { formatRupiah } from './customerProfiles.js'
 
-function MoneyPiece({ denomination, disabled, onSelect }) {
+function MoneyPiece({ denomination, disabled, onSelect, imageUrl }) {
   const { value, type, color, light } = denomination
   const isCoin = type === 'coin'
   return (
@@ -12,6 +12,11 @@ function MoneyPiece({ denomination, disabled, onSelect }) {
       className={'cash-piece-button ' + (isCoin ? 'cash-piece-button--coin' : '')}
       aria-label={'Tambahkan ' + (isCoin ? 'koin' : 'uang kertas') + ' ' + formatRupiah(value)}
     >
+      {imageUrl ? (
+        <span className={'cash-piece cash-piece--uploaded '+(isCoin?'cash-piece--uploaded-coin':'cash-piece--uploaded-note')} aria-hidden="true">
+          <img loading="lazy" src={imageUrl} alt="" />
+        </span>
+      ) : (
       <span className={'cash-piece ' + (isCoin ? 'cash-piece--coin' : 'cash-piece--note')}
         style={{ '--cash-tone': color, '--cash-light': light }} aria-hidden="true">
         {isCoin ? (
@@ -30,13 +35,13 @@ function MoneyPiece({ denomination, disabled, onSelect }) {
             <span className="cash-note-bottom">RUPIAH</span>
           </>
         )}
-      </span>
+      </span>)}
       <span className="cash-piece-caption">+ {formatRupiah(value)}</span>
     </button>
   )
 }
 
-export default function MoneyTray({ selected, paidAmount, busy, onChange, onConfirm }) {
+export default function MoneyTray({ selected, paidAmount, busy, onChange, onConfirm, images = {} }) {
   const total = totalCash(selected)
   const breakdown = cashBreakdown(selected)
   const count = selected.length
@@ -56,7 +61,7 @@ export default function MoneyTray({ selected, paidAmount, busy, onChange, onConf
       <p className="mt-5 text-sm font-bold text-slate-200">Uang kertas</p>
       <div className="cash-piece-grid mt-3" role="group" aria-label="Pilih pecahan uang kertas">
         {CASH_DENOMINATIONS.filter(d => d.type === 'note').map(d => (
-          <MoneyPiece key={d.value} denomination={d}
+          <MoneyPiece key={d.value} denomination={d} imageUrl={images[d.value]}
             disabled={busy || !canAddCash(selected, d.value, paidAmount)}
             onSelect={add}/>
         ))}
@@ -65,7 +70,7 @@ export default function MoneyTray({ selected, paidAmount, busy, onChange, onConf
       <p className="mt-5 text-sm font-bold text-slate-200">Uang logam</p>
       <div className="cash-piece-grid cash-piece-grid--coins mt-3" role="group" aria-label="Pilih pecahan uang logam">
         {CASH_DENOMINATIONS.filter(d => d.type === 'coin').map(d => (
-          <MoneyPiece key={d.value} denomination={d}
+          <MoneyPiece key={d.value} denomination={d} imageUrl={images[d.value]}
             disabled={busy || !canAddCash(selected, d.value, paidAmount)}
             onSelect={add}/>
         ))}
@@ -127,7 +132,7 @@ export default function MoneyTray({ selected, paidAmount, busy, onChange, onConf
         </button>
       </section>
       <p className="mt-4 text-center text-xs text-slate-500">
-        Ilustrasi uang dibuat untuk latihan dan bukan gambar uang rupiah resmi.
+        Gambar uang dan koin bisa diganti admin. Jika belum ada foto, tampil ilustrasi latihan bawaan.
       </p>
     </div>
   )

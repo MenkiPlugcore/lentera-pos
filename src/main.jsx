@@ -12,6 +12,7 @@ import HardDeletePanel from './HardDeletePanel.jsx'
 import ReportsPanel from './ReportsPanel.jsx'
 import CafePage from './CafePage.jsx'
 import GamePage from './GamePage.jsx'
+import PublicHomePage from './PublicHomePage.jsx'
 import VisualCustomerPage from './simulation/VisualCustomerPage.jsx'
 
 function normalizePath(pathname) {
@@ -101,38 +102,44 @@ function CloudGate({ children }) {
   )
 }
 
+function PublicHeader() {
+  return <header className="border-b border-slate-800 bg-slate-950 px-4 py-3 text-slate-100">
+    <nav aria-label="Navigasi situs umum" className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3">
+      <a href="/" className="text-lg font-black tracking-tight text-cyan-300">LENTERA POS</a>
+      <div className="flex flex-wrap items-center gap-2 text-sm">
+        <a href="/" className="rounded-lg px-3 py-2 hover:bg-slate-800">Beranda</a>
+        <a href="/simulasi" className="rounded-lg px-3 py-2 hover:bg-slate-800">Simulasi Pelanggan</a>
+        <a href="/game" className="rounded-lg px-3 py-2 hover:bg-slate-800">Kasir Pintar</a>
+        <a href="/admin" className="rounded-lg border border-cyan-700 px-3 py-2 font-bold text-cyan-200 hover:bg-slate-800">Login Admin</a>
+      </div>
+    </nav>
+  </header>
+}
+
 function RootRoute() {
   const path = normalizePath(window.location.pathname)
 
-  const view = (() => {
-  if (path === '/') {
-    window.history.replaceState({}, '', '/kasir')
-    return <CashierPage />
+  if (!IS_CLOUD) {
+    if (path === '/admin') return <><App/><AdminCashierShortcut/><HardDeletePanel/><ReportsPanel/></>
+    if (path !== '/kasir') window.history.replaceState({}, '', '/kasir')
+    return <CashierPage/>
   }
 
-  if (path === '/kasir') {
-    return <CashierPage />
-  }
+  if (path === '/' || path === '/home') return <><PublicHeader/><PublicHomePage/></>
+  if (path === '/simulasi') return <><PublicHeader/><VisualCustomerPage/></>
+  if (path === '/game') return <><PublicHeader/><GamePage/></>
 
-  if (path === '/cafe' && IS_CLOUD) return <CafePage />
-  if (path === '/game' && IS_CLOUD) return <GamePage />
-  if (path === '/simulasi' && IS_CLOUD) return <VisualCustomerPage />
+  if (path === '/kasir') return <CloudGate><CashierPage/></CloudGate>
+  if (path === '/cafe') return <CloudGate><CafePage/></CloudGate>
+  if (path === '/admin') return <CloudGate>
+    <App/>
+    <AdminCashierShortcut/>
+    <HardDeletePanel/>
+    <ReportsPanel/>
+  </CloudGate>
 
-  if (path === '/admin') {
-    return (
-      <>
-        <App />
-        <AdminCashierShortcut />
-        <HardDeletePanel />
-        <ReportsPanel />
-      </>
-    )
-  }
-
-  window.history.replaceState({}, '', '/kasir')
-  return <CashierPage />
-  })()
-  return IS_CLOUD ? <CloudGate>{view}</CloudGate> : view
+  window.history.replaceState({}, '', '/')
+  return <><PublicHeader/><PublicHomePage/></>
 }
 
 createRoot(document.getElementById('root')).render(

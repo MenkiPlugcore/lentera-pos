@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { cloudApiFetch } from './cloudApi.js'
 import { exportBackup, getLocalStats } from './localPos.js'
+import MoneyAssetsPanel from './MoneyAssetsPanel.jsx'
+import AutoStockPanel from './AutoStockPanel.jsx'
 
 export default function CloudAdminPanel() {
   const [stats, setStats] = useState(null)
@@ -122,6 +124,8 @@ export default function CloudAdminPanel() {
         </div>
         {mediaNotice && <p role="status" className="mt-2 text-sm text-cyan-300">{mediaNotice}</p>}
       </div>
+      <MoneyAssetsPanel />
+      <AutoStockPanel />
       <div className="mt-5 border-t border-slate-800 pt-4">
         <h3 className="font-black">Migrasi menu dari browser lama</h3>
         <p className="mt-1 text-sm text-slate-400">Ekspor cadangan JSON sebelum migrasi. Impor bersifat tambah saja, tanpa menghapus stok atau riwayat pada Neon.</p>

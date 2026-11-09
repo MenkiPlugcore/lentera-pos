@@ -19,31 +19,43 @@ const challengeOutput=(row)=>({
   resolved:Boolean(row.resolved_at),wasCorrect:row.is_correct,
   expectedChange:row.resolved_at?row.correct_change:null,
 })
-export async function handleGameApi({db,path,method,request}) {
+export async function handleGameApi({db,path,method,request,guestId=null,account={role:'admin'}}) {
+  // In production the Worker always passes an explicit account or a verified guest cookie.
+  if (!account && !guestId) return response({ok:false,error:'Sesi pengunjung diperlukan. Muat ulang halaman.'},401)
   if (!path.startsWith('/api/game/')) return null
   if (path==='/api/game/summary' && method==='GET') {
+    if (!account) return response({ok:false,error:'Hanya untuk admin.'},403)
     const [summary]=await db.query('SELECT count(*)::int sessions, COALESCE(sum(score),0)::int total_score FROM public.lentera_game_sessions')
     return response({ok:true,summary})
   }
   if (path==='/api/game/sessions' && method==='GET') {
-    const rows=await db.query(
-      'SELECT s.id,s.player_label AS "playerLabel",s.role,s.level_no AS level,s.score,s.experience AS xp,s.status,s.created_at AS "createdAt",s.completed_at AS "completedAt",(SELECT count(*)::int FROM public.lentera_game_challenges c WHERE c.session_id=s.id AND c.resolved_at IS NOT NULL) AS "completedCount" FROM public.lentera_game_sessions s ORDER BY s.created_at DESC LIMIT 50')
+    const sql='SELECT s.id,s.player_label AS "playerLabel",s.role,s.level_no AS level,s.score,s.experience AS xp,s.status,s.created_at AS "createdAt",s.completed_at AS "completedAt",(SELECT count(*)::int FROM public.lentera_game_challenges c WHERE c.session_id=s.id AND c.resolved_at IS NOT NULL) AS "completedCount" FROM public.lentera_game_sessions s'
+    const rows=account
+      ? await db.query(sql+' ORDER BY s.created_at DESC LIMIT 50')
+      : await db.query(sql+' WHERE s.guest_id=$1::uuid ORDER BY s.created_at DESC LIMIT 50',[guestId])
     return response({ok:true,sessions:rows})
   }
   if (path==='/api/game/sessions' && method==='POST') {
     const data=await body(request)
     const playerLabel=String(data?.playerLabel||'').trim()
     if(playerLabel.length<2||playerLabel.length>60)invalid('Nama panggilan 2–60 karakter.')
+    if (!account) {
+      const [limits]=await db.query(
+        "SELECT count(*)::int today FROM public.lentera_game_sessions WHERE guest_id=$1::uuid AND created_at>now()-interval '24 hours'",
+        [guestId])
+      if (limits.today>=100) return response({ok:false,error:'Batas 100 sesi latihan per perangkat per hari tercapai.'},429)
+    }
     const [session]=await db.query(
-      'INSERT INTO public.lentera_game_sessions(player_label,role) VALUES($1,\'kasir\') RETURNING id,player_label AS "playerLabel",role,level_no AS level,score,experience AS xp,status,0 AS "completedCount"',
-      [playerLabel])
+      'INSERT INTO public.lentera_game_sessions(player_label,role,guest_id) VALUES($1,\'kasir\',$2::uuid) RETURNING id,player_label AS "playerLabel",role,level_no AS level,score,experience AS xp,status,0 AS "completedCount"',
+      [playerLabel,account?null:guestId])
     return response({ok:true,session},201)
   }
   if (path==='/api/game/challenge' && method==='POST') {
     const data=await body(request)
     const sessionId=idOf(data?.sessionId)
     const [session]=await db.query(
-      'SELECT id,level_no,status FROM public.lentera_game_sessions WHERE id=$1::uuid',[sessionId])
+      'SELECT id,level_no,status FROM public.lentera_game_sessions WHERE id=$1::uuid AND ($2::uuid IS NULL OR guest_id=$2::uuid)',
+      [sessionId,account?null:guestId])
     if(!session) return response({ok:false,error:'Sesi latihan tidak ditemukan.'},404)
     if(session.status!=='active') return response({ok:false,error:'Sesi latihan sudah selesai.'},409)
     const [progress]=await db.query(
@@ -73,6 +85,12 @@ export async function handleGameApi({db,path,method,request}) {
     const id=idOf(data?.challengeId)
     const answer=Number(data?.answer)
     if(!Number.isSafeInteger(answer)||answer<0||answer>2147483647)invalid('Jawaban harus nominal rupiah yang valid.')
+    if (!account) {
+      const [owned]=await db.query(
+        'SELECT c.id FROM public.lentera_game_challenges c JOIN public.lentera_game_sessions s ON s.id=c.session_id WHERE c.id=$1::uuid AND s.guest_id=$2::uuid',
+        [id,guestId])
+      if (!owned) return response({ok:false,error:'Soal latihan tidak ditemukan pada perangkat ini.'},404)
+    }
     const [result]=await db.query(
       'SELECT * FROM public.lentera_game_answer($1::uuid,$2::integer)',[id,answer])
     return response({ok:true,result:{

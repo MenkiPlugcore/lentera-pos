@@ -2,6 +2,8 @@ import { neon } from '@neondatabase/serverless'
 import bcrypt from 'bcryptjs'
 import { handleCafeApi } from './cafe.js'
 import { handleGameApi } from './game.js'
+import { handlePublicApi } from './public.js'
+import { getGuest } from './guest.js'
 
 const COOKIE = '__Host-lentera_session'
 const SESSION_AGE = 12 * 60 * 60
@@ -59,6 +61,8 @@ function requiredText(value, label, min, max) {
 }
 
 const PRODUCT_MEDIA_FOLDER = 'lentera-pos/products'
+const MONEY_MEDIA_FOLDER = 'lentera-pos/money'
+const MONEY_VALUES = new Set([100,200,500,1000,2000,5000,10000,20000,50000,100000])
 const INLINE_IMAGE_RE = /^data:image\/(?:jpeg|png|webp);base64,[A-Za-z0-9+/]+={0,2}$/i
 
 function cloudinaryConfigured(env) {
@@ -68,7 +72,7 @@ function cloudinaryConfigured(env) {
   )
 }
 
-function verifyProductImageUrl(image, env, existingImage = null) {
+function verifyProductImageUrl(image, env, existingImage = null, folder = PRODUCT_MEDIA_FOLDER) {
   if (!image) return null
   if (existingImage && image === existingImage) return image // preserve legacy external link unchanged
   if (image.length <= 250000 && INLINE_IMAGE_RE.test(image)) return image // legacy Base64
@@ -80,13 +84,15 @@ function verifyProductImageUrl(image, env, existingImage = null) {
     if (parsed.protocol === 'https:' && parsed.hostname === 'res.cloudinary.com' &&
         !parsed.username && !parsed.password && !parsed.port && !parsed.search && !parsed.hash &&
         parsed.pathname.startsWith(prefix) &&
-        /^v\d+\/lentera-pos\/products\/[a-zA-Z0-9_./%-]+$/.test(imagePath) &&
+        /^v\d+\/lentera-pos\/(products|money)\/[a-zA-Z0-9_./%-]+$/.test(imagePath) &&
+        imagePath.includes('/' + folder + '/') &&
         !imagePath.includes('..') && image.length <= 800) return image
   } catch { /* not a Cloudinary URL */ }
   bad('Gambar harus berasal dari Cloudinary LENTERA POS atau data lama yang valid.')
 }
 
-async function cloudinaryUpload(env, image) {
+async function cloudinaryUpload(env, image, folder = PRODUCT_MEDIA_FOLDER) {
+  if (![PRODUCT_MEDIA_FOLDER,MONEY_MEDIA_FOLDER].includes(folder)) bad('Folder media tidak valid.')
   if (!cloudinaryConfigured(env)) {
     bad('Cloudinary belum siap. Atur CLOUDINARY_API_KEY dan CLOUDINARY_API_SECRET pada Worker.', 503)
   }
@@ -95,7 +101,7 @@ async function cloudinaryUpload(env, image) {
   }
   const timestamp = String(Math.floor(Date.now() / 1000))
   const fields = {
-    folder: PRODUCT_MEDIA_FOLDER,
+    folder,
     overwrite: 'false',
     timestamp,
     unique_filename: 'true',
@@ -122,7 +128,7 @@ async function cloudinaryUpload(env, image) {
     bad('Upload Cloudinary gagal (' + response.status + '). Periksa Cloud Name, API Key dan API Secret.', 502)
   }
   const result = await response.json()
-  const url = verifyProductImageUrl(String(result.secure_url || ''),env)
+  const url = verifyProductImageUrl(String(result.secure_url || ''),env,null,folder)
   return { imageUrl:url, publicId:result.public_id }
 }
 
@@ -197,6 +203,8 @@ async function handleApi(request, env) {
   }
   if (!env.DATABASE_URL) return fail('DATABASE_URL belum diatur di Worker.', 503)
   const db = neon(env.DATABASE_URL)
+  const publicResponse = await handlePublicApi({db,path,method})
+  if (publicResponse) return publicResponse
 
   if (['POST','PATCH','PUT','DELETE'].includes(method)) {
     const origin = request.headers.get('origin')
@@ -241,13 +249,21 @@ async function handleApi(request, env) {
     if (token) await db.query('DELETE FROM public.auth_sessions WHERE token_hash=$1', [await sha256(token)])
     return json({ ok: true }, 200, sessionCookie('', 0))
   }
-  if (!account) return fail('Silakan login terlebih dahulu.', 401)
+  if (path.startsWith('/api/game/')) {
+    const canCreate = path === '/api/game/sessions' && ['GET','POST'].includes(method)
+    const guest = account ? null : await getGuest(db,request,canCreate)
+    if (!account && !guest) return fail('Sesi pengunjung belum ada. Muat ulang halaman latihan.',401)
+    const result = await handleGameApi({db,path,method,request,account,guestId:guest?.id || null})
+    if (result) {
+      if (guest?.setCookie) result.headers.set('set-cookie',guest.setCookie)
+      return result
+    }
+  }
+  if (!account) return fail('Silakan login admin terlebih dahulu.',401)
   if (account.role !== 'admin') return fail('Akses admin diperlukan.', 403)
 
   const cafeResponse = await handleCafeApi({ db, path, method, request, account })
   if (cafeResponse) return cafeResponse
-  const gameResponse = await handleGameApi({ db, path, method, request, account })
-  if (gameResponse) return gameResponse
 
 
   if (path === '/api/media/status' && method === 'GET') {
@@ -263,7 +279,9 @@ async function handleApi(request, env) {
   }
   if (path === '/api/media/upload' && method === 'POST') {
     const payload = await bodyJson(request)
-    const result = await cloudinaryUpload(env,payload?.image)
+    const folder=payload?.purpose === 'money' ? MONEY_MEDIA_FOLDER : PRODUCT_MEDIA_FOLDER
+    if (payload?.purpose && !['product','money'].includes(payload.purpose)) bad('Jenis foto tidak valid.')
+    const result = await cloudinaryUpload(env,payload?.image,folder)
     return json({ ok:true,...result },201)
   }
   if (path === '/api/media/migrate' && method === 'POST') {
@@ -282,6 +300,38 @@ async function handleApi(request, env) {
       [imageUrl,id,product.image_url])
     if (!changed.length) return fail('Gambar telah diubah saat migrasi. Ulangi pemuatan data.',409)
     return json({ok:true,migrated:true,imageUrl})
+  }
+
+  if (path === '/api/money' && method === 'GET') {
+    const rows=await db.query('SELECT denomination AS value,kind AS type,image_url AS "imageUrl",updated_at AS "updatedAt" FROM public.lentera_money_media ORDER BY denomination DESC')
+    return json({ok:true,denominations:rows})
+  }
+  const denomMatch=path.match(/^\/api\/money\/(\d+)$/)
+  if(denomMatch && method==='PATCH'){
+    const value=Number(denomMatch[1])
+    if(!MONEY_VALUES.has(value)) bad('Pecahan uang tidak valid.')
+    const payload=await bodyJson(request)
+    const imageUrl=String(payload?.imageUrl||'').trim()
+    if(imageUrl) verifyProductImageUrl(imageUrl,env,null,MONEY_MEDIA_FOLDER)
+    const [row]=await db.query(
+      'UPDATE public.lentera_money_media SET image_url=$1,updated_by=$2::uuid,updated_at=now() WHERE denomination=$3 RETURNING denomination AS value,kind AS type,image_url AS "imageUrl"',
+      [imageUrl||null,account.id,value])
+    if(!row)return fail('Pecahan uang tidak ditemukan.',404)
+    return json({ok:true,denomination:row})
+  }
+  if(path==='/api/stock-policy' && method==='GET'){
+    const [policy]=await db.query('SELECT enabled,refill_quantity AS "refillQuantity",updated_at AS "updatedAt" FROM public.lentera_stock_policy WHERE id=1')
+    return json({ok:true,policy})
+  }
+  if(path==='/api/stock-policy' && method==='PATCH'){
+    const payload=await bodyJson(request)
+    if(typeof payload?.enabled!=='boolean') bad('Status restock harus true/false.')
+    const quantity=Number(payload?.refillQuantity)
+    if(!Number.isInteger(quantity)||quantity<1||quantity>1000) bad('Jumlah isi ulang antara 1 sampai 1000.')
+    const [policy]=await db.query(
+      'UPDATE public.lentera_stock_policy SET enabled=$1,refill_quantity=$2,updated_at=now(),updated_by=$3::uuid WHERE id=1 RETURNING enabled,refill_quantity AS "refillQuantity",updated_at AS "updatedAt"',
+      [payload.enabled,quantity,account.id])
+    return json({ok:true,policy})
   }
 
   if (path === '/api/dashboard' && method === 'GET') {
