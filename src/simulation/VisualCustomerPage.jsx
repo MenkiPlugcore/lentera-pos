@@ -187,7 +187,7 @@ export default function VisualCustomerPage() {
         {!session ? (
           <div className="arcade-lobby">
             <div className="arcade-lobby-stage">
-              <StoreScene customer={customerForChallenge('welcome')} mood="happy"/>
+              <StoreScene empty/>
               <div className="arcade-lobby-stage-label">SELAMAT DATANG DI TOKO LENTERA!</div>
             </div>
             <section className="arcade-lobby-panel" aria-labelledby="arcade-start-title">

@@ -930,3 +930,99 @@
   .arcade-essentials strong { font-size:.85rem; }
   .cash-pocket-actions { width:100%; }
 }
+
+
+/* Scene LENTERA v1.3: exact customer + store artwork supplied by the project owner.
+   Whites in the character images are visually merged using multiply blending.
+   The game's HUD remains real HTML and never becomes part of the image. */
+.game-store-art--custom {
+  position:absolute;
+  inset:0;
+  display:block;
+  overflow:hidden;
+  width:100%;
+  height:100%;
+  isolation:isolate;
+  background:#e9d4ba;
+  pointer-events:none;
+}
+.game-store-art--custom .game-store-background {
+  position:absolute;
+  width:100%;
+  height:100%;
+  inset:0;
+  object-fit:cover;
+  object-position:center center;
+  user-select:none;
+  -webkit-user-drag:none;
+}
+.game-store-art--custom .game-store-character {
+  position:absolute;
+  z-index:1;
+  left:42%;
+  bottom:16%;
+  height:71%;
+  width:58%;
+  display:flex;
+  justify-content:center;
+  align-items:end;
+  transform:translateX(-50%);
+  overflow:visible;
+  pointer-events:none;
+  animation:customer-enter .4s ease-out both;
+}
+.game-store-art--custom .game-store-character img {
+  display:block;
+  width:auto;
+  height:100%;
+  max-width:100%;
+  object-fit:contain;
+  object-position:bottom center;
+  mix-blend-mode:multiply;
+  filter:contrast(1.025) saturate(1.04);
+  animation:customer-idle 5s ease-in-out 400ms infinite;
+}
+.game-store-art--custom .game-store-character--happy img {
+  animation:customer-happy .6s ease-out, customer-idle 5s ease-in-out .6s infinite;
+}
+.game-store-art--custom .game-store-character--thinking img {
+  animation:customer-thinking 1.2s ease-in-out;
+}
+.arcade-lobby .game-store-art--empty .game-store-background {
+  object-fit:cover;
+  object-position:center center;
+}
+@keyframes customer-enter {
+  from { opacity:0; transform:translate(-50%,16px) scale(.97); }
+  to { opacity:1; transform:translate(-50%,0) scale(1); }
+}
+@keyframes customer-idle {
+  0%,100% { transform:translateY(0); }
+  50% { transform:translateY(-3px); }
+}
+@keyframes customer-happy {
+  0%,100% { transform:translateY(0); }
+  45% { transform:translateY(-8px); }
+}
+@keyframes customer-thinking {
+  0%,100% { transform:rotate(0deg); }
+  40% { transform:rotate(-2deg); }
+  65% { transform:rotate(1deg); }
+}
+@media (min-width:961px) {
+  .arcade-play-layout .game-store-character { height:70%; width:62%; left:43%; bottom:15%; }
+}
+@media (max-width:960px) {
+  .game-store-art--custom .game-store-character { height:63%; width:92%; left:50%; bottom:15%; }
+  .game-store-art--custom .game-store-background { object-position:center center; }
+}
+@media (max-width:520px) {
+  .game-store-art--custom .game-store-character { height:57%; width:96%; left:50%; bottom:22%; }
+  .game-store-art--custom .game-store-background { object-position:50% center; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .game-store-art--custom .game-store-character,
+  .game-store-art--custom .game-store-character img {
+    animation:none !important;
+  }
+}
