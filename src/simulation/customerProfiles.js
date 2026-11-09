@@ -4,19 +4,19 @@ export const CUSTOMERS = Object.freeze([
   {
     id:'naya',name:'Naya',label:'Pelajar',palette:'violet',
     shirt:'#9b5fb4',hair:'#583829',
-    imageUrl:'https://res.cloudinary.com/dvds41ivm/image/upload/v1794236652/lentera-pos/customers/pelanggan-ungu-v1.png',
+    imageUrl:'https://res.cloudinary.com/dvds41ivm/image/upload/e_make_transparent:15/f_png/v1794236652/lentera-pos/customers/pelanggan-ungu-v1.png',
     greeting:'Halo, Kak. Saya mau belanja, ya!'
   },
   {
     id:'raka',name:'Raka',label:'Pelajar',palette:'emerald',
     shirt:'#275f69',hair:'#29282e',
-    imageUrl:'https://res.cloudinary.com/dvds41ivm/image/upload/v1794236677/lentera-pos/customers/pelanggan-jaket-biru-v1.png',
+    imageUrl:'https://res.cloudinary.com/dvds41ivm/image/upload/e_make_transparent:15/f_png/v1794236677/lentera-pos/customers/pelanggan-jaket-biru-v1.png',
     greeting:'Permisi, Kak. Saya mau membeli sesuatu.'
   },
   {
     id:'bu-maya',name:'Bu Maya',label:'Pelanggan',palette:'orange',
     shirt:'#199e8a',hair:'#3e302a',
-    imageUrl:'https://res.cloudinary.com/dvds41ivm/image/upload/v1794236683/lentera-pos/customers/pelanggan-kacamata-v1.png',
+    imageUrl:'https://res.cloudinary.com/dvds41ivm/image/upload/e_make_transparent:15/f_png/v1794236683/lentera-pos/customers/pelanggan-kacamata-v1.png',
     greeting:'Selamat siang. Saya mau belanja, boleh?'
   },
 ])

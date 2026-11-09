@@ -1026,3 +1026,76 @@
     animation:none !important;
   }
 }
+
+
+/* v1.3.1 — PNG transparan asli (Cloudinary), bukan multiply pada kotak putih. */
+.game-store-art--custom .game-store-character {
+  z-index: 1;
+  left: 53%;
+  bottom: 13%;
+  height: 72%;
+  width: 64%;
+}
+.game-store-art--custom .game-store-character img {
+  mix-blend-mode: normal;
+  filter: none;
+}
+.game-store-art--custom .game-store-foreground {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: block;
+  height: 100%;
+  width: 100%;
+  object-fit: cover;
+  object-position: center center;
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-drag: none;
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, transparent 78%, black 90%);
+  mask-image: linear-gradient(to bottom, transparent 0%, transparent 78%, black 90%);
+}
+.arcade-play-layout .arcade-dialogue {
+  left: 2%;
+  top: 23%;
+  width: min(285px, 39%);
+}
+@media (min-width: 961px) {
+  .arcade-play-layout .game-store-art--custom .game-store-character {
+    left: 54%;
+    width: 70%;
+    height: 70%;
+    bottom: 13%;
+  }
+}
+@media (max-width: 960px) {
+  .game-store-art--custom .game-store-character {
+    left: 53%;
+    width: 93%;
+    height: 62%;
+    bottom: 20%;
+  }
+  .arcade-play-layout .arcade-dialogue {
+    left: 3%;
+    top: 20%;
+    width: min(285px, 43%);
+  }
+}
+@media (max-width: 520px) {
+  .game-store-art--custom .game-store-character {
+    left: 52%;
+    width: 100%;
+    height: 53%;
+    bottom: 24%;
+  }
+  .arcade-play-layout .arcade-dialogue {
+    left: 3%;
+    top: 16%;
+    width: min(230px, 63%);
+    padding: .65rem .75rem;
+  }
+  .game-store-art--custom .game-store-foreground {
+    -webkit-mask-image: linear-gradient(to bottom, transparent 0%, transparent 75%, black 88%);
+    mask-image: linear-gradient(to bottom, transparent 0%, transparent 75%, black 88%);
+  }
+}

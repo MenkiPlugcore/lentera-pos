@@ -1,7 +1,8 @@
 // Scene visual menggunakan empat gambar pilihan pengguna yang diunggah ke Cloudinary.
-// Karakter memakai mix-blend-mode multiply untuk menyamarkan latar putih pada PNG asli.
+// Aset karakter transparan diolah Cloudinary (e_make_transparent) untuk menghindari latar putih.
+// Foreground memakai latar toko yang sama agar meja kasir terlihat di depan karakter.
 export const STORE_IMAGE = 'https://res.cloudinary.com/dvds41ivm/image/upload/v1794236695/lentera-pos/customers/toko-kosong-v1.png'
-export const DEFAULT_CUSTOMER_IMAGE = 'https://res.cloudinary.com/dvds41ivm/image/upload/v1794236652/lentera-pos/customers/pelanggan-ungu-v1.png'
+export const DEFAULT_CUSTOMER_IMAGE = 'https://res.cloudinary.com/dvds41ivm/image/upload/e_make_transparent:15/f_png/v1794236652/lentera-pos/customers/pelanggan-ungu-v1.png'
 
 export default function StoreScene({customer, mood='neutral', empty=false}) {
   const characterImage = customer?.imageUrl || DEFAULT_CUSTOMER_IMAGE
@@ -13,6 +14,8 @@ export default function StoreScene({customer, mood='neutral', empty=false}) {
       {!empty && <div className={'game-store-character game-store-character--'+mood} key={characterImage}>
         <img src={characterImage} alt="" aria-hidden="true" fetchPriority="high"/>
       </div>}
+      {!empty && <img className="game-store-foreground" src={STORE_IMAGE} alt=""
+        aria-hidden="true" loading="eager" />}
     </div>
   )
 }
