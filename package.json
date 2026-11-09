@@ -10,17 +10,23 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "test": "node --test src/localPos.test.mjs"
+    "test": "node --test src/localPos.test.mjs",
+    "build:cloud": "VITE_POS_MODE=cloud vite build",
+    "deploy:cloud": "npm run build:cloud && wrangler deploy",
+    "dev:cloud": "npm run build:cloud && wrangler dev"
   },
   "dependencies": {
     "@zxing/browser": "^0.2.1",
     "react": "^19.2.0",
-    "react-dom": "^19.2.0"
+    "react-dom": "^19.2.0",
+    "@neondatabase/serverless": "^1.0.2",
+    "bcryptjs": "^3.0.2"
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.3.3",
     "@vitejs/plugin-react": "^6.1.0",
     "tailwindcss": "^4.3.3",
-    "vite": "^8.1.0"
+    "vite": "^8.1.0",
+    "wrangler": "^4.20.0"
   }
 }

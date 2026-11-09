@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { apiFetch as requestJson } from './localPos.js'
+import { IS_CLOUD } from './cloudApi.js'
 
 export default function HardDeletePanel() {
   const [open, setOpen] = useState(false)
@@ -39,7 +40,7 @@ export default function HardDeletePanel() {
     }
 
     const confirmed = window.confirm(
-      `Produk ${product.name} (${product.sku}) akan dihapus permanen dari penyimpanan lokal. Tindakan ini tidak dapat dibatalkan. Lanjutkan?`,
+      `Produk ${product.name} (${product.sku}) akan dihapus permanen dari ${IS_CLOUD ? 'database cloud' : 'penyimpanan lokal'}. Tindakan ini tidak dapat dibatalkan. Lanjutkan?`,
     )
     if (!confirmed) return
 
@@ -82,7 +83,7 @@ export default function HardDeletePanel() {
                 <p className="text-xs font-bold uppercase tracking-[0.2em] text-rose-300">Danger Zone</p>
                 <h2 className="mt-2 text-2xl font-black">Hapus Produk Permanen</h2>
                 <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-400">
-                  Produk yang belum pernah dipakai dalam transaksi dapat dihapus total dari browser. Riwayat stok produk tersebut ikut terhapus. Produk yang sudah pernah masuk transaksi wajib diarsipkan agar laporan kasir tetap konsisten.
+                  Produk yang belum pernah dipakai dalam transaksi dapat dihapus dari {IS_CLOUD ? 'database' : 'browser'}. Riwayat stok produk tersebut ikut terhapus. Produk yang sudah pernah masuk transaksi wajib diarsipkan agar laporan kasir tetap konsisten.
                 </p>
               </div>
               <button

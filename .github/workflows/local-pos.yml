@@ -1,9 +1,10 @@
-name: Validate local POS
+name: Validate LENTERA POS
 
 on:
   pull_request:
   push:
     branches:
+      - main
       - feature/local-only-no-login
 
 jobs:
@@ -16,4 +17,6 @@ jobs:
           node-version: '22'
       - run: npm install --no-audit --no-fund
       - run: npm test
+      - run: node --check worker/index.js
       - run: npm run build
+      - run: npm run build:cloud

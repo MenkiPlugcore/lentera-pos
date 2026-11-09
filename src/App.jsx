@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import ProductBarcodeActions from './ProductBarcodeActions.jsx'
 import LocalBackupPanel from './LocalBackupPanel.jsx'
+import CloudAdminPanel from './CloudAdminPanel.jsx'
+import { IS_CLOUD } from './cloudApi.js'
 import { apiFetch, imageFileToDataUrl } from './localPos.js'
 
 const emptyProduct = {
@@ -34,7 +36,7 @@ function Brand() {
     <div>
       <p className="text-xs font-bold tracking-[0.28em] text-cyan-400">HOMESCHOOLING LENTERA</p>
       <h1 className="mt-2 text-3xl font-black tracking-tight text-white">LENTERA POS</h1>
-      <p className="mt-1 text-sm text-slate-400">Sistem Kasir & Laboratorium Praktik TKJ</p>
+      <p className="mt-1 text-sm text-slate-400">Sistem Kasir, Smart Cafe & Learning Game</p>
     </div>
   )
 }
@@ -47,13 +49,13 @@ function AdminApp() {
           <Brand />
           <div className="flex items-center gap-3">
             <div className="rounded-2xl border border-cyan-900 bg-slate-900 px-4 py-2 text-right">
-              <p className="text-sm font-bold text-cyan-300">MODE LOKAL</p>
-              <p className="text-xs text-slate-500">Tanpa akun & server</p>
+              <p className="text-sm font-bold text-cyan-300">{IS_CLOUD ? 'NEON CLOUD' : 'MODE LOKAL'}</p>
+              <p className="text-xs text-slate-500">{IS_CLOUD ? 'Database & login aktif' : 'Tanpa akun & server'}</p>
             </div>
           </div>
         </div>
       </header>
-      <div className="mx-auto max-w-7xl px-5 py-7"><LocalBackupPanel /><ProductManager /></div>
+      <div className="mx-auto max-w-7xl px-5 py-7">{IS_CLOUD ? <CloudAdminPanel /> : <LocalBackupPanel />}<ProductManager /></div>
     </main>
   )
 }

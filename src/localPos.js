@@ -1,3 +1,5 @@
+import { IS_CLOUD, cloudApiFetch } from './cloudApi.js'
+
 // LENTERA POS - penyimpanan lokal tanpa database, backend, atau akun.
 // Seluruh data terikat pada origin + profil browser perangkat ini.
 const STORAGE_KEY = 'lentera-pos:local:v1';
@@ -207,6 +209,7 @@ function salesReport(state, from, to) {
 // Fungsi ini mempertahankan kontrak respons API lama sehingga panel UI tetap kompatibel,
 // tetapi SEMUA pemrosesan terjadi di browser; tidak ada fetch atau permintaan jaringan.
 export async function apiFetch(rawUrl, options = {}) {
+  if (IS_CLOUD) return cloudApiFetch(rawUrl, options)
   const url = new URL(rawUrl, window.location.origin);
   const path = url.pathname.replace(/\/+$/, '') || '/';
   const method = String(options.method || 'GET').toUpperCase();
