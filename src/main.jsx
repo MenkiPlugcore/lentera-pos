@@ -43,20 +43,23 @@ function LoginPage({ onSuccess }) {
   }
 
   return (
-    <main className="grid min-h-screen place-items-center bg-slate-950 px-4 py-12 text-slate-100">
-      <form onSubmit={submit} className="w-full max-w-md rounded-3xl border border-slate-800 bg-slate-900 p-7 shadow-xl">
-        <div className="mb-5 text-4xl">☕</div>
-        <p className="text-xs font-black uppercase tracking-[0.2em] text-cyan-400">Lentera POS 2.0</p>
-        <h1 className="mt-2 text-3xl font-black">Masuk Admin</h1>
-        <p className="mt-2 text-sm leading-6 text-slate-400">Database Neon aktif. Gunakan akun admin LENTERA POS lama untuk mengakses kasir dan produk.</p>
-        <label className="mt-7 block text-sm font-bold">Username
+    <main className="portal-login-page">
+      <form onSubmit={submit} className="portal-login-card">
+        <div className="portal-login-badge" aria-hidden="true">☘</div>
+        <div className="portal-login-kicker">LENTERA POS · AKSES PETUGAS</div>
+        <h1>Masuk Admin</h1>
+        <p>Kelola produk, gambar uang, stok, dan transaksi melalui akun admin LENTERA POS.</p>
+        <label className="mt-7">Username
           <input className="input mt-2 w-full" autoComplete="username" value={username} onChange={e=>setUsername(e.target.value)} required />
         </label>
-        <label className="mt-4 block text-sm font-bold">Password
+        <label className="mt-4">Password
           <input className="input mt-2 w-full" type="password" autoComplete="current-password" value={password} onChange={e=>setPassword(e.target.value)} required />
         </label>
-        {error && <p className="mt-4 text-sm text-rose-300" role="alert">{error}</p>}
-        <button className="primary-button mt-6 w-full py-3" type="submit" disabled={loading}>{loading ? 'Memeriksa...' : 'Masuk ke LENTERA POS'}</button>
+        {error && <p className="portal-login-error mt-4" role="alert">{error}</p>}
+        <button className="primary-button portal-login-submit mt-6 w-full py-3" type="submit" disabled={loading}>
+          {loading ? 'Memeriksa...' : 'Masuk ke Dashboard'}
+        </button>
+        <a className="portal-login-back" href="/">← Kembali ke beranda</a>
       </form>
     </main>
   )
@@ -86,15 +89,16 @@ function CloudGate({ children }) {
 
   return (
     <>
-      <div className="sticky top-0 z-[70] flex flex-wrap items-center justify-between gap-3 border-b border-cyan-900 bg-slate-950 px-4 py-2 text-xs text-slate-200">
-        <span>☁️ Neon Cloud · {state.user.fullName || state.user.username}</span>
-        <nav className="flex flex-wrap items-center gap-2" aria-label="Navigasi LENTERA POS">
-          <a href="/kasir" className="rounded-lg border border-slate-700 px-3 py-1.5 hover:bg-slate-800">Kasir</a>
-          <a href="/admin" className="rounded-lg border border-slate-700 px-3 py-1.5 hover:bg-slate-800">Admin</a>
-          <a href="/cafe" className="rounded-lg border border-cyan-700 px-3 py-1.5 text-cyan-200 hover:bg-cyan-900">Smart Cafe</a>
-          <a href="/game" className="rounded-lg border border-cyan-700 px-3 py-1.5 text-cyan-200 hover:bg-cyan-900">Mode Game</a>
-          <a href="/simulasi" className="rounded-lg border border-cyan-700 px-3 py-1.5 text-cyan-200 hover:bg-cyan-900">Pelanggan Virtual</a>
-          <button type="button" className="rounded-lg border border-slate-700 px-3 py-1.5 hover:bg-slate-800" onClick={logout}>Keluar</button>
+      <div className="portal-adminbar">
+        <span className="portal-adminbar-user">● Admin · {state.user.fullName || state.user.username}</span>
+        <nav className="portal-adminbar-nav" aria-label="Navigasi LENTERA POS">
+          <a href="/admin">Dashboard</a>
+          <a href="/kasir">Kasir</a>
+          <a href="/cafe">Smart Cafe</a>
+          <a href="/game">Kasir Pintar</a>
+          <a href="/simulasi">Simulasi</a>
+          <a href="/">Beranda</a>
+          <button type="button" onClick={logout}>Keluar</button>
         </nav>
       </div>
       {children}
@@ -103,17 +107,48 @@ function CloudGate({ children }) {
 }
 
 function PublicHeader() {
-  return <header className="border-b border-slate-800 bg-slate-950 px-4 py-3 text-slate-100">
-    <nav aria-label="Navigasi situs umum" className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3">
-      <a href="/" className="text-lg font-black tracking-tight text-cyan-300">LENTERA POS</a>
-      <div className="flex flex-wrap items-center gap-2 text-sm">
-        <a href="/" className="rounded-lg px-3 py-2 hover:bg-slate-800">Beranda</a>
-        <a href="/simulasi" className="rounded-lg px-3 py-2 hover:bg-slate-800">Simulasi Pelanggan</a>
-        <a href="/game" className="rounded-lg px-3 py-2 hover:bg-slate-800">Kasir Pintar</a>
-        <a href="/admin" className="rounded-lg border border-cyan-700 px-3 py-2 font-bold text-cyan-200 hover:bg-slate-800">Login Admin</a>
-      </div>
-    </nav>
+  const [menuOpen,setMenuOpen]=useState(false)
+  const current=normalizePath(window.location.pathname)
+  const nav=[
+    {href:'/',label:'Beranda'},
+    {href:'/simulasi',label:'Simulasi Pelanggan'},
+    {href:'/game',label:'Kasir Pintar'},
+  ]
+  return <header className="portal-header">
+    <a href="#page-content" className="portal-skip">Langsung ke konten</a>
+    <div className="portal-header-inner">
+      <a href="/" className="portal-brand" aria-label="LENTERA POS, kembali ke beranda">
+        <span className="portal-brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M19.5 4.5c-8 .2-13.9 3.4-14.6 9-.5 4.4 2.8 6.5 6.3 5.3 6.6-2.2 8.1-8.8 8.3-14.3Z"/>
+            <path d="M4.5 20c1.7-4 4.2-6.8 9.6-10.1"/>
+          </svg>
+        </span>
+        <span className="portal-brand-copy"><strong>LENTERA POS</strong><small>Belajar • Berlatih • Berkembang</small></span>
+      </a>
+      <button type="button" className="portal-menu-toggle" aria-label={menuOpen?'Tutup menu navigasi':'Buka menu navigasi'}
+        aria-expanded={menuOpen} aria-controls="portal-site-nav"
+        onClick={()=>setMenuOpen(open=>!open)}>
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+          {menuOpen ? <path d="M5 5l14 14M19 5 5 19"/> : <path d="M4 6h16M4 12h16M4 18h16"/>}
+        </svg>
+        Menu
+      </button>
+      <nav id="portal-site-nav" className="portal-nav" data-open={menuOpen} aria-label="Navigasi situs umum">
+        {nav.map(item=><a href={item.href} key={item.href} className="portal-nav-link"
+          aria-current={current===item.href?'page':undefined}
+          onClick={()=>setMenuOpen(false)}>{item.label}</a>)}
+        <a href="/admin" className="portal-nav-link portal-nav-admin">Masuk Admin</a>
+      </nav>
+    </div>
   </header>
+}
+
+function PublicShell({children}) {
+  return <div className="portal-shell">
+    <PublicHeader/>
+    <div id="page-content">{children}</div>
+  </div>
 }
 
 function RootRoute() {
@@ -125,9 +160,9 @@ function RootRoute() {
     return <CashierPage/>
   }
 
-  if (path === '/' || path === '/home') return <><PublicHeader/><PublicHomePage/></>
-  if (path === '/simulasi') return <><PublicHeader/><VisualCustomerPage/></>
-  if (path === '/game') return <><PublicHeader/><GamePage/></>
+  if (path === '/' || path === '/home') return <PublicShell><PublicHomePage/></PublicShell>
+  if (path === '/simulasi') return <PublicShell><VisualCustomerPage/></PublicShell>
+  if (path === '/game') return <PublicShell><GamePage/></PublicShell>
 
   if (path === '/kasir') return <CloudGate><CashierPage/></CloudGate>
   if (path === '/cafe') return <CloudGate><CafePage/></CloudGate>
@@ -139,7 +174,7 @@ function RootRoute() {
   </CloudGate>
 
   window.history.replaceState({}, '', '/')
-  return <><PublicHeader/><PublicHomePage/></>
+  return <PublicShell><PublicHomePage/></PublicShell>
 }
 
 createRoot(document.getElementById('root')).render(

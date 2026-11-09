@@ -1,13 +1,13 @@
 /* Accessible customer simulation. Contrast and layout intentionally simple. */
 .simulation-customer-card {
-  border: 1px solid rgba(8, 145, 178, .35);
-  background: #0f172a;
+  border: 1px solid rgba(22, 163, 74, .25);
+  background: #ffffff;
   border-radius: 1.5rem;
   padding: 1.25rem;
 }
 .simulation-customer-frame {
   border-radius: 1.25rem;
-  background: linear-gradient(155deg, #164e63 0%, #172554 100%);
+  background: linear-gradient(155deg, #dbf5e5 0%, #b6e9c8 100%);
   padding: 1.25rem;
   text-align: center;
   display: grid;
@@ -19,7 +19,7 @@
   color: #0f172a;
   border-radius: 1.25rem;
   padding: 1.25rem;
-  border: 2px solid #67e8f9;
+  border: 2px solid #86cfa4;
   box-shadow: 0 8px 24px rgba(0, 0, 0, .15);
 }
 .simulation-speech::before {
@@ -31,20 +31,20 @@
   height: 18px;
   background: #f8fafc;
   transform: rotate(45deg);
-  border-top: 2px solid #67e8f9;
-  border-left: 2px solid #67e8f9;
+  border-top: 2px solid #86cfa4;
+  border-left: 2px solid #86cfa4;
 }
 .simulation-money-card {
   min-width: 0;
-  border: 2px solid #475569;
-  background: #1e293b;
+  border: 2px solid #c8e6d1;
+  background: #f5fcf7;
   border-radius: 1rem;
   padding: 1.25rem;
 }
 .simulation-money-card strong { overflow-wrap: anywhere; }
 .simulation-money-highlight {
-  background: #155e75;
-  border-color: #67e8f9;
+  background: #e0f6e7;
+  border-color: #79c899;
 }
 .simulation-main-button {
   min-height: 56px;
@@ -56,17 +56,17 @@
   padding: 1rem .55rem;
   font-size: 1.1rem;
   font-weight: 900;
-  border: 2px solid #22d3ee;
+  border: 2px solid #158247;
   color: #f8fafc;
-  background: #164e63;
+  background: #177747;
   border-radius: 1rem;
   overflow-wrap: anywhere;
   transition: background-color .12s ease, border-color .12s ease;
   cursor: pointer;
 }
 .simulation-answer:hover:not(:disabled) {
-  background: #0e7490;
-  border-color: #a5f3fc;
+  background: #0e633a;
+  border-color: #86cfa4;
 }
 .simulation-answer:disabled, .simulation-main-button:disabled {
   opacity: .6;
@@ -80,14 +80,14 @@
 .simulation-session-card {
   display: grid;
   gap: .5rem;
-  border: 1px solid #475569;
-  background: #020617;
+  border: 1px solid #c7e5d0;
+  background: #ffffff;
   padding: 1rem;
   border-radius: 1rem;
   text-align: left;
   cursor: pointer;
 }
-.simulation-session-card:hover:not(:disabled) { border-color: #22d3ee; }
+.simulation-session-card:hover:not(:disabled) { border-color: #15934c; }
 .simulation-session-card:disabled { cursor: not-allowed; opacity: .65; }
 @media (max-width: 380px) {
   .simulation-answer { font-size: 1rem; }
@@ -102,9 +102,9 @@
 .cash-tray {
   margin-top: 1rem;
   padding: 1rem;
-  border: 1px solid #334155;
+  border: 1px solid #cce6d3;
   border-radius: 1.5rem;
-  background: #0b172a;
+  background: #f9fefa;
 }
 .cash-training-label {
   display: inline-flex;
@@ -112,8 +112,8 @@
   border-radius: 999px;
   font-size: .75rem;
   font-weight: 800;
-  color: #a5f3fc;
-  background: #164e63;
+  color: #16663d;
+  background: #dcfce7;
 }
 .cash-piece-grid {
   display: grid;
@@ -129,13 +129,13 @@
   min-height: 116px;
   gap: .45rem;
   padding: .5rem;
-  border: 1px solid #475569;
+  border: 1px solid #b9dac4;
   border-radius: .9rem;
-  background: #18273c;
+  background: #e9f8ee;
   cursor: pointer;
   transition: border-color .12s ease, background-color .12s ease;
 }
-.cash-piece-button:hover:not(:disabled) { border-color: #67e8f9; background: #24415c; }
+.cash-piece-button:hover:not(:disabled) { border-color: #4cbb79; background: #d6f3e0; }
 .cash-piece-button:disabled { opacity: .35; cursor: not-allowed; }
 .cash-piece-button:focus-visible,
 .cash-small-button:focus-visible,
@@ -205,18 +205,18 @@
 }
 .cash-coin-face strong { font-size: 1rem; }
 .cash-coin-mark, .cash-coin-face small { font-size: .44rem; letter-spacing: .04em; }
-.cash-piece-caption { color: #f8fafc; font-size: .85rem; font-weight: 800; }
+.cash-piece-caption { color: #18593a; font-size: .85rem; font-weight: 800; }
 .cash-counting-area {
-  border: 2px solid #2dd4bf;
+  border: 2px solid #86d3a4;
   border-radius: 1.1rem;
-  background: #132536;
+  background: #f3fcf5;
   padding: 1rem;
 }
 .cash-small-button, .cash-remove-button, .cash-zero-button {
   border: 1px solid #64748b;
   border-radius: .7rem;
-  background: #334155;
-  color: #fff;
+  background: #e5f6e9;
+  color: #19603f;
   font-weight: 800;
   padding: .75rem 1rem;
   min-height: 44px;
@@ -224,7 +224,7 @@
 }
 .cash-small-button:hover:not(:disabled),
 .cash-remove-button:hover:not(:disabled),
-.cash-zero-button:hover:not(:disabled) { background: #475569; }
+.cash-zero-button:hover:not(:disabled) { background: #c8e9d1; }
 .cash-small-button:disabled, .cash-remove-button:disabled { opacity: .4; cursor: not-allowed; }
 .cash-selected-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: .55rem; }
 .cash-selected-piece {
@@ -233,12 +233,12 @@
   gap: .5rem;
   justify-content: space-between;
   align-items: center;
-  background: #1e293b;
+  background: #e3f5e9;
   border-radius: .75rem;
   padding: .6rem;
   font-size: .9rem;
 }
-.cash-remove-button { min-height: 40px; min-width: 46px; padding: .45rem; background: #155e75; }
+.cash-remove-button { min-height: 40px; min-width: 46px; padding: .45rem; background: #d4eedc; }
 .cash-submit-button {
   width: 100%;
   min-height: 64px;
@@ -249,7 +249,7 @@
 .cash-zero-button {
   width: 100%;
   min-height: 52px;
-  background: #1e293b;
+  background: #f3fbf5;
 }
 .simulation-mode-switch {
   display: flex;
@@ -259,17 +259,17 @@
 }
 .simulation-mode-button {
   min-height: 48px;
-  border: 2px solid #475569;
+  border: 2px solid #c7e2d0;
   border-radius: .8rem;
   padding: .7rem 1rem;
-  background: #172338;
-  color: #e2e8f0;
+  background: #f4fcf6;
+  color: #20583b;
   font-weight: 900;
   cursor: pointer;
 }
 .simulation-mode-button[aria-pressed="true"] {
-  background: #155e75;
-  border-color: #67e8f9;
+  background: #176d43;
+  border-color: #176d43;
   color: #fff;
 }
 @media (min-width: 600px) {
@@ -310,3 +310,28 @@
   border-radius: 50%;
 }
 .cash-piece--uploaded img { display: block; max-width: 100%; width: 100%; height: 100%; object-fit: contain; }
+
+/* Light emerald public learning screens: protect readable amounts and card text. */
+.portal-shell .simulation-customer-card,
+.portal-shell .cash-tray,
+.portal-shell .cash-counting-area { color: #19452e; }
+.portal-shell .simulation-customer-frame p { color: #1d5937 !important; }
+.portal-shell .simulation-money-card p,
+.portal-shell .simulation-money-card strong { color: #1d5937 !important; }
+.portal-shell .cash-tray p,
+.portal-shell .cash-tray h4,
+.portal-shell .cash-counting-area p { color: #21543a !important; }
+.portal-shell .cash-selected-piece span { color: #194a31 !important; }
+.portal-shell .cash-piece-button:disabled { opacity: .5; }
+.portal-shell .cash-small-button,
+.portal-shell .cash-zero-button { color: #1b603c !important; }
+.portal-shell .simulation-mode-button[aria-pressed="true"] {
+  background: #187846;
+  border-color: #187846;
+  color: #fff;
+}
+@media (max-width: 560px) {
+  .portal-shell .cash-counting-area { padding: .8rem; }
+  .portal-shell .cash-selected-grid { grid-template-columns: 1fr; }
+  .portal-shell .simulation-answer { min-height: 74px; }
+}

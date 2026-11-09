@@ -3,8 +3,8 @@
 :root {
   font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   color-scheme: light;
-  background: #eef7ff;
-  color: #0f172a;
+  background: #f3fbf5;
+  color: #173d2b;
 }
 
 * {
@@ -12,7 +12,7 @@
 }
 
 html {
-  background: linear-gradient(180deg, #e0f2fe 0%, #f8fafc 28%, #ffffff 100%);
+  background: linear-gradient(180deg, #e8f8ec 0%, #f7fcf8 34%, #ffffff 100%);
 }
 
 body {
@@ -37,19 +37,20 @@ button {
 }
 
 .input {
-  @apply w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-cyan-500 focus:ring-4 focus:ring-cyan-500/15;
+  @apply w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-emerald-600 focus:ring-4 focus:ring-emerald-600/15;
   min-height: 44px;
   box-shadow: 0 1px 2px rgb(15 23 42 / 0.04);
 }
 
 .primary-button {
-  @apply inline-flex items-center justify-center gap-2 rounded-xl bg-cyan-500 px-4 py-2.5 text-sm font-black text-white transition hover:bg-cyan-600 disabled:cursor-wait disabled:opacity-60;
+  @apply inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-700 px-4 py-2.5 text-sm font-black text-white transition hover:bg-emerald-800 disabled:cursor-wait disabled:opacity-60;
   min-height: 44px;
-  box-shadow: 0 10px 24px rgb(6 182 212 / 0.22);
+  box-shadow: 0 10px 24px rgb(22 101 52 / 0.16);
+  color: #ffffff !important;
 }
 
 .secondary-button {
-  @apply inline-flex items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-bold text-slate-700 transition hover:border-cyan-300 hover:bg-cyan-50 hover:text-cyan-800 disabled:opacity-60;
+  @apply inline-flex items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-bold text-slate-700 transition hover:border-emerald-300 hover:bg-emerald-50 hover:text-emerald-800 disabled:opacity-60;
   min-height: 42px;
   box-shadow: 0 1px 2px rgb(15 23 42 / 0.05);
 }
@@ -169,18 +170,18 @@ button {
 }
 
 [class*="bg-cyan-950"] {
-  background-color: #ecfeff !important;
+  background-color: #edfaf1 !important;
 }
 
 [class*="border-cyan-900"],
 [class*="border-cyan-800"] {
-  border-color: #a5f3fc !important;
+  border-color: #bde7c9 !important;
 }
 
 [class*="text-cyan-200"],
 [class*="text-cyan-300"],
 [class*="text-cyan-400"] {
-  color: #0e7490 !important;
+  color: #147347 !important;
 }
 
 /* Cards and modal surfaces */
@@ -239,7 +240,7 @@ tbody tr {
 }
 
 tbody tr:hover {
-  background-color: rgba(236, 254, 255, 0.65);
+  background-color: rgba(225, 248, 232, 0.65);
 }
 
 /* Responsive polish */
@@ -321,4 +322,28 @@ tbody tr:hover {
   button[class*="fixed"][class*="bottom-[72px]"] {
     bottom: 3.9rem !important;
   }
+}
+
+
+/* Unified emerald accent for screens that still use legacy cyan utilities. */
+[class*="bg-cyan-500"],[class*="bg-cyan-400"] {
+  background-color: #18814e !important;
+  color: #ffffff !important;
+}
+[class*="bg-cyan-700"],[class*="bg-cyan-600"] {
+  background-color: #177748 !important;
+  color: #ffffff !important;
+}
+[class*="bg-cyan-900"],[class*="bg-cyan-800"] {
+  background-color: #dbf4e2 !important;
+}
+[class*="border-cyan-700"],[class*="border-cyan-600"],
+[class*="border-cyan-500"] {
+  border-color: #91d8a8 !important;
+}
+[class*="text-cyan-100"],[class*="text-cyan-500"] {
+  color: #16734a !important;
+}
+button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible {
+  outline-offset: 3px;
 }

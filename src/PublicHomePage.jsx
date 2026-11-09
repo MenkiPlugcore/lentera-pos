@@ -1,84 +1,186 @@
 import { useEffect, useState } from 'react'
 import { cloudApiFetch } from './cloudApi.js'
+import './landing.css'
 
-const rupiah = value => new Intl.NumberFormat('id-ID',{style:'currency',currency:'IDR',maximumFractionDigits:0}).format(Number(value)||0)
+const rupiah = value => new Intl.NumberFormat('id-ID',{
+  style:'currency',currency:'IDR',maximumFractionDigits:0,
+}).format(Number(value)||0)
+
+const modules = [
+  {
+    id:'simulasi',
+    label:'Simulasi Pelanggan',
+    href:'/simulasi',
+    eyebrow:'BELAJAR MELAYANI',
+    description:'Sambut pembeli, lihat pesanannya, lalu susun uang kembalian memakai gambar uang dan koin.',
+    icon:'customer',
+    duration:'5 pelanggan per sesi',
+  },
+  {
+    id:'game',
+    label:'Kasir Pintar',
+    href:'/game',
+    eyebrow:'BELAJAR BERHITUNG',
+    description:'Latih penjumlahan, pengurangan, dan menghitung kembalian melalui soal interaktif.',
+    icon:'calculator',
+    duration:'5 soal per sesi',
+  },
+]
+
+function IllustrationIcon({ name, size=28 }) {
+  const shared={width:size,height:size,viewBox:'0 0 24 24',fill:'none',stroke:'currentColor',strokeWidth:1.8,strokeLinecap:'round',strokeLinejoin:'round', 'aria-hidden':true}
+  if(name==='customer')return <svg {...shared}><circle cx="12" cy="7" r="3.5"/><path d="M4 20v-2a8 8 0 0 1 16 0v2"/><path d="M17.5 5.2h4M19.5 3.2v4"/></svg>
+  if(name==='calculator')return <svg {...shared}><rect x="5" y="2.5" width="14" height="19" rx="2.5"/><path d="M8 7h8M8.5 11h1M14.5 11h1M8.5 15h1M14.5 15h1M8.5 19h1M14.5 19h1"/></svg>
+  if(name==='arrow')return <svg {...shared}><path d="M4 12h16M14 6l6 6-6 6"/></svg>
+  if(name==='check')return <svg {...shared}><circle cx="12" cy="12" r="9"/><path d="m8 12 2.5 2.5L16 9"/></svg>
+  if(name==='book')return <svg {...shared}><path d="M12 6.5C9 4.6 5.5 4.5 3 5v13c3-.8 6.3-.5 9 1 2.7-1.5 6-1.8 9-1V5c-2.5-.5-6-.4-9 1.5Z"/><path d="M12 6.5V19"/></svg>
+  return <svg {...shared}><path d="M4 7h16v10H4zM8 11h8M8 14h5"/></svg>
+}
+
+function PreviewCard() {
+  return <div className="landing-preview" aria-label="Ilustrasi contoh transaksi latihan">
+    <div className="landing-preview-top">
+      <span className="landing-preview-status"><span/> CONTOH SIMULASI</span>
+      <span className="landing-preview-steps">01 / 05</span>
+    </div>
+    <div className="landing-customer-line">
+      <div className="landing-customer-avatar" aria-hidden="true">☺</div>
+      <div className="landing-customer-speech">
+        <span>PELANGGAN</span>
+        <p>Halo! Saya mau belanja. Bantu hitung kembaliannya, ya!</p>
+      </div>
+    </div>
+    <div className="landing-preview-order">
+      <div className="landing-order-heading"><span>Pesanan pembeli</span><span>1 item</span></div>
+      <div className="landing-preview-product"><span className="landing-bag-icon" aria-hidden="true">▣</span><span>Alat tulis & kebutuhan sekolah</span><strong>Rp13.000</strong></div>
+      <div className="landing-order-summary"><span>Total belanja</span><strong>Rp13.000</strong></div>
+      <div className="landing-order-summary landing-order-cash"><span>Uang diterima</span><strong>Rp20.000</strong></div>
+      <div className="landing-order-change"><span><IllustrationIcon name="check" size={20}/> Kembalian tepat</span><strong>Rp7.000</strong></div>
+    </div>
+    <div className="landing-preview-bottom"><span>✓</span> Simulasi belajar · Bukan pembayaran asli</div>
+    <div className="landing-spark landing-spark-one" aria-hidden="true">✳</div>
+    <div className="landing-spark landing-spark-two" aria-hidden="true">✳</div>
+  </div>
+}
 
 export default function PublicHomePage() {
   const [products,setProducts]=useState([])
+  const [loading,setLoading]=useState(true)
   const [error,setError]=useState('')
-  useEffect(()=>{
-    let live=true
-    cloudApiFetch('/api/public/catalog').then(data=>{
-      if(live)setProducts((data.products||[]).slice(0,12))
-    }).catch(problem=>{if(live)setError(problem.message)})
-    return ()=>{live=false}
-  },[])
+  const [retry,setRetry]=useState(0)
 
-  return <main className="min-h-screen bg-slate-950 text-slate-100">
-    <section className="relative overflow-hidden border-b border-slate-800 bg-gradient-to-br from-slate-900 via-cyan-950 to-slate-950">
-      <div className="mx-auto grid max-w-7xl gap-8 px-5 py-12 sm:py-20 lg:grid-cols-2 lg:items-center">
-        <div>
-          <p className="text-xs font-black uppercase tracking-[.3em] text-cyan-300">HOMESCHOOLING LENTERA HATI · MEDIA BELAJAR</p>
-          <h1 className="mt-4 text-4xl font-black leading-tight sm:text-5xl">
-            Belajar jadi kasir lewat <span className="text-cyan-300">simulasi seru.</span>
-          </h1>
-          <p className="mt-5 max-w-xl text-base leading-8 text-slate-200">
-            Sambut pelanggan, hitung belanja, dan susun uang kembalian dengan gambar uang interaktif.
-            Bisa bermain tanpa login dan tanpa memengaruhi stok atau transaksi asli.
+  useEffect(()=>{
+    let active=true
+    setLoading(true)
+    setError('')
+    cloudApiFetch('/api/public/catalog')
+      .then(result=>{if(active)setProducts((result.products||[]).slice(0,8))})
+      .catch(problem=>{if(active)setError(problem.message)})
+      .finally(()=>{if(active)setLoading(false)})
+    return ()=>{active=false}
+  },[retry])
+
+  return <main id="konten-utama" className="landing-page">
+    <section className="landing-hero" aria-labelledby="landing-title">
+      <div className="landing-container landing-hero-grid">
+        <div className="landing-hero-copy">
+          <div className="landing-eyebrow"><span className="landing-eyebrow-dot"/> HOMESCHOOLING LENTERA HATI</div>
+          <h1 id="landing-title">Belajar jual beli jadi <span>lebih mudah & menyenangkan.</span></h1>
+          <p className="landing-hero-description">
+            Latihan menjadi kasir bersama pelanggan virtual. Pilih produk,
+            hitung uang, dan pelajari kembalian dengan langkah sederhana,
+            langsung dari HP atau komputer.
           </p>
-          <div className="mt-7 flex flex-wrap gap-3">
-            <a href="/simulasi" className="primary-button inline-flex min-h-14 items-center justify-center px-7 text-lg font-black">Main Simulasi Pelanggan</a>
-            <a href="/game" className="secondary-button inline-flex min-h-14 items-center justify-center px-5 font-bold">Kasir Pintar</a>
+          <div className="landing-actions">
+            <a className="landing-btn landing-btn-primary" href="/simulasi">
+              Mulai Simulasi <IllustrationIcon name="arrow" size={20}/>
+            </a>
+            <a className="landing-btn landing-btn-secondary" href="/game">Coba Kasir Pintar</a>
           </div>
-          <p className="mt-4 text-sm text-slate-300">Gratis untuk latihan · Tanpa timer · Ramah pembelajaran bertahap</p>
+          <div className="landing-reassurance">
+            <span><IllustrationIcon name="check" size={18}/> Tanpa login</span>
+            <span><IllustrationIcon name="check" size={18}/> Tanpa batas waktu</span>
+            <span><IllustrationIcon name="check" size={18}/> Ramah HP</span>
+          </div>
         </div>
-        <div aria-hidden="true" className="rounded-3xl border border-cyan-700/50 bg-slate-900/80 p-6 shadow-2xl shadow-cyan-950/30">
-          <div className="flex items-center justify-between rounded-xl bg-slate-800 p-4"><span className="font-bold">Pelanggan sedang membeli...</span><span className="text-3xl">🛍️</span></div>
-          <div className="mt-4 grid gap-3 sm:grid-cols-2">
-            <div className="rounded-2xl border border-cyan-800 bg-slate-950 p-5"><p className="text-sm text-slate-300">Total Belanja</p><p className="mt-2 text-3xl font-black">Rp13.000</p></div>
-            <div className="rounded-2xl border border-cyan-600 bg-cyan-950 p-5"><p className="text-sm text-cyan-200">Uang Diterima</p><p className="mt-2 text-3xl font-black">Rp20.000</p></div>
-          </div>
-          <div className="mt-4 rounded-2xl border-2 border-dashed border-emerald-700 bg-emerald-950/30 p-5">
-            <p className="text-sm text-slate-200">Bantu siapkan uang kembalian:</p>
-            <div className="mt-3 flex gap-3">
-              <span className="rounded-lg bg-amber-100 px-4 py-3 font-black text-slate-900">5.000</span>
-              <span className="rounded-lg bg-slate-200 px-4 py-3 font-black text-slate-900">2.000</span>
+        <div className="landing-preview-wrap"><PreviewCard/></div>
+      </div>
+    </section>
+
+    <section className="landing-section" id="aktivitas" aria-labelledby="activities-title">
+      <div className="landing-container">
+        <div className="landing-section-heading">
+          <div><span className="landing-kicker">PILIH KEGIATAN</span><h2 id="activities-title">Mau belajar apa hari ini?</h2></div>
+          <p>Pilih aktivitas yang sesuai. Mulai dari latihan transaksi visual hingga berhitung kembalian.</p>
+        </div>
+        <div className="landing-module-grid">
+          {modules.map(module=><a href={module.href} key={module.id} className={'landing-module landing-module-'+module.id}>
+            <div className="landing-module-top">
+              <span className="landing-module-icon"><IllustrationIcon name={module.icon} size={32}/></span>
+              <span className="landing-module-arrow"><IllustrationIcon name="arrow" size={20}/></span>
             </div>
-            <p className="mt-4 text-xl font-black text-emerald-300">Kembalian Rp7.000</p>
-          </div>
+            <span className="landing-module-eyebrow">{module.eyebrow}</span>
+            <h3>{module.label}</h3>
+            <p>{module.description}</p>
+            <div className="landing-module-footer"><span>{module.duration}</span><span>Mulai belajar <IllustrationIcon name="arrow" size={17}/></span></div>
+          </a>)}
         </div>
       </div>
     </section>
-    <section className="mx-auto max-w-7xl px-5 py-12">
-      <h2 className="text-2xl font-black">Pilih Aktivitas Belajar</h2>
-      <div className="mt-5 grid gap-4 md:grid-cols-3">
-        <a href="/simulasi" className="rounded-3xl border border-cyan-800 bg-slate-900 p-6 hover:border-cyan-400">
-          <span className="text-4xl">🧑‍🍳</span><h3 className="mt-4 text-xl font-black">Pelanggan Virtual</h3>
-          <p className="mt-2 text-sm leading-6 text-slate-300">Lihat pesanan, pilih uang kertas dan koin, lalu berikan kembalian.</p>
-        </a>
-        <a href="/game" className="rounded-3xl border border-slate-700 bg-slate-900 p-6 hover:border-cyan-400">
-          <span className="text-4xl">🧮</span><h3 className="mt-4 text-xl font-black">Kasir Pintar</h3>
-          <p className="mt-2 text-sm leading-6 text-slate-300">Jawab lima tantangan matematika dan kumpulkan skor serta XP.</p>
-        </a>
-        <div className="rounded-3xl border border-slate-700 bg-slate-900 p-6">
-          <span className="text-4xl">🏫</span><h3 className="mt-4 text-xl font-black">Pendampingan Guru</h3>
-          <p className="mt-2 text-sm leading-6 text-slate-300">Siswa bisa belajar dengan instruksi bertahap, tanpa batas waktu atau tekanan.</p>
+
+    <section className="landing-section landing-how-section" id="cara-belajar" aria-labelledby="how-title">
+      <div className="landing-container">
+        <div className="landing-section-heading">
+          <div><span className="landing-kicker">MUDAH DIIKUTI</span><h2 id="how-title">Tiga langkah untuk mulai</h2></div>
+          <p>Alurnya sederhana, sehingga siswa bisa belajar mandiri atau didampingi guru dan orang tua.</p>
+        </div>
+        <ol className="landing-steps">
+          <li><span className="landing-step-number">01</span><div><h3>Pilih permainan</h3><p>Buka Simulasi Pelanggan atau Kasir Pintar.</p></div></li>
+          <li><span className="landing-step-number">02</span><div><h3>Ikuti petunjuk</h3><p>Baca pesanan, hitung total dan pilih uang kembalian.</p></div></li>
+          <li><span className="landing-step-number">03</span><div><h3>Lihat hasil belajar</h3><p>Terima umpan balik positif, poin, dan pengalaman belajar.</p></div></li>
+        </ol>
+      </div>
+    </section>
+
+    <section className="landing-section" id="menu-latihan" aria-labelledby="products-title">
+      <div className="landing-container">
+        <div className="landing-section-heading">
+          <div><span className="landing-kicker">KATALOG LATIHAN</span><h2 id="products-title">Kenali produk dan harganya</h2></div>
+          <p>Contoh produk yang digunakan sebagai bahan belajar berhitung. Ini bukan toko online.</p>
+        </div>
+        {error && <div className="landing-catalog-notice" role="status">
+          <p>Katalog belum berhasil dimuat: {error}</p>
+          <button type="button" onClick={()=>setRetry(n=>n+1)}>Coba lagi</button>
+        </div>}
+        <div className="landing-product-grid" aria-busy={loading}>
+          {loading && Array.from({length:4},(_,i)=><div key={'skeleton-'+i} className="landing-product-skeleton" aria-hidden="true"><div/><span/><span/></div>)}
+          {!loading && !error && products.map(product=><article className="landing-product" key={product.id}>
+            <div className="landing-product-image">
+              {product.imageUrl
+                ? <img src={product.imageUrl} loading="lazy" alt={'Gambar '+product.name}/>
+                : <span aria-hidden="true"><IllustrationIcon name="book" size={38}/></span>}
+            </div>
+            <div className="landing-product-detail"><p>{product.category || 'Produk latihan'}</p><h3>{product.name}</h3><strong>{rupiah(product.sellingPrice)}</strong></div>
+          </article>)}
+        </div>
+        {!loading && !error && products.length===0 && <p className="landing-catalog-empty">Belum ada produk latihan yang ditampilkan. Admin dapat menambahkan produk melalui dashboard.</p>}
+      </div>
+    </section>
+
+    <section className="landing-cta-section" aria-label="Mulai latihan sekarang">
+      <div className="landing-container">
+        <div className="landing-bottom-cta">
+          <div><span className="landing-kicker">SIAP BELAJAR?</span><h2>Satu langkah kecil, banyak keterampilan baru.</h2><p>Latihan berhitung, komunikasi, dan pelayanan dalam satu tempat.</p></div>
+          <a href="/simulasi" className="landing-btn landing-btn-primary">Ayo mulai <IllustrationIcon name="arrow" size={20}/></a>
         </div>
       </div>
     </section>
-    <section className="mx-auto max-w-7xl px-5 pb-16">
-      <h2 className="text-2xl font-black">Contoh Produk untuk Latihan</h2>
-      <p className="mt-2 text-sm text-slate-400">Diambil dari katalog LENTERA POS. Ini bukan toko online atau halaman checkout.</p>
-      {error && <p role="status" className="mt-4 text-sm text-amber-300">Katalog belum dapat dimuat: {error}</p>}
-      <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-        {products.map(p=><article className="overflow-hidden rounded-2xl border border-slate-800 bg-slate-900" key={p.id}>
-          {p.imageUrl?<img loading="lazy" className="h-36 w-full object-cover" src={p.imageUrl} alt={p.name}/>:<div className="grid h-36 place-items-center bg-slate-800 text-4xl">🛒</div>}
-          <div className="p-4"><p className="font-black">{p.name}</p><p className="mt-2 text-cyan-300">{rupiah(p.sellingPrice)}</p></div>
-        </article>)}
+
+    <footer className="landing-footer">
+      <div className="landing-container landing-footer-inner">
+        <span>© LENTERA POS · Media pembelajaran Homeschooling Lentera Hati</span>
+        <a href="/admin">Masuk Admin</a>
       </div>
-    </section>
-    <footer className="border-t border-slate-800 px-5 py-6 text-center text-sm text-slate-500">
-      LENTERA POS · Media pembelajaran interaktif · <a href="/admin" className="text-cyan-300 underline">Masuk Admin</a>
     </footer>
   </main>
 }
