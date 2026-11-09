@@ -9,6 +9,14 @@ function formatRupiah(value) {
   }).format(Number(value || 0))
 }
 
+function normalizePaidAmount(value) {
+  return String(value ?? '').replace(/\D/g, '')
+}
+
+function formatPaidAmount(value) {
+  return normalizePaidAmount(value).replace(/\B(?=(\d{3})+(?!\d))/g, '.')
+}
+
 function escapeHtml(value) {
   return String(value ?? '')
     .replaceAll('&', '&amp;')
@@ -117,6 +125,28 @@ export default function POSPanel({ initialOpen = false }) {
   const paid = Number(paidAmount || 0)
   const change = Math.max(paid - total, 0)
 
+  function handlePaidAmountChange(event) {
+    const input = event.currentTarget
+    const rawValue = normalizePaidAmount(input.value)
+    const digitsBeforeCaret = normalizePaidAmount(input.value.slice(0, input.selectionStart ?? input.value.length)).length
+
+    setPaidAmount(rawValue)
+
+    requestAnimationFrame(() => {
+      if (document.activeElement !== input) return
+      const formatted = formatPaidAmount(rawValue)
+      let position = 0
+      let digitsSeen = 0
+
+      while (position < formatted.length && digitsSeen < digitsBeforeCaret) {
+        if (/\d/.test(formatted[position])) digitsSeen += 1
+        position += 1
+      }
+
+      input.setSelectionRange(position, position)
+    })
+  }
+
   function addProduct(product) {
     if (Number(product.stock) <= 0) {
       setNotice({ tone: 'error', text: `${product.name} sedang habis.` })
@@ -192,7 +222,7 @@ export default function POSPanel({ initialOpen = false }) {
     if (!burst?.target) return
     if (burst.target === scanRef.current) setScanCode(burst.originalValue)
     else if (burst.target === searchRef.current) setSearch(burst.originalValue)
-    else if (burst.target === paidRef.current) setPaidAmount(burst.originalValue)
+    else if (burst.target === paidRef.current) setPaidAmount(normalizePaidAmount(burst.originalValue))
   }
 
   useEffect(() => {
@@ -575,7 +605,17 @@ export default function POSPanel({ initialOpen = false }) {
 
                 <label className="mt-5 block">
                   <span className="mb-2 block text-sm font-bold text-slate-300">Uang Dibayar</span>
-                  <input ref={paidRef} className="input text-xl font-black" type="number" min="0" step="1" value={paidAmount} onChange={(event) => setPaidAmount(event.target.value)} placeholder="0" />
+                  <input
+                    ref={paidRef}
+                    data-pos-payment
+                    className="input text-xl font-black"
+                    type="text"
+                    inputMode="numeric"
+                    autoComplete="off"
+                    value={formatPaidAmount(paidAmount)}
+                    onChange={handlePaidAmountChange}
+                    placeholder="0"
+                  />
                 </label>
 
                 <div className="mt-4 flex justify-between rounded-2xl bg-slate-950 px-4 py-3">

@@ -231,7 +231,7 @@ export default function POSFocusOverlay() {
   function focusPayment() {
     setDrawerOpen(true)
     setTimeout(() => {
-      const input = aside?.querySelector('input[type="number"]')
+      const input = aside?.querySelector('input[data-pos-payment]')
       input?.scrollIntoView({ behavior: 'smooth', block: 'center' })
       input?.focus()
     }, 180)
