@@ -68,7 +68,10 @@ test('PDF xref offsets point to real PDF objects and byte lengths match',()=>{
     assert.match(prefix,new RegExp('^'+(i+1)+' 0 obj'))
   }
   const size=Number(content.match(/<< \/Length (\d+) >>\nstream\n/)[1])
-  const raw=content.split('stream\n')[1].split('endstream')[0]
+  const streamStart=content.indexOf('stream\n')+'stream\n'.length
+  const streamEnd=content.indexOf('endstream',streamStart)
+  assert.ok(streamStart>0 && streamEnd>streamStart)
+  const raw=content.slice(streamStart,streamEnd)
   assert.equal(new TextEncoder().encode(raw).length,size)
 })
 test('long names and parentheses are encoded safely in PDF receipt',()=>{
@@ -77,7 +80,7 @@ test('long names and parentheses are encoded safely in PDF receipt',()=>{
     qty:1,unitPrice:4000,
   }],10000,new Date('2026-11-10T01:00:00Z'),'LAT-(02)')
   const src=new TextDecoder().decode(createReceiptPdf(r))
-  assert.match(src,/Biskuit \(\\\(Cokelat\\\)\)/)
+  assert.match(src,/Biskuit \\\(Cokelat\\\)/)
   assert.match(src,/6\.000/)
   assert.equal(receiptPdfFilename(r),'LenteraPOS-Struk-LAT--02-.pdf')
 })
