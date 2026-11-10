@@ -9,11 +9,11 @@ import './publicCashier.css'
 const prettyInput=value=>String(value||'').replace(/\B(?=(\d{3})+(?!\d))/g,'.')
 
 function ProductPhoto({product}){
-  return <div className="pc-product-image">
+  return <span className="pc-product-image">
     {product.imageUrl?<img src={product.imageUrl} alt="" loading="lazy"
       onError={e=>{e.currentTarget.hidden=true;e.currentTarget.parentElement.classList.add('pc-product-image--missing')}}/>
       :<span aria-hidden="true">▣</span>}
-  </div>
+  </span>
 }
 
 export default function PublicCashierPage(){
@@ -119,15 +119,16 @@ export default function PublicCashierPage(){
           <input id="pc-search" className="pc-search" type="search" placeholder="Cari barang..."
             value={search} onChange={e=>setSearch(e.target.value)} />
           <div className="pc-products" aria-live="polite">
-            {filtered.map(product=><article className="pc-product" key={product.id}>
+            {filtered.map(product=><button type="button" className="pc-product" key={product.id}
+              onClick={()=>add(product)}
+              aria-label={'Tambahkan '+product.name+' ke keranjang, '+formatRupiah(product.sellingPrice)}>
               <ProductPhoto product={product}/>
-              <div className="pc-product-meta">
-                <h3>{product.name}</h3>
-                <strong>{formatRupiah(product.sellingPrice)}</strong>
-              </div>
-              <button type="button" onClick={()=>add(product)}
-                aria-label={'Tambahkan '+product.name+' ke keranjang'}>+ Tambah</button>
-            </article>)}
+              <span className="pc-product-meta">
+                <strong className="pc-product-name">{product.name}</strong>
+                <span className="pc-product-price">{formatRupiah(product.sellingPrice)}</span>
+              </span>
+              <span className="pc-product-add" aria-hidden="true">＋</span>
+            </button>)}
             {!filtered.length&&<p className="pc-empty">Produk tidak ditemukan.</p>}
           </div>
           <details className="pc-manual">

@@ -121,3 +121,20 @@ test('public cashier compact interface keeps essential transaction values withou
   assert.doesNotMatch(ui,/Data stok, pembayaran, dan omzet kasir admin tidak berubah/)
   assert.match(css,/v1\.9\.1 — compact cashier/)
 })
+
+
+test('product image, name and price are one accessible card button with no nested add button',()=>{
+  const ui=readFileSync(new URL('./PublicCashierPage.jsx',import.meta.url),'utf8')
+  const css=readFileSync(new URL('./publicCashier.css',import.meta.url),'utf8')
+  const card=ui.match(/\{filtered\.map\(product=><button type="button" className="pc-product"[\s\S]*?<\/button>\)\}/)
+  assert.ok(card,'Each product must be a clickable button')
+  assert.match(card[0],/onClick=\{\(\)=>add\(product\)\}/)
+  assert.match(card[0],/<ProductPhoto product=\{product\}\/>/)
+  assert.match(card[0],/<strong className="pc-product-name">\{product\.name\}<\/strong>/)
+  assert.match(card[0],/<span className="pc-product-price">\{formatRupiah\(product\.sellingPrice\)\}<\/span>/)
+  assert.match(card[0],/aria-label=\{'Tambahkan '/)
+  assert.equal((card[0].match(/<button\b/g)||[]).length,1,'No nested button inside product card')
+  assert.doesNotMatch(ui,/<article className="pc-product"/)
+  assert.match(css,/\.pc-products \.pc-product:focus-visible/)
+  assert.match(css,/touch-action: manipulation/)
+})
