@@ -3,9 +3,9 @@ import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { CUSTOMERS } from './customerProfiles.js'
 
-test('all three game customer artworks use transparent Cloudinary derivatives', () => {
-  assert.equal(CUSTOMERS.length, 3)
-  assert.equal(new Set(CUSTOMERS.map(c => c.imageUrl)).size, 3)
+test('all seven game customer artworks use transparent Cloudinary derivatives', () => {
+  assert.equal(CUSTOMERS.length, 7)
+  assert.equal(new Set(CUSTOMERS.map(c => c.imageUrl)).size, 7)
   for (const customer of CUSTOMERS) {
     assert.match(customer.imageUrl, /^https:\/\/res\.cloudinary\.com\/dvds41ivm\/image\/upload\/e_make_transparent:15\/f_png\/v\d+\/lentera-pos\/customers\//)
   }

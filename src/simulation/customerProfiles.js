@@ -19,6 +19,26 @@ export const CUSTOMERS = Object.freeze([
     imageUrl:'https://res.cloudinary.com/dvds41ivm/image/upload/e_make_transparent:15/f_png/v1794236683/lentera-pos/customers/pelanggan-kacamata-v1.png',
     greeting:'Selamat siang. Saya mau belanja, boleh?'
   },
+  {
+    id:'milo',name:'Milo',label:'Kucing Ceria',palette:'orange',
+    imageUrl:'https://res.cloudinary.com/dvds41ivm/image/upload/e_make_transparent:15/f_png/v1794273464/lentera-pos/customers/pelanggan-kucing-v1.png',
+    greeting:'Meong! Halo, Kak. Aku mau belanja!'
+  },
+  {
+    id:'boo',name:'Boo',label:'Hantu Ramah',palette:'violet',
+    imageUrl:'https://res.cloudinary.com/dvds41ivm/image/upload/e_make_transparent:15/f_png/v1794273473/lentera-pos/customers/pelanggan-hantu-v1.png',
+    greeting:'Buuu! Tenang, aku cuma mau belanja, kok!'
+  },
+  {
+    id:'rubi',name:'Rubi',label:'Iblis Kecil',palette:'red',
+    imageUrl:'https://res.cloudinary.com/dvds41ivm/image/upload/e_make_transparent:15/f_png/v1794273481/lentera-pos/customers/pelanggan-iblis-v1.png',
+    greeting:'Halo! Rubi mau beli sesuatu, ya!'
+  },
+  {
+    id:'aura',name:'Aura',label:'Malaikat',palette:'sky',
+    imageUrl:'https://res.cloudinary.com/dvds41ivm/image/upload/e_make_transparent:15/f_png/v1794273489/lentera-pos/customers/pelanggan-malaikat-v1.png',
+    greeting:'Hai, Kak! Boleh bantu aku belanja?'
+  },
 ])
 
 export function customerForChallenge(challengeId) {

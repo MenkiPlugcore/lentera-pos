@@ -1,4 +1,4 @@
-// Scene visual menggunakan empat gambar pilihan pengguna yang diunggah ke Cloudinary.
+// Scene visual menggunakan gambar toko dan tujuh karakter pilihan pengguna dari Cloudinary.
 // Aset karakter transparan diolah Cloudinary (e_make_transparent) untuk menghindari latar putih.
 // Foreground memakai latar toko yang sama agar meja kasir terlihat di depan karakter.
 export const STORE_IMAGE = 'https://res.cloudinary.com/dvds41ivm/image/upload/v1794236695/lentera-pos/customers/toko-kosong-v1.png'

@@ -76,3 +76,26 @@ test('invalid UUID session is rejected before database access',async()=>{
   }),/ID tidak valid/)
   assert.equal(queried,false)
 })
+
+test('four fantasy visitors join the existing three customers',()=>{
+  assert.equal(CUSTOMERS.length,7)
+  const ids=CUSTOMERS.map(customer=>customer.id)
+  assert.equal(new Set(ids).size,7)
+  for(const id of ['milo','boo','rubi','aura']){
+    const customer=CUSTOMERS.find(c=>c.id===id)
+    assert.ok(customer,'Missing visitor '+id)
+    assert.ok(customer.imageUrl.includes('e_make_transparent:15/f_png/'))
+    assert.ok(customer.greeting)
+  }
+})
+
+test('customer selection varies across new challenges but stays stable for each saved challenge',()=>{
+  const seen=new Set()
+  for(let n=0;n<700;n++){
+    const key='local-level-'+n+'-challenge-'+(n*1723)
+    const a=customerForChallenge(key)
+    assert.equal(customerForChallenge(key).id,a.id)
+    seen.add(a.id)
+  }
+  assert.equal(seen.size,CUSTOMERS.length)
+})
