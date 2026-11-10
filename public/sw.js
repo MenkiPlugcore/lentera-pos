@@ -1,4 +1,4 @@
-const CACHE_NAME = 'lentera-pos-offline-v13'
+const CACHE_NAME = 'lentera-pos-offline-v14'
 const PAGES = ['/', '/admin', '/kasir', '/cafe', '/simulasi', '/game']
 
 self.addEventListener('install', (event) => {

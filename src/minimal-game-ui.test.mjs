@@ -7,7 +7,7 @@ const tray = readFileSync(new URL('./simulation/MoneyTray.jsx',import.meta.url),
 const css = readFileSync(new URL('./simulation/arcade.css',import.meta.url),'utf8')
 
 test('gameplay shows only compact critical information and keeps screen-reader heading',()=>{
-  assert.match(visual, /\{!session && <header className="arcade-page-heading">/)
+  assert.match(visual, /<LevelSelect profiles=\{profiles\}/)
   assert.match(visual, /session && <h1 className="sr-only">Simulasi Pelanggan<\/h1>/)
   assert.match(visual, /<BasketList items=\{items\} variant="scene"\/>/)
   assert.match(visual, /Total belanja/)

@@ -4,29 +4,47 @@ import StoreScene from './StoreScene.jsx'
 import MoneyTray from './MoneyTray.jsx'
 import SubtractionSlide from './SubtractionSlide.jsx'
 import BasketList, { basketLines } from './BasketList.jsx'
+import LevelSelect from './LevelSelect.jsx'
+import { createProfile,loadProfiles,saveProfiles,startLevel,submitLocalAnswer,
+  advanceLocalRound,starsForCorrect,ROUNDS_PER_LEVEL,MIN_CORRECT_TO_PASS,
+  FALLBACK_PRODUCTS,TOTAL_LEVELS } from './localLevels.js'
 import { canBuildExactChange, totalCash } from './cashMoney.js'
 import { changeChoices, customerDialogue, customerForChallenge, formatRupiah } from './customerProfiles.js'
 import './simulation.css'
 import './arcade.css'
 
-const STATUS = {active: 'Sedang latihan', completed: 'Selesai'}
-const post = (path, data) => cloudApiFetch(path, { method: 'POST', body: JSON.stringify(data) })
+const CURRENT_KEY = 'lentera-pos-simulasi-selected-v1'
+const initialProfiles = () => {
+  try { return typeof window === 'undefined' ? [] : loadProfiles(window.localStorage) }
+  catch { return [] }
+}
+const initialSelected = () => {
+  try { return typeof window === 'undefined' ? '' : (window.localStorage.getItem(CURRENT_KEY) || '') }
+  catch { return '' }
+}
 
 export default function VisualCustomerPage() {
   const [nickname, setNickname] = useState('')
-  const [sessions, setSessions] = useState([])
-  const [session, setSession] = useState(null)
-  const [challenge, setChallenge] = useState(null)
-  const [feedback, setFeedback] = useState(null)
+  const [profiles, setProfiles] = useState(initialProfiles)
+  const [selectedId, setSelectedId] = useState(initialSelected)
+  const [showMap, setShowMap] = useState(false)
+  const [summary, setSummary] = useState(null)
+  const [catalog, setCatalog] = useState(FALLBACK_PRODUCTS)
   const [hint, setHint] = useState(false)
   const [focusMode, setFocusMode] = useState(false)
   const drawerCloseRef = useRef(null)
   const [inputMode, setInputMode] = useState('cash')
   const [selectedCash, setSelectedCash] = useState([])
-  const [busy, setBusy] = useState(false)
+  const busy = false
   const [error, setError] = useState('')
   const [moneyImages, setMoneyImages] = useState({})
-  const [guestReady, setGuestReady] = useState(false)
+  const profile = profiles.find(p => p.id === selectedId) || null
+  const session = profile?.active && !showMap && !summary
+    ? {status:'active',playerLabel:profile.name,level:profile.active.level,
+       score:profile.active.score,xp:profile.active.score,
+       completedCount:profile.active.round-1} : null
+  const challenge = session ? profile.active.challenge : null
+  const feedback = session ? profile.active.feedback : null
   const [cashDrawerOpen, setCashDrawerOpen] = useState(false)
   const [calculatorOpen, setCalculatorOpen] = useState(false)
   const closeCalculator = useCallback(() => setCalculatorOpen(false), [])
@@ -39,154 +57,147 @@ export default function VisualCustomerPage() {
     challenge?.id, challenge?.paidAmount, challenge?.totalAmount, challenge?.unitPrice
   ])
   const mood = feedback?.correct ? 'happy' : (feedback && !feedback.correct ? 'thinking' : 'neutral')
-  const round = challenge?.round || Math.min(5, (session?.completedCount || 0) + 1)
-  const completedCount = Math.min(5, Number(session?.completedCount || 0))
+  const round = challenge?.round || Math.min(ROUNDS_PER_LEVEL, (session?.completedCount || 0) + 1)
+  const completedCount = Math.min(ROUNDS_PER_LEVEL, Number(session?.completedCount || 0))
   const items = basketLines(challenge)
 
-  async function loadSessions() {
+  // Menyimpan nama/progres per browser. Tidak ada POST ke Neon.
+  useEffect(() => {
+    try { saveProfiles(window.localStorage,profiles) }
+    catch { setError('Penyimpanan browser penuh atau nonaktif. Progres tidak bisa disimpan.') }
+  }, [profiles])
+  useEffect(() => {
     try {
-      const result = await cloudApiFetch('/api/game/sessions')
-      setSessions(result.sessions || [])
-    } catch (problem) {
-      setError(problem.message)
-    } finally {
-      setGuestReady(true)
-    }
-  }
+      if(selectedId)window.localStorage.setItem(CURRENT_KEY,selectedId)
+      else window.localStorage.removeItem(CURRENT_KEY)
+    } catch { /* pengguna bisa mengaktifkan penyimpanan browser */ }
+  }, [selectedId])
 
   useEffect(() => {
-    loadSessions()
-    cloudApiFetch('/api/public/money').then(data => {
-      const entries=(data.denominations||[]).filter(d=>d.imageUrl).map(d=>[d.value,d.imageUrl])
-      setMoneyImages(Object.fromEntries(entries))
-    }).catch(()=>{ /* ilustrasi bawaan tetap tersedia */ })
+    // Data katalog & foto uang hanya dibaca; game tetap berjalan tanpa jaringan.
+    cloudApiFetch('/api/public/money').then(data=>{
+      setMoneyImages(Object.fromEntries((data.denominations||[])
+        .filter(d=>d.imageUrl).map(d=>[d.value,d.imageUrl])))
+    }).catch(()=>{})
+    cloudApiFetch('/api/public/catalog').then(data=>{
+      if(Array.isArray(data.products) && data.products.length)setCatalog(data.products)
+    }).catch(()=>{})
   }, [])
 
   useEffect(() => {
-    if (!cashDrawerOpen) return
-    const onKeyDown = event => {
-      if (event.key === 'Escape') setCashDrawerOpen(false)
-    }
-    const mobile = window.matchMedia('(max-width: 960px)').matches
-    const previousFocus = document.activeElement
-    const previousOverflow = document.body.style.overflow
-    if (mobile) {
-      document.body.style.overflow = 'hidden'
+    if(!cashDrawerOpen || calculatorOpen)return
+    const onKeyDown=event=>{ if(event.key==='Escape')setCashDrawerOpen(false) }
+    const mobile=window.matchMedia('(max-width:960px)').matches
+    const previousFocus=document.activeElement
+    const previousOverflow=document.body.style.overflow
+    if(mobile){
+      document.body.style.overflow='hidden'
       drawerCloseRef.current?.focus()
     }
-    window.addEventListener('keydown', onKeyDown)
-    return () => {
-      window.removeEventListener('keydown', onKeyDown)
-      if (mobile) {
-        document.body.style.overflow = previousOverflow
-        if (previousFocus?.isConnected && typeof previousFocus.focus === 'function') previousFocus.focus()
+    window.addEventListener('keydown',onKeyDown)
+    return ()=>{
+      window.removeEventListener('keydown',onKeyDown)
+      if(mobile){
+        document.body.style.overflow=previousOverflow
+        if(previousFocus?.isConnected&&typeof previousFocus.focus==='function')previousFocus.focus()
       }
     }
-  }, [cashDrawerOpen])
+  }, [cashDrawerOpen,calculatorOpen])
 
-  async function request(action) {
-    if (busy) return
-    setBusy(true)
-    setError('')
-    try { await action() }
-    catch (problem) { setError(problem.message) }
-    finally { setBusy(false) }
+  const updateProfile=(next)=>{
+    setProfiles(current=>current.map(p=>p.id===next.id?next:p))
   }
-
-  async function loadChallenge(nextSession) {
-    if (nextSession.status !== 'active') {
-      setChallenge(null)
-      setFeedback(null)
+  function createLocalPlayer() {
+    const name=nickname.trim()
+    if(profiles.some(p=>p.name.toLocaleLowerCase('id-ID')===name.toLocaleLowerCase('id-ID'))){
+      setError('Nama itu sudah digunakan di perangkat ini. Pilih nama lain atau lanjutkan profil lama.')
       return
     }
-    const result = await post('/api/game/challenge', { sessionId: nextSession.id })
-    setChallenge(result.challenge)
-    setFeedback(null)
+    if(profiles.length>=30){setError('Maksimal 30 pemain lokal per browser.');return}
+    try {
+      const id=crypto.randomUUID()
+      const newPlayer=createProfile(name,id)
+      setProfiles(current=>[...current,newPlayer])
+      setSelectedId(id)
+      setNickname('')
+      setSummary(null)
+      setShowMap(true)
+      setError('')
+    } catch(problem){setError(problem.message)}
+  }
+  function chooseLocalPlayer(id) {
+    if(!profiles.some(p=>p.id===id))return
+    setSelectedId(id);setSummary(null);setShowMap(true);setError('')
+  }
+  function deleteLocalPlayer(id) {
+    const selected=profiles.find(p=>p.id===id)
+    if(!selected||!window.confirm('Hapus profil '+selected.name+' beserta semua progres 40 level di browser ini?'))return
+    setProfiles(current=>current.filter(p=>p.id!==id))
+    if(selectedId===id)setSelectedId('')
+    setSummary(null);setShowMap(true)
+  }
+  function playLevel(level) {
+    if(!profile)return
+    if(profile.active && profile.active.level!==level &&
+      !window.confirm('Berpindah level akan mengulang progres level yang sedang dimainkan. Lanjut?'))return
+    try {
+      const next=startLevel(profile,level,catalog)
+      updateProfile(next)
+      setSummary(null);setShowMap(false);setError('')
+      resetGameUI(next.active.challenge)
+    } catch(problem){setError(problem.message)}
+  }
+  function resumeLevel() {
+    if(!profile?.active)return
+    setSummary(null);setShowMap(false);setError('')
+    resetGameUI(profile.active.challenge,false)
+  }
+  function resetGameUI(current,resetCash=true) {
     setHint(false)
-    setSelectedCash([])
-    setCashDrawerOpen(false)
-    setCalculatorOpen(false)
-    const neededChange = Number(result.challenge.paidAmount) - Number(result.challenge.totalAmount)
-    if (!canBuildExactChange(neededChange)) setInputMode('choices')
+    if(resetCash)setSelectedCash([])
+    setCashDrawerOpen(false);setCalculatorOpen(false)
+    const change=current.paidAmount-current.totalAmount
+    if(!canBuildExactChange(change))setInputMode('choices')
+    else setInputMode('cash')
   }
-
-  function start() {
-    if (!guestReady || nickname.trim().length < 2) return
-    request(async () => {
-      const { session: created } = await post('/api/game/sessions', { playerLabel: nickname.trim() })
-      setSession(created)
-      setChallenge(null)
-      await loadChallenge(created)
-      await loadSessions()
-    })
-  }
-
-  function resume(existing) {
-    request(async () => {
-      setSession(existing)
-      setChallenge(null)
-      setFeedback(null)
-      await loadChallenge(existing)
-    })
-  }
-
   function leave() {
-    setSession(null)
-    setChallenge(null)
-    setFeedback(null)
-    setError('')
+    // Kembali ke pemilihan level; ronde aktif tetap disimpan.
+    setShowMap(true);setSummary(null);setError('')
+    setCashDrawerOpen(false);setCalculatorOpen(false)
     setSelectedCash([])
-    setCashDrawerOpen(false)
-    setCalculatorOpen(false)
-    loadSessions()
   }
-
   function answer(value) {
-    if (!challenge || challenge.resolved || busy || !Number.isSafeInteger(value) || value < 0) return
-    request(async () => {
-      const result = await post('/api/game/answer', {
-        challengeId: challenge.id, answer: value,
-      })
-      const outcome = result.result
-      setFeedback(outcome)
-      if (outcome.status === 'completed') {
-        setCashDrawerOpen(false)
-        setCalculatorOpen(false)
-      }
-      setChallenge(old => ({
-        ...old,
-        attempts: outcome.attemptCount,
-        resolved: outcome.resolved,
-        expectedChange: outcome.expectedChange,
-      }))
-      setSession(old => ({
-        ...old,
-        score: outcome.score, xp: outcome.xp, level: outcome.level,
-        status: outcome.status,
-        completedCount: (outcome.resolved ? (old?.completedCount || 0) + 1 : old?.completedCount || 0),
-      }))
-      if (outcome.resolved) await loadSessions()
-    })
+    if(!profile?.active||challenge?.resolved||!Number.isSafeInteger(value)||value<0)return
+    try {
+      const {profile:next}=submitLocalAnswer(profile,value)
+      updateProfile(next)
+      setError('')
+    } catch(problem){setError(problem.message)}
   }
-
+  function clearFeedback() {
+    if(!profile?.active?.feedback)return
+    updateProfile({...profile,active:{...profile.active,feedback:null}})
+  }
   function next() {
-    request(async () => {
-      await loadChallenge(session)
-      await loadSessions()
-    })
+    if(!profile?.active?.challenge?.resolved)return
+    try {
+      const old=profile.active
+      const updated=advanceLocalRound(profile,catalog)
+      updateProfile(updated)
+      if(!updated.active) {
+        setSummary({level:old.level,score:old.score,correctCount:old.correctCount,
+          passed:old.correctCount>=MIN_CORRECT_TO_PASS,
+          stars:starsForCorrect(old.correctCount)})
+        setShowMap(true)
+      } else {
+        resetGameUI(updated.active.challenge)
+      }
+      setError('')
+    } catch(problem){setError(problem.message)}
   }
-
   return (
     <main className={'arcade-page' + (session ? ' arcade-page--playing' : '') + (focusMode ? ' arcade-page--focus' : '')}>
       <div className="arcade-container">
-        {!session && <header className="arcade-page-heading">
-          <div>
-            <p className="arcade-kicker">LENTERA POS · SIMULASI INTERAKTIF</p>
-            <h1>Simulasi Pelanggan</h1>
-            <p>Jadilah kasir, layani pelanggan, dan siapkan uang kembalian. Tanpa timer atau transaksi sungguhan.</p>
-          </div>
-          <a href="/" className="arcade-back-link">← Beranda</a>
-        </header>}
         {session && <h1 className="sr-only">Simulasi Pelanggan</h1>}
 
         {error && (
@@ -196,77 +207,64 @@ export default function VisualCustomerPage() {
         )}
 
         {!session ? (
-          <div className="arcade-lobby">
-            <div className="arcade-lobby-stage">
-              <StoreScene empty/>
-              <div className="arcade-lobby-stage-label">SELAMAT DATANG DI TOKO LENTERA!</div>
-            </div>
-            <section className="arcade-lobby-panel" aria-labelledby="arcade-start-title">
-              <div className="arcade-lobby-icon" aria-hidden="true">✦</div>
-              <span className="arcade-panel-kicker">SIAP MENJADI KASIR?</span>
-              <h2 id="arcade-start-title">Ayo layani 5 pelanggan!</h2>
-              <p>Ikuti pesanan pelanggan, hitung kembalian, lalu pilih uang kertas dan koin. Setiap jawaban benar menambah poin dan XP.</p>
-              <label className="arcade-label" htmlFor="arcade-nickname">Nama panggilan pemain</label>
-              <input id="arcade-nickname" className="arcade-input" value={nickname}
-                maxLength={60} placeholder="Misalnya: Siswa A" autoComplete="off"
-                onChange={event => setNickname(event.target.value)}/>
-              <p className="arcade-input-caption">Cukup nama panggilan, tidak perlu nama lengkap.</p>
-              <button type="button" className="arcade-primary-button"
-                disabled={busy || !guestReady || nickname.trim().length < 2}
-                onClick={start}>
-                {busy ? 'Menyiapkan game...' : 'Mulai Bermain →'}
-              </button>
-              <div className="arcade-lobby-guarantee">✓ Tidak mengurangi stok & omzet asli</div>
-              <div className="arcade-lobby-history">
-                <h3>Lanjutkan permainan sebelumnya</h3>
-                {sessions.length ? (
-                  <div className="arcade-session-list">
-                    {sessions.map(item => (
-                      <button type="button" className="arcade-session" key={item.id}
-                        disabled={busy} onClick={() => resume(item)}>
-                        <span><strong>{item.playerLabel}</strong><small>{STATUS[item.status] || item.status} · Level {item.level}</small></span>
-                        <span className="arcade-session-points">{item.score || 0} poin →</span>
-                      </button>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="arcade-history-empty">Belum ada permainan tersimpan pada perangkat ini.</p>
+          summary && profile ? (
+            <section className="local-completion" aria-label="Hasil level">
+              <span className="local-completion-star" aria-hidden="true">{summary.passed ? '★' : '↻'}</span>
+              <p className="local-overline">LEVEL {summary.level} SELESAI</p>
+              <h2>{summary.passed ? 'Level Berhasil!' : 'Ayo Coba Lagi!'}</h2>
+              <p>{summary.correctCount} dari {ROUNDS_PER_LEVEL} pelanggan dijawab benar.</p>
+              <div className="local-completion-score">
+                <strong>{summary.score} poin</strong>
+                <strong>{summary.passed ? '★'.repeat(summary.stars)+'☆'.repeat(3-summary.stars) : 'Belum lulus'}</strong>
+              </div>
+              <p>{summary.passed
+                ? (summary.level===TOTAL_LEVELS
+                  ? 'Hebat! Semua 40 level sudah kamu selesaikan.'
+                  : 'Level '+(summary.level+1)+' sudah terbuka!')
+                : 'Butuh minimal '+MIN_CORRECT_TO_PASS+' jawaban benar. Tidak ada batas waktu.'}</p>
+              <div className="local-completion-actions">
+                {summary.passed && summary.level<TOTAL_LEVELS && (
+                  <button type="button" className="arcade-primary-button"
+                    onClick={()=>playLevel(summary.level+1)}>Main Level {summary.level+1} →</button>
                 )}
+                <button type="button" className="arcade-primary-button"
+                  onClick={()=>playLevel(summary.level)}>Ulangi Level {summary.level}</button>
+                <button type="button" className="local-switch-button"
+                  onClick={()=>{setSummary(null);setShowMap(true)}}>Pilih Level</button>
               </div>
             </section>
-          </div>
+          ) : (
+            <LevelSelect profiles={profiles} profile={profile} nickname={nickname}
+              onNameChange={setNickname} onCreate={createLocalPlayer}
+              onChooseProfile={chooseLocalPlayer} onDeleteProfile={deleteLocalPlayer}
+              onStartLevel={playLevel} onResume={resumeLevel}
+              onBackHome={()=>{setSelectedId('');setSummary(null);setError('');setShowMap(true)}}/>
+          )
         ) : (
           <>
-            <div className={'arcade-play-layout' + (session.status === 'completed' ? ' arcade-play-layout--finished' : '')}>
+            <div className="arcade-play-layout">
             <section className="arcade-stage" aria-label="Area permainan kasir">
-              <StoreScene customer={customer} mood={session.status === 'completed' ? 'happy' : mood}/>
+              <StoreScene customer={customer} mood={mood}/>
               <div className="arcade-scene-vignette" aria-hidden="true"/>
 
               <div className="arcade-hud">
-                <div className="arcade-hud-score" aria-label={'Kasir '+session.playerLabel+', level '+(session.level||1)+', '+(session.score||0)+' poin, '+(session.xp||0)+' XP'}>
-                  <strong>Lv {session.level || 1} · {session.score || 0} poin</strong>
+                <div className="arcade-hud-score" aria-label={'Kasir '+session.playerLabel+', Level '+session.level+', '+session.score+' poin'}>
+                  <strong>Level {session.level} · {session.score} poin</strong>
                 </div>
                 <div className="arcade-hud-right">
                   <div className="arcade-hud-progress">
-                    <span aria-label={'Pelanggan '+Math.min(round,5)+' dari 5'}>{Math.min(round, 5)}/5 pelanggan</span>
+                    <span aria-label={'Pelanggan '+Math.min(round,5)+' dari 5'}>{Math.min(round, ROUNDS_PER_LEVEL)}/{ROUNDS_PER_LEVEL} pelanggan</span>
                     <div className="arcade-progress-track" role="progressbar"
-                      aria-label="Pelanggan yang sudah selesai dilayani" aria-valuemin={0} aria-valuemax={5}
-                      aria-valuenow={session.status === 'completed' ? 5 : completedCount}>
-                      <span style={{width:((session.status === 'completed' ? 5 : completedCount) / 5 * 100)+'%'}}/>
+                      aria-label="Pelanggan yang sudah selesai dilayani" aria-valuemin={0} aria-valuemax={ROUNDS_PER_LEVEL}
+                      aria-valuenow={completedCount}>
+                      <span style={{width:(completedCount / ROUNDS_PER_LEVEL * 100)+'%'}}/>
                     </div>
                   </div>
                   <button type="button" className="arcade-hud-exit" onClick={leave}>Keluar</button>
                 </div>
               </div>
 
-              {session.status === 'completed' ? (
-                <div className="arcade-finish" role="status">
-                  <div className="arcade-finish-stars" aria-hidden="true">★ ★ ★</div>
-                  <h2>Hebat! Semua pelanggan sudah dilayani.</h2>
-                  <p>Skor akhir <strong>{session.score || 0} poin</strong> · XP {session.xp || 0}</p>
-                  <button type="button" className="arcade-primary-button" onClick={leave}>Main Lagi</button>
-                </div>
-              ) : !challenge ? (
+              {!challenge ? (
                 <div className="arcade-loading" role="status">Pelanggan sedang datang...</div>
               ) : (
                 <>
@@ -275,7 +273,7 @@ export default function VisualCustomerPage() {
                     <p>{feedback ? customerDialogue(customer, challenge, feedback) : customer.greeting}</p>
                   </div>
                   <div className="arcade-order-board" aria-label="Keranjang belanja pelanggan">
-                    <div className="arcade-basket-stage">Tahap {round}/5</div>
+                    <div className="arcade-basket-stage">Level {session.level} · Pelanggan {round}/{ROUNDS_PER_LEVEL}</div>
                     <BasketList items={items} variant="scene"/>
                     <div className="arcade-order-money">
                       <div><span>Total belanja</span><strong>{formatRupiah(challenge.totalAmount)}</strong></div>
@@ -364,7 +362,7 @@ export default function VisualCustomerPage() {
                           paidAmount={Number(challenge.paidAmount)}
                           busy={busy} onChange={nextSelection => {
                             setSelectedCash(nextSelection)
-                            if (feedback?.correct === false) setFeedback(null)
+                            if (feedback?.correct === false) clearFeedback()
                           }} onConfirm={answer}/>
                       ) : (
                         <div className="arcade-quick-choices" role="group" aria-label="Pilih nominal kembalian">
