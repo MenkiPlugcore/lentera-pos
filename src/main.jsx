@@ -11,7 +11,7 @@ import CashierPage from './CashierPage.jsx'
 import HardDeletePanel from './HardDeletePanel.jsx'
 import ReportsPanel from './ReportsPanel.jsx'
 import CafePage from './CafePage.jsx'
-import GamePage from './GamePage.jsx'
+import PublicCashierPage from './PublicCashierPage.jsx'
 import PublicHomePage from './PublicHomePage.jsx'
 import VisualCustomerPage from './simulation/VisualCustomerPage.jsx'
 
@@ -95,7 +95,7 @@ function CloudGate({ children }) {
           <a href="/admin">Dashboard</a>
           <a href="/kasir">Kasir</a>
           <a href="/cafe">Smart Cafe</a>
-          <a href="/game">Kasir Pintar</a>
+          <a href="/kasir-umum">Kasir Biasa</a>
           <a href="/simulasi">Simulasi</a>
           <a href="/">Beranda</a>
           <button type="button" onClick={logout}>Keluar</button>
@@ -112,7 +112,7 @@ function PublicHeader() {
   const nav=[
     {href:'/',label:'Beranda'},
     {href:'/simulasi',label:'Simulasi Pelanggan'},
-    {href:'/game',label:'Kasir Pintar'},
+    {href:'/kasir-umum',label:'Kasir Biasa'},
   ]
   return <header className="portal-header">
     <a href="#page-content" className="portal-skip">Langsung ke konten</a>
@@ -162,7 +162,7 @@ function RootRoute() {
 
   if (path === '/' || path === '/home') return <PublicShell><PublicHomePage/></PublicShell>
   if (path === '/simulasi') return <PublicShell><VisualCustomerPage/></PublicShell>
-  if (path === '/game') return <PublicShell><GamePage/></PublicShell>
+  if (path === '/kasir-umum' || path === '/game') return <PublicShell><PublicCashierPage/></PublicShell>
 
   if (path === '/kasir') return <CloudGate><CashierPage/></CloudGate>
   if (path === '/cafe') return <CloudGate><CafePage/></CloudGate>

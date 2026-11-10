@@ -7,7 +7,7 @@ export async function handlePublicApi({db,path,method}) {
   if (method!=='GET') return json({ok:false,error:'Metode tidak diizinkan.'},405)
   if(path==='/api/public/catalog') {
     const rows=await db.query(
-      "SELECT p.id,p.name,p.selling_price AS \"sellingPrice\",p.image_url AS \"imageUrl\",c.name AS category FROM public.products p LEFT JOIN public.categories c ON c.id=p.category_id WHERE p.is_active ORDER BY c.name NULLS LAST,p.name LIMIT 100")
+      "SELECT p.id,p.name,p.sku,p.barcode,p.selling_price AS \"sellingPrice\",p.image_url AS \"imageUrl\",c.name AS category FROM public.products p LEFT JOIN public.categories c ON c.id=p.category_id WHERE p.is_active ORDER BY c.name NULLS LAST,p.name LIMIT 100")
     return json({ok:true,products:rows})
   }
   if(path==='/api/public/money') {

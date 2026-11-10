@@ -17,13 +17,13 @@ const modules = [
     duration:'5 pelanggan per sesi',
   },
   {
-    id:'game',
-    label:'Kasir Pintar',
-    href:'/game',
-    eyebrow:'BELAJAR BERHITUNG',
-    description:'Latih penjumlahan, pengurangan, dan menghitung kembalian melalui soal interaktif.',
+    id:'cashier',
+    label:'Kasir Biasa',
+    href:'/kasir-umum',
+    eyebrow:'LATIHAN TRANSAKSI',
+    description:'Pilih produk, scan kode barang, atur keranjang, terima pembayaran, dan buat struk latihan. Stok terisi otomatis.',
     icon:'calculator',
-    duration:'5 soal per sesi',
+    duration:'Transaksi tanpa batas',
   },
 ]
 
@@ -95,7 +95,7 @@ export default function PublicHomePage() {
             <a className="landing-btn landing-btn-primary" href="/simulasi">
               Mulai Simulasi <IllustrationIcon name="arrow" size={20}/>
             </a>
-            <a className="landing-btn landing-btn-secondary" href="/game">Coba Kasir Pintar</a>
+            <a className="landing-btn landing-btn-secondary" href="/game">Coba Kasir Biasa</a>
           </div>
           <div className="landing-reassurance">
             <span><IllustrationIcon name="check" size={18}/> Tanpa login</span>
@@ -111,7 +111,7 @@ export default function PublicHomePage() {
       <div className="landing-container">
         <div className="landing-section-heading">
           <div><span className="landing-kicker">PILIH KEGIATAN</span><h2 id="activities-title">Mau belajar apa hari ini?</h2></div>
-          <p>Pilih aktivitas yang sesuai. Mulai dari latihan transaksi visual hingga berhitung kembalian.</p>
+          <p>Pilih aktivitas yang sesuai. Mulai dari pelanggan visual hingga praktik kasir dengan keranjang, pembayaran, dan struk.</p>
         </div>
         <div className="landing-module-grid">
           {modules.map(module=><a href={module.href} key={module.id} className={'landing-module landing-module-'+module.id}>
@@ -135,7 +135,7 @@ export default function PublicHomePage() {
           <p>Alurnya sederhana, sehingga siswa bisa belajar mandiri atau didampingi guru dan orang tua.</p>
         </div>
         <ol className="landing-steps">
-          <li><span className="landing-step-number">01</span><div><h3>Pilih permainan</h3><p>Buka Simulasi Pelanggan atau Kasir Pintar.</p></div></li>
+          <li><span className="landing-step-number">01</span><div><h3>Pilih permainan</h3><p>Buka Simulasi Pelanggan atau Kasir Biasa.</p></div></li>
           <li><span className="landing-step-number">02</span><div><h3>Ikuti petunjuk</h3><p>Baca pesanan, hitung total dan pilih uang kembalian.</p></div></li>
           <li><span className="landing-step-number">03</span><div><h3>Lihat hasil belajar</h3><p>Terima umpan balik positif, poin, dan pengalaman belajar.</p></div></li>
         </ol>

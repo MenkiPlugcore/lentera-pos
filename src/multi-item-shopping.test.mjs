@@ -113,13 +113,14 @@ test('schema migration adds only training snapshot and keeps existing data',()=>
   assert.doesNotMatch(sql,/DROP TABLE|TRUNCATE|DELETE\s+FROM\s+public\.products|UPDATE\s+public\.products/)
 })
 
-test('both simulation pages show product basket and retain subtraction calculator',()=>{
+test('visual simulation keeps its basket and calculator while public cashier handles multi-item sales',()=>{
   const visual=readFileSync(new URL('./simulation/VisualCustomerPage.jsx',import.meta.url),'utf8')
-  const game=readFileSync(new URL('./GamePage.jsx',import.meta.url),'utf8')
+  const cashier=readFileSync(new URL('./PublicCashierPage.jsx',import.meta.url),'utf8')
   const basket=readFileSync(new URL('./simulation/BasketList.jsx',import.meta.url),'utf8')
   assert.match(visual,/<BasketList items=\{items\} variant="scene"\/>/)
   assert.match(visual,/<BasketList items=\{items\} variant="drawer"\/>/)
-  assert.match(game,/<BasketList items=\{basketLines\(challenge\)\} variant="drawer"\/>/)
+  assert.match(cashier,/cart\.map\(item=>/)
+  assert.match(cashier,/checkoutDemo\(cart,paid/)
   assert.match(visual,/<SubtractionSlide open=\{calculatorOpen\}/)
   assert.match(visual,/<MoneyTray compact images=\{moneyImages\}/)
   assert.match(basket,/imageUrl/)
