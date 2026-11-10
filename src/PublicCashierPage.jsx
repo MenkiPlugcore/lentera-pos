@@ -1,7 +1,7 @@
 import { useEffect,useMemo,useRef,useState } from 'react'
 import { cloudApiFetch } from './cloudApi.js'
 import {
-  DEMO_STOCK,DEMO_CATALOG,normalizeCatalog,findByBarcode,addToCart,
+  DEMO_CATALOG,normalizeCatalog,findByBarcode,addToCart,
   setCartQty,cartTotal,getCashChange,checkoutDemo,receiptText,formatRupiah,
 } from './publicCashier.js'
 import './publicCashier.css'
@@ -18,7 +18,6 @@ function ProductPhoto({product}){
 
 export default function PublicCashierPage(){
   const [catalog,setCatalog]=useState(DEMO_CATALOG)
-  const [catalogStatus,setCatalogStatus]=useState('Memuat katalog...')
   const [search,setSearch]=useState('')
   const [scan,setScan]=useState('')
   const [cart,setCart]=useState([])
@@ -34,11 +33,8 @@ export default function PublicCashierPage(){
     cloudApiFetch('/api/public/catalog').then(data=>{
       if(!active)return
       const valid=normalizeCatalog(data.products)
-      if(valid.length){setCatalog(valid);setCatalogStatus('Katalog produk latihan')}
-      else setCatalogStatus('Memakai katalog latihan bawaan')
-    }).catch(()=>{
-      if(active)setCatalogStatus('Katalog latihan bawaan · offline')
-    })
+      if(valid.length)setCatalog(valid)
+    }).catch(()=>{ /* Tetap gunakan katalog latihan bawaan. */ })
     return()=>{active=false}
   },[])
   const filtered=useMemo(()=>{
@@ -61,7 +57,7 @@ export default function PublicCashierPage(){
   function scanProduct(event){
     event.preventDefault()
     const product=findByBarcode(catalog,scan)
-    if(product){add(product);setNotice('Barang ditambahkan: '+product.name)}
+    if(product)add(product)
     else setNotice('Kode tidak ditemukan dalam katalog latihan.')
     setScan('')
     barcodeInput.current?.focus()
@@ -77,7 +73,7 @@ export default function PublicCashierPage(){
     const id='manual-'+name.toLocaleLowerCase('id-ID')+'-'+price
     add({id,name,sellingPrice:price,imageUrl:null})
     setManualName('');setManualPrice('')
-    setNotice('Barang latihan ditambahkan.')
+    setNotice('')
   }
   function checkout(event){
     event.preventDefault()
@@ -87,7 +83,7 @@ export default function PublicCashierPage(){
       setSalesCount(count=>count+1)
       setCart([])
       setPaidRaw('')
-      setNotice('Transaksi latihan selesai. Stok virtual otomatis bertambah '+next.restockedUnits+' unit dan kembali ke '+DEMO_STOCK+'.')
+      setNotice('')
     }catch(e){setNotice(e.message)}
   }
   async function copyReceipt(){
@@ -99,84 +95,65 @@ export default function PublicCashierPage(){
   return <main className="pc-page">
     <div className="pc-container">
       <header className="pc-header">
-        <div>
-          <p className="pc-eyebrow">LENTERA POS · KASIR LATIHAN UMUM</p>
-          <h1>Kasir Biasa</h1>
-          <p>Pilih barang, atur jumlah, terima pembayaran, dan hitung kembalian. Tidak perlu akun.</p>
-        </div>
-        <div className="pc-header-badges">
-          <span>✓ Tanpa login</span><span>✓ Stok otomatis</span>
-        </div>
+        <h1>Kasir Biasa</h1>
+        <span className="pc-mode-label">Mode latihan</span>
       </header>
-      <section className="pc-disclaimer" aria-label="Informasi mode edukasi">
-        <span className="pc-disclaimer-icon" aria-hidden="true">ⓘ</span>
-        <div><strong>Mode edukasi — bukan transaksi asli.</strong>
-          <p>Barang dan harga mengikuti katalog latihan. Stok virtual selalu tersedia dan diisi kembali setelah transaksi. Data stok, pembayaran, dan omzet kasir admin tidak berubah.</p>
-        </div>
-      </section>
-      <div className="pc-stats">
-        <div><span>Jenis produk</span><strong>{catalog.length}</strong></div>
-        <div><span>Stok per barang</span><strong>{DEMO_STOCK} <small>otomatis</small></strong></div>
-        <div><span>Transaksi latihan</span><strong>{salesCount}</strong></div>
-      </div>
+      <p className="pc-disclaimer" role="note">
+        <span aria-hidden="true">ⓘ</span> Stok otomatis · Bukan transaksi asli
+      </p>
       {notice&&<div role="status" aria-live="polite" className="pc-notice">{notice}</div>}
       <div className="pc-grid">
         <section className="pc-catalog-panel" aria-labelledby="pc-catalog-title">
           <div className="pc-panel-heading">
-            <div><span className="pc-section-tag">1. PILIH BARANG</span>
-              <h2 id="pc-catalog-title">Katalog Barang</h2></div>
-            <span className="pc-source">{catalogStatus}</span>
+            <h2 id="pc-catalog-title">Produk</h2>
+            <span className="pc-item-count">{catalog.length} produk</span>
           </div>
           <form className="pc-scan" onSubmit={scanProduct}>
-            <label htmlFor="pc-barcode">Scan atau ketik barcode / SKU</label>
+            <label htmlFor="pc-barcode" className="sr-only">Barcode atau SKU produk</label>
             <div><input id="pc-barcode" ref={barcodeInput} value={scan}
               onChange={e=>setScan(e.target.value)} autoComplete="off"
-              placeholder="Scan barcode lalu Enter"/>
+              placeholder="Scan barcode / SKU"/>
               <button type="submit" disabled={!scan.trim()}>Tambah</button></div>
           </form>
-          <label className="pc-search-label" htmlFor="pc-search">Cari produk</label>
-          <input id="pc-search" className="pc-search" type="search" placeholder="Cari nama produk..."
+          <label className="sr-only" htmlFor="pc-search">Cari produk</label>
+          <input id="pc-search" className="pc-search" type="search" placeholder="Cari barang..."
             value={search} onChange={e=>setSearch(e.target.value)} />
           <div className="pc-products" aria-live="polite">
             {filtered.map(product=><article className="pc-product" key={product.id}>
               <ProductPhoto product={product}/>
               <div className="pc-product-meta">
-                <span>{product.category||'Produk'}</span><h3>{product.name}</h3>
+                <h3>{product.name}</h3>
                 <strong>{formatRupiah(product.sellingPrice)}</strong>
-                <small>Stok latihan: {DEMO_STOCK} • isi ulang otomatis</small>
               </div>
               <button type="button" onClick={()=>add(product)}
                 aria-label={'Tambahkan '+product.name+' ke keranjang'}>+ Tambah</button>
             </article>)}
-            {!filtered.length&&<p className="pc-empty">Produk tidak ditemukan. Coba kata kunci lain atau tambahkan barang manual.</p>}
+            {!filtered.length&&<p className="pc-empty">Produk tidak ditemukan.</p>}
           </div>
           <details className="pc-manual">
-            <summary>+ Tambahkan barang manual (latihan)</summary>
+            <summary>+ Barang manual</summary>
             <form onSubmit={manualProduct}>
-              <label htmlFor="pc-custom-name">Nama barang</label>
+              <label htmlFor="pc-custom-name" className="sr-only">Nama barang manual</label>
               <input id="pc-custom-name" value={manualName} maxLength={100} required
-                onChange={e=>setManualName(e.target.value)} placeholder="Contoh: Roti Cokelat"/>
-              <label htmlFor="pc-custom-price">Harga (Rp)</label>
+                onChange={e=>setManualName(e.target.value)} placeholder="Nama barang"/>
+              <label htmlFor="pc-custom-price" className="sr-only">Harga barang manual (rupiah)</label>
               <input id="pc-custom-price" value={manualPrice} inputMode="numeric" type="number"
                 min={100} max={1000000} step={1} required
-                onChange={e=>setManualPrice(e.target.value)} placeholder="5000"/>
-              <button type="submit">Tambahkan ke keranjang</button>
+                onChange={e=>setManualPrice(e.target.value)} placeholder="Harga (Rp)"/>
+              <button type="submit">Tambah</button>
             </form>
-            <p>Barang manual hanya berlaku untuk keranjang ini dan tidak masuk database.</p>
           </details>
         </section>
 
         <aside className="pc-checkout-panel" aria-labelledby="pc-cart-title">
           <div className="pc-panel-heading">
-            <div><span className="pc-section-tag">2. KERANJANG & PEMBAYARAN</span>
-              <h2 id="pc-cart-title">Kasir</h2></div>
+            <h2 id="pc-cart-title">Keranjang <small>({units})</small></h2>
             <button type="button" className="pc-clear" disabled={!cart.length}
-              onClick={()=>{setCart([]);setPaidRaw('');setReceipt(null);setNotice('Keranjang dikosongkan.')}}>Kosongkan</button>
+              onClick={()=>{setCart([]);setPaidRaw('');setReceipt(null);setNotice('')}}>Kosongkan</button>
           </div>
           <div className="pc-cart-list">
             {cart.length===0?<div className="pc-cart-empty">
-              <span aria-hidden="true">▣</span><p>Keranjang kosong</p>
-              <small>Pilih barang dari katalog untuk mulai.</small>
+              <span aria-hidden="true">▣</span><p>Belum ada barang</p>
             </div>:cart.map(item=><div className="pc-cart-item" key={item.id}>
               <div><strong>{item.name}</strong><small>{formatRupiah(item.unitPrice)} / unit</small></div>
               <div className="pc-quantity" aria-label={'Jumlah '+item.name}>
@@ -190,11 +167,10 @@ export default function PublicCashierPage(){
             </div>)}
           </div>
           <div className="pc-totals">
-            <div><span>{units} unit barang</span><strong>{cart.length} jenis</strong></div>
-            <div className="pc-grand-total"><span>Total belanja</span><strong>{formatRupiah(total)}</strong></div>
+            <div className="pc-grand-total"><span>Total</span><strong>{formatRupiah(total)}</strong></div>
           </div>
           <form className="pc-payment" onSubmit={checkout}>
-            <label htmlFor="pc-payment">Uang diterima (Rp)</label>
+            <label htmlFor="pc-payment">Uang diterima</label>
             <input id="pc-payment" type="text" inputMode="numeric" pattern="[0-9]*"
               autoComplete="off" placeholder="0" value={prettyInput(paidRaw)}
               onChange={e=>setPaidRaw(e.target.value.replace(/\D/g,'').slice(0,10))}/>
@@ -213,16 +189,14 @@ export default function PublicCashierPage(){
               <p className="pc-shortage" role="status">{payment.reason}</p>}
             <button className="pc-checkout-button" type="submit"
               disabled={!cart.length||!payment.valid}>
-              ✓ Selesaikan Transaksi Latihan
+              Selesaikan
             </button>
-            <p className="pc-payment-note">Setelah selesai, keranjang kosong dan stok latihan kembali ke {DEMO_STOCK} unit.</p>
           </form>
           {receipt&&<section className="pc-receipt" aria-label="Struk transaksi latihan" role="status">
             <div className="pc-receipt-header">
-              <strong>TRANSAKSI LATIHAN BERHASIL</strong>
+              <strong>✓ Struk latihan</strong>
               <small>{receipt.id}</small>
             </div>
-            <p><strong>Struk edukasi</strong> · Bukan pembayaran asli</p>
             <div className="pc-receipt-items">
               {receipt.items.map(item=><div key={item.id}>
                 <span>{item.qty} × {item.name}</span><b>{formatRupiah(item.subtotal)}</b>
@@ -233,7 +207,6 @@ export default function PublicCashierPage(){
               <div><span>Uang diterima</span><b>{formatRupiah(receipt.paidAmount)}</b></div>
               <div><span>Kembalian</span><b>{formatRupiah(receipt.changeAmount)}</b></div>
             </div>
-            <p className="pc-restock-line">↻ Stok latihan otomatis ditambah {receipt.restockedUnits} unit.</p>
             <button type="button" className="pc-copy-receipt" onClick={copyReceipt}>Salin struk</button>
           </section>}
         </aside>
