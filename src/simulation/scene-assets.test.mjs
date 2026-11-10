@@ -3,11 +3,16 @@ import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { CUSTOMERS } from './customerProfiles.js'
 
-test('all seven game customer artworks use transparent Cloudinary derivatives', () => {
+test('seven customer assets use transparent Cloudinary images and four fantasy guests preserve white foregrounds', () => {
   assert.equal(CUSTOMERS.length, 7)
   assert.equal(new Set(CUSTOMERS.map(c => c.imageUrl)).size, 7)
+  const fantasy=new Set(['milo','boo','rubi','aura'])
   for (const customer of CUSTOMERS) {
-    assert.match(customer.imageUrl, /^https:\/\/res\.cloudinary\.com\/dvds41ivm\/image\/upload\/e_make_transparent:15\/f_png\/v\d+\/lentera-pos\/customers\//)
+    assert.match(customer.imageUrl, /^https:\/\/res\.cloudinary\.com\/dvds41ivm\/image\/upload\/e_(?:make_transparent:15|background_removal)\/f_png\/v\d+\/lentera-pos\/customers\//)
+    if (fantasy.has(customer.id)) {
+      assert.ok(customer.imageUrl.includes('/e_background_removal/f_png/'), customer.id+' must use subject-aware background extraction')
+      assert.ok(!customer.imageUrl.includes('e_make_transparent'),customer.id+' should not key out white costume/body parts')
+    }
   }
 })
 

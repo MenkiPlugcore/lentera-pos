@@ -84,7 +84,7 @@ test('four fantasy visitors join the existing three customers',()=>{
   for(const id of ['milo','boo','rubi','aura']){
     const customer=CUSTOMERS.find(c=>c.id===id)
     assert.ok(customer,'Missing visitor '+id)
-    assert.ok(customer.imageUrl.includes('e_make_transparent:15/f_png/'))
+    assert.ok(customer.imageUrl.includes('e_background_removal/f_png/'))
     assert.ok(customer.greeting)
   }
 })
