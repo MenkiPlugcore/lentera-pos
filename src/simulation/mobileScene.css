@@ -1,0 +1,359 @@
+/* LENTERA POS v1.4.2
+   One mobile layout source of truth. Desktop keeps its existing scene overlays.
+   On narrow screens the store image is its own region; all UI is in normal flow.
+   This deliberately avoids absolute-positioned HUD/dialogue/basket over customers.
+*/
+@media (max-width: 960px) {
+  .arcade-page--playing {
+    padding-top: .4rem;
+    padding-bottom: 1.75rem;
+  }
+  .arcade-page--playing .arcade-container {
+    width: min(100% - 1rem, 680px);
+  }
+  .arcade-play-layout {
+    display: block;
+    margin: 0;
+    min-width: 0;
+  }
+  .arcade-play-layout .arcade-stage {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: .65rem;
+    position: relative;
+    width: 100%;
+    height: auto;
+    min-height: 0;
+    max-height: none;
+    aspect-ratio: auto;
+    padding: 0;
+    margin: 0;
+    border: none;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+    overflow: visible;
+  }
+  /* Header no longer overlays the level heading baked into original store image. */
+  .arcade-play-layout .arcade-stage > .arcade-hud {
+    order: 0;
+    position: relative;
+    inset: auto;
+    display: flex;
+    flex: 0 0 auto;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    min-width: 0;
+    gap: .45rem;
+    padding: .1rem 0;
+    color: #fff;
+  }
+  .arcade-play-layout .arcade-hud-score {
+    flex: 0 1 auto;
+    max-width: none;
+    min-width: 0;
+    padding: .55rem .7rem;
+    border-width: 1px;
+    border-radius: 12px;
+    box-shadow: none;
+    white-space: normal;
+  }
+  .arcade-play-layout .arcade-hud-score strong {
+    font-size: clamp(.78rem, 2.7vw, .98rem);
+    line-height: 1.22;
+  }
+  .arcade-play-layout .arcade-hud-right {
+    display: flex;
+    align-items: center;
+    gap: .4rem;
+    flex: 0 0 auto;
+    min-width: 0;
+  }
+  .arcade-play-layout .arcade-hud-progress {
+    width: clamp(70px, 20vw, 130px);
+    min-width: 0;
+    white-space: normal;
+    text-shadow: none;
+    color: #225b3c;
+    font-size: .7rem;
+    line-height: 1.18;
+  }
+  .arcade-play-layout .arcade-hud-progress .arcade-progress-track {
+    margin-top: .2rem;
+  }
+  .arcade-play-layout .arcade-hud-exit {
+    flex: 0 0 auto;
+    min-height: 42px;
+    padding: .45rem .7rem;
+    font-size: .76rem;
+    border-width: 1px;
+    box-shadow: none;
+  }
+  /* StoreScene is the ONLY content in this bounded image region. */
+  .arcade-play-layout .arcade-stage > .game-store-art {
+    order: 1;
+    display: block;
+    position: relative;
+    inset: auto;
+    width: 100%;
+    height: auto;
+    min-height: 220px;
+    aspect-ratio: 1.25 / 1;
+    overflow: hidden;
+    border: 3px solid #fff;
+    border-radius: 18px;
+    background: #e4d0b9;
+    box-shadow: 0 8px 24px #163e2a24;
+    isolation: isolate;
+  }
+  .arcade-play-layout .arcade-stage .game-store-art--custom .game-store-background,
+  .arcade-play-layout .arcade-stage .game-store-art--custom .game-store-foreground {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center bottom;
+    /* The source art has an obsolete title at the top: crop it away
+       consistently in both background and foreground image layers. */
+    transform: scale(1.23);
+    transform-origin: center bottom;
+  }
+  .arcade-play-layout .arcade-stage .game-store-art--custom .game-store-character {
+    left: 51%;
+    bottom: 15%;
+    width: 93%;
+    height: 76%;
+    z-index: 1;
+    transform: translateX(-50%);
+  }
+  .arcade-play-layout .arcade-stage > .arcade-scene-vignette {
+    display: none;
+  }
+  /* Dialogue and basket are cards BELOW the art, never floating over faces. */
+  .arcade-play-layout .arcade-stage > .arcade-dialogue {
+    order: 2;
+    position: relative;
+    inset: auto;
+    display: block;
+    flex: 0 0 auto;
+    width: 100%;
+    max-width: none;
+    margin: 0;
+    padding: .7rem .85rem;
+    border: 1px solid #c6dfd0;
+    border-radius: 13px;
+    background: #fff;
+    color: #234631;
+    box-shadow: 0 3px 12px #173c2911;
+    animation: none;
+  }
+  .arcade-play-layout .arcade-stage > .arcade-dialogue::after {
+    display: none;
+  }
+  .arcade-play-layout .arcade-dialogue-name {
+    color: #176940;
+    font-size: .76rem;
+    line-height: 1.3;
+  }
+  .arcade-play-layout .arcade-dialogue p {
+    margin: .2rem 0 0;
+    color: #243c2d;
+    font-size: .89rem;
+    line-height: 1.37;
+    font-weight: 760;
+  }
+  .arcade-play-layout .arcade-stage > .arcade-order-board {
+    order: 3;
+    position: relative;
+    inset: auto;
+    display: block;
+    width: 100%;
+    max-width: none;
+    max-height: none;
+    overflow: visible;
+    flex: 0 0 auto;
+    margin: 0;
+    padding: .7rem;
+    border: 1px solid #c5e0d1;
+    border-radius: 14px;
+    background: #fff;
+    color: #234b33;
+    box-shadow: 0 3px 12px #173c2911;
+  }
+  .arcade-play-layout .arcade-order-board .arcade-basket-stage {
+    font-size: .69rem;
+    color: #468365;
+    font-weight: 850;
+  }
+  .arcade-play-layout .arcade-order-board .game-basket-heading {
+    margin: .3rem 0 .45rem;
+  }
+  .arcade-play-layout .arcade-order-board .game-basket-heading strong {
+    color: #17472f;
+  }
+  .arcade-play-layout .arcade-order-board .game-basket-heading span {
+    background: #def4e7;
+    color: #1b6e42;
+  }
+  .arcade-play-layout .arcade-order-board .game-basket-list {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: .45rem;
+  }
+  .arcade-play-layout .arcade-order-board .game-basket-row {
+    background: #f4faf6;
+    border-color: #dceadf;
+    min-width: 0;
+    gap: .35rem;
+    padding: .4rem;
+  }
+  .arcade-play-layout .arcade-order-board .game-basket-info strong {
+    color: #234d35;
+    font-size: .72rem;
+  }
+  .arcade-play-layout .arcade-order-board .game-basket-info small {
+    color: #52705d;
+    font-size: .62rem;
+  }
+  .arcade-play-layout .arcade-order-board .game-basket-subtotal {
+    color: #146940;
+    font-size: .72rem;
+  }
+  .arcade-play-layout .arcade-order-board .game-basket-more {
+    color: #3d7954;
+  }
+  .arcade-play-layout .arcade-order-board .arcade-order-money {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: .45rem;
+    margin-top: .55rem;
+  }
+  .arcade-play-layout .arcade-order-board .arcade-order-money > div {
+    min-width: 0;
+    padding: .6rem .65rem;
+    border: 1px solid #d8e8db;
+    border-radius: 10px;
+    background: #eaf6ee;
+  }
+  .arcade-play-layout .arcade-order-board .arcade-order-money > div:last-child {
+    background: #e4f5f0;
+    border-color: #c1e5d7;
+  }
+  .arcade-play-layout .arcade-order-board .arcade-order-money span {
+    color: #4e725e;
+    font-size: .67rem;
+  }
+  .arcade-play-layout .arcade-order-board .arcade-order-money strong {
+    color: #155c38;
+    font-size: clamp(.93rem, 3.5vw, 1.1rem);
+    margin-top: .22rem;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+  .arcade-play-layout .arcade-stage > .arcade-scene-actions {
+    order: 4;
+    position: relative;
+    inset: auto;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    flex: 0 0 auto;
+    width: 100%;
+    min-width: 0;
+    gap: .5rem;
+    padding: 0;
+    margin: 0;
+  }
+  .arcade-play-layout .arcade-scene-actions > .arcade-open-drawer,
+  .arcade-play-layout .arcade-scene-actions > .arcade-open-calculator {
+    position: relative;
+    inset: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: .15rem;
+    width: 100%;
+    min-width: 0;
+    min-height: 56px;
+    padding: .55rem .45rem;
+    margin: 0;
+    border-radius: 12px;
+    font-size: .81rem;
+    line-height: 1.25;
+    text-align: center;
+    white-space: normal;
+  }
+  .arcade-play-layout .arcade-scene-actions > .arcade-open-drawer strong {
+    font-size: .76rem;
+  }
+  .arcade-play-layout .arcade-stage > .arcade-reward {
+    order: 2;
+    position: relative;
+    inset: auto;
+    transform: none;
+    text-align: center;
+    color: #a87917;
+    text-shadow: none;
+    animation: none;
+  }
+}
+@media (max-width: 520px) {
+  .arcade-play-layout .arcade-stage { gap: .5rem; }
+  .arcade-play-layout .arcade-stage > .game-store-art {
+    aspect-ratio: 1.26 / 1;
+    min-height: 215px;
+    border-radius: 14px;
+  }
+  .arcade-play-layout .arcade-hud-score {
+    padding: .42rem .5rem;
+    border-radius: 10px;
+  }
+  .arcade-play-layout .arcade-hud-score strong {
+    font-size: .75rem;
+  }
+  .arcade-play-layout .arcade-hud-right { gap: .28rem; }
+  .arcade-play-layout .arcade-hud-progress {
+    width: clamp(67px, 19vw, 90px);
+    font-size: .59rem;
+  }
+  .arcade-play-layout .arcade-hud-exit {
+    padding: .38rem .48rem;
+    font-size: .71rem;
+  }
+  .arcade-play-layout .arcade-stage > .arcade-dialogue {
+    padding: .58rem .7rem;
+  }
+  .arcade-play-layout .arcade-dialogue p {
+    font-size: .83rem;
+  }
+  .arcade-play-layout .arcade-stage > .arcade-order-board {
+    padding: .58rem;
+  }
+  .arcade-play-layout .arcade-order-board .game-basket-list {
+    grid-template-columns: 1fr;
+    gap: .32rem;
+  }
+  .arcade-play-layout .arcade-order-board .game-basket-row {
+    padding: .3rem .4rem;
+  }
+  .arcade-play-layout .arcade-order-board .game-basket-thumb {
+    width: 34px;
+    height: 34px;
+  }
+  .arcade-play-layout .arcade-scene-actions > .arcade-open-drawer,
+  .arcade-play-layout .arcade-scene-actions > .arcade-open-calculator {
+    min-height: 54px;
+    font-size: .78rem;
+  }
+}
+@media (max-width: 350px) {
+  .arcade-play-layout .arcade-hud-score strong { font-size: .69rem; }
+  .arcade-play-layout .arcade-hud-progress { width: 60px; font-size: .54rem; }
+  .arcade-play-layout .arcade-hud-exit { font-size: .66rem; }
+}
+@media (prefers-reduced-motion: reduce) and (max-width: 960px) {
+  .arcade-play-layout .arcade-stage > .arcade-reward { animation: none; }
+}

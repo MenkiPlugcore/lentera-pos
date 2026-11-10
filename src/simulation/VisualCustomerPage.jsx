@@ -12,6 +12,7 @@ import { canBuildExactChange, totalCash } from './cashMoney.js'
 import { changeChoices, customerDialogue, customerForChallenge, formatRupiah } from './customerProfiles.js'
 import './simulation.css'
 import './arcade.css'
+import './mobileScene.css'
 
 const CURRENT_KEY = 'lentera-pos-simulasi-selected-v1'
 const initialProfiles = () => {
