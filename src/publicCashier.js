@@ -1,5 +1,8 @@
 // Public educational cashier; every transaction is simulated and in-memory.
 // No mutations to Neon products, product stock, actual transactions, or accounting.
+// Pisahkan angka mentah dari penampilannya agar 50.000 tetap valid saat dibayar.
+export const normalizeCashInput=value=>String(value??'').replace(/\D/g,'').slice(0,10)
+export const displayCashInput=value=>normalizeCashInput(value).replace(/\B(?=(\d{3})+(?!\d))/g,'.')
 export const DEMO_STOCK=100
 export const MAX_QTY=99
 export const DEMO_CATALOG=Object.freeze([

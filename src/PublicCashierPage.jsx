@@ -3,11 +3,11 @@ import { cloudApiFetch } from './cloudApi.js'
 import {
   DEMO_CATALOG,normalizeCatalog,findByBarcode,addToCart,
   setCartQty,cartTotal,getCashChange,checkoutDemo,receiptText,formatRupiah,
+  normalizeCashInput,displayCashInput,
 } from './publicCashier.js'
 import './publicCashier.css'
 import './publicCashierGallery.css'
-
-const prettyInput=value=>String(value||'').replace(/\B(?=(\d{3})+(?!\d))/g,'.')
+import { createReceiptPdf, receiptPdfFilename } from './receiptPdf.js'
 
 function ProductPhoto({product}){
   return <span className="pc-gallery-photo">
@@ -19,6 +19,35 @@ function ProductPhoto({product}){
         }}/>
     ) : <span className="pc-gallery-placeholder" aria-hidden="true">▣</span>}
   </span>
+}
+
+function ReceiptDetails({receipt}) {
+  const date=new Date(receipt.createdAt).toLocaleString('id-ID',{
+    dateStyle:'short',timeStyle:'short',
+  })
+  return <div className="pc-receipt-document">
+    <div className="pc-receipt-brand">LENTERA POS</div>
+    <div className="pc-receipt-label">STRUK LATIHAN</div>
+    <div className="pc-receipt-identity">
+      <span>No. {receipt.id}</span>
+      <span>{date}</span>
+    </div>
+    <div className="pc-receipt-items">
+      {receipt.items.map(item=><div key={item.id} className="pc-receipt-item">
+        <span><strong>{item.name}</strong>
+          <small>{item.qty} × {formatRupiah(item.unitPrice)}</small>
+        </span>
+        <b>{formatRupiah(item.subtotal)}</b>
+      </div>)}
+    </div>
+    <div className="pc-receipt-totals">
+      <div><span>Total</span><b>{formatRupiah(receipt.totalAmount)}</b></div>
+      <div><span>Uang diterima</span><b>{formatRupiah(receipt.paidAmount)}</b></div>
+      <div><span>Kembalian</span><b>{formatRupiah(receipt.changeAmount)}</b></div>
+    </div>
+    <p className="pc-receipt-warning">BUKAN TRANSAKSI ASLI</p>
+    <p className="pc-receipt-thanks">Terima kasih sudah belajar!</p>
+  </div>
 }
 
 export default function PublicCashierPage(){
@@ -125,6 +154,27 @@ export default function PublicCashierPage(){
     try{await navigator.clipboard.writeText(receiptText(receipt));setNotice('Struk latihan disalin.')}
     catch{setNotice('Tidak bisa menyalin otomatis di browser ini.')}
   }
+  function printReceipt(){
+    if(!receipt)return
+    window.print()
+  }
+  function downloadReceipt(){
+    if(!receipt)return
+    try {
+      const pdf=createReceiptPdf(receipt)
+      const url=URL.createObjectURL(new Blob([pdf],{type:'application/pdf'}))
+      const anchor=document.createElement('a')
+      anchor.href=url
+      anchor.download=receiptPdfFilename(receipt)
+      document.body.appendChild(anchor)
+      anchor.click()
+      anchor.remove()
+      window.setTimeout(()=>URL.revokeObjectURL(url),2000)
+      setNotice('')
+    } catch(error) {
+      setNotice('Gagal membuat PDF struk: '+error.message)
+    }
+  }
 
   return <main className="pc-page">
     <div className="pc-container">
@@ -213,9 +263,9 @@ export default function PublicCashierPage(){
           </div>
           <form className="pc-payment" onSubmit={checkout}>
             <label htmlFor="pc-payment">Uang diterima</label>
-            <input id="pc-payment" type="text" inputMode="numeric" pattern="[0-9]*"
-              autoComplete="off" placeholder="0" value={prettyInput(paidRaw)}
-              onChange={e=>setPaidRaw(e.target.value.replace(/\D/g,'').slice(0,10))}/>
+            <input id="pc-payment" type="text" inputMode="numeric"
+              autoComplete="off" placeholder="0" maxLength={13} value={displayCashInput(paidRaw)}
+              onChange={e=>setPaidRaw(normalizeCashInput(e.target.value))}/>
             <div className="pc-quick-cash" aria-label="Pilihan uang cepat">
               {[10000,20000,50000,100000].map(amount=>
                 <button key={amount} type="button" onClick={()=>setPaidRaw(String(amount))}>
@@ -235,21 +285,12 @@ export default function PublicCashierPage(){
             </button>
           </form>
           {receipt&&<section className="pc-receipt" aria-label="Struk transaksi latihan" role="status">
-            <div className="pc-receipt-header">
-              <strong>✓ Struk latihan</strong>
-              <small>{receipt.id}</small>
+            <ReceiptDetails receipt={receipt}/>
+            <div className="pc-receipt-actions">
+              <button type="button" onClick={printReceipt}>Cetak struk</button>
+              <button type="button" onClick={downloadReceipt}>Unduh PDF</button>
+              <button type="button" onClick={copyReceipt}>Salin</button>
             </div>
-            <div className="pc-receipt-items">
-              {receipt.items.map(item=><div key={item.id}>
-                <span>{item.qty} × {item.name}</span><b>{formatRupiah(item.subtotal)}</b>
-              </div>)}
-            </div>
-            <div className="pc-receipt-totals">
-              <div><span>Total</span><b>{formatRupiah(receipt.totalAmount)}</b></div>
-              <div><span>Uang diterima</span><b>{formatRupiah(receipt.paidAmount)}</b></div>
-              <div><span>Kembalian</span><b>{formatRupiah(receipt.changeAmount)}</b></div>
-            </div>
-            <button type="button" className="pc-copy-receipt" onClick={copyReceipt}>Salin struk</button>
           </section>}
         </aside>
       </div>
@@ -262,5 +303,8 @@ export default function PublicCashierPage(){
     </button>
     {cartOpen&&<button type="button" className="pc-cart-backdrop"
       aria-label="Tutup panel keranjang" onClick={()=>setCartOpen(false)}/>}
+    <div className="pc-print-stage" aria-hidden="true">
+      {receipt&&<ReceiptDetails receipt={receipt}/>}
+    </div>
   </main>
 }

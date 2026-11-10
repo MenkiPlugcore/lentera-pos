@@ -349,3 +349,170 @@
   .pc-gallery-card:hover,.pc-gallery-card:active,
   .pc-gallery-card:hover .pc-gallery-photo img {transform:none!important;}
 }
+
+
+/* v1.10.1 — print-ready thermal receipt; the on-screen receipt is also the preview. */
+.pc-receipt-document {
+  width:100%;
+  min-width:0;
+  padding:1rem .75rem;
+  background:#fff;
+  border:1px dashed #c1d5c7;
+  border-radius:10px;
+  color:#252f27;
+  font-family:"Courier New",Courier,monospace;
+  font-size:.76rem;
+  line-height:1.45;
+}
+.pc-receipt-brand {
+  text-align:center;
+  color:#17492f;
+  font-size:1.05rem;
+  font-weight:950;
+  letter-spacing:.08em;
+}
+.pc-receipt-label {text-align:center;font-size:.74rem;font-weight:950;letter-spacing:.1em;}
+.pc-receipt-identity {
+  display:grid;
+  gap:.2rem;
+  margin-top:.75rem;
+  padding-bottom:.65rem;
+  font-size:.73rem;
+  border-bottom:1px dashed #becac0;
+}
+.pc-receipt-document .pc-receipt-items {
+  display:grid;
+  gap:.55rem;
+  border-block:0;
+  margin:0;
+  padding:.85rem 0;
+}
+.pc-receipt-document .pc-receipt-item {
+  display:flex;
+  justify-content:space-between;
+  align-items:start;
+  gap:.65rem;
+  font-size:.74rem;
+}
+.pc-receipt-document .pc-receipt-item > span {
+  display:grid;
+  gap:.13rem;
+  flex:1;
+  min-width:0;
+  overflow-wrap:anywhere;
+}
+.pc-receipt-document .pc-receipt-item > span strong {font-weight:900;}
+.pc-receipt-document .pc-receipt-item small {font-size:.66rem;color:#586a5b;}
+.pc-receipt-document .pc-receipt-item > b {
+  flex:0 0 auto;
+  font-size:.73rem;
+  white-space:nowrap;
+}
+.pc-receipt-document .pc-receipt-totals {
+  display:grid;
+  gap:.45rem;
+  border-block:1px dashed #becac0;
+  padding:.7rem 0;
+  color:#283c2e;
+}
+.pc-receipt-document .pc-receipt-totals > div {
+  display:flex;justify-content:space-between;gap:.5rem;
+  font-size:.75rem;
+}
+.pc-receipt-document .pc-receipt-totals > div:last-child {
+  color:#105c36;
+  font-size:.86rem;
+  font-weight:950;
+}
+.pc-receipt-warning {
+  margin:.8rem 0 0!important;
+  text-align:center;
+  color:#9f353b!important;
+  font-size:.71rem!important;
+  font-weight:950;
+}
+.pc-receipt-thanks {
+  margin:.4rem 0 0!important;
+  text-align:center;
+  color:#697668!important;
+  font-size:.7rem!important;
+}
+.pc-receipt-actions {
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:.45rem;
+  margin-top:.75rem;
+}
+.pc-receipt-actions button {
+  min-height:44px;
+  padding:.6rem .3rem;
+  border:1px solid #b8dec4;
+  border-radius:9px;
+  background:#e1f4e7;
+  color:#166d40;
+  font-size:.78rem;
+  font-weight:950;
+  cursor:pointer;
+}
+.pc-receipt-actions button:first-child {background:#176e42;color:#fff;border-color:#176e42;}
+.pc-receipt-actions button:last-child {grid-column:1/-1;background:#f7faf8;}
+.pc-receipt-actions button:hover {filter:brightness(.97);}
+.pc-receipt-actions button:focus-visible {outline:3px solid #299956;outline-offset:2px;}
+.pc-print-stage {display:none;}
+
+@media print {
+  @page {size:80mm 240mm;margin:0;}
+  html,body {
+    width:80mm!important;
+    margin:0!important;
+    padding:0!important;
+    background:#fff!important;
+    overflow:visible!important;
+    min-height:0!important;
+  }
+  body * {visibility:hidden!important;}
+  .pc-print-stage,
+  .pc-print-stage * {visibility:visible!important;}
+  .pc-page {
+    margin:0!important;
+    padding:0!important;
+    min-height:0!important;
+    background:#fff!important;
+    overflow:visible!important;
+  }
+  .pc-page > .pc-container,
+  .pc-page > .pc-cart-fab,
+  .pc-page > .pc-cart-backdrop {display:none!important;}
+  .pc-print-stage {
+    display:block!important;
+    position:absolute!important;
+    top:0!important;
+    left:0!important;
+    width:80mm!important;
+    margin:0!important;
+    padding:3mm!important;
+    border:0!important;
+    background:#fff!important;
+    color:#111!important;
+  }
+  .pc-print-stage .pc-receipt-document {
+    display:block!important;
+    width:74mm!important;
+    margin:0!important;
+    padding:1mm!important;
+    border:0!important;
+    border-radius:0!important;
+    background:#fff!important;
+    color:#111!important;
+    box-shadow:none!important;
+    break-inside:avoid;
+  }
+  .pc-print-stage .pc-receipt-document *,
+  .pc-print-stage .pc-receipt-warning,
+  .pc-print-stage .pc-receipt-thanks {color:#111!important;}
+  .pc-print-stage .pc-receipt-brand {font-size:12pt!important;}
+  .pc-print-stage .pc-receipt-label {font-size:9pt!important;}
+  .pc-print-stage .pc-receipt-item,
+  .pc-print-stage .pc-receipt-identity,
+  .pc-print-stage .pc-receipt-totals > div {font-size:8pt!important;}
+}
