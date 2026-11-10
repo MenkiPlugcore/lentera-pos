@@ -138,3 +138,23 @@ test('product image, name and price are one accessible card button with no neste
   assert.match(css,/\.pc-products \.pc-product:focus-visible/)
   assert.match(css,/touch-action: manipulation/)
 })
+
+
+test('horizontal product cards show dominant left image and name/price within same clickable card',()=>{
+  const ui=readFileSync(new URL('./PublicCashierPage.jsx',import.meta.url),'utf8')
+  const css=readFileSync(new URL('./publicCashier.css',import.meta.url),'utf8')
+  const card=ui.match(/\{filtered\.map\(product=><button type="button" className="pc-product"[\s\S]*?<\/button>\)\}/)
+  assert.ok(card)
+  assert.match(card[0],/<ProductPhoto product=\{product\}\/>[\s\S]*?pc-product-name[\s\S]*?pc-product-price/)
+  assert.match(card[0],/onClick=\{\(\)=>add\(product\)\}/)
+  assert.equal((card[0].match(/<button\b/g)||[]).length,1)
+  const latest=css.split('v1.9.3 — horizontal image-first product cards.')[1]
+  assert.ok(latest,'Missing new card design')
+  assert.match(latest,/\.pc-products \.pc-product\s*\{[\s\S]*?grid-template-columns:\s*minmax\(0,\s*43%\)\s+minmax\(0,\s*57%\)/)
+  assert.match(latest,/\.pc-products \.pc-product-image\s*\{[\s\S]*?height:\s*100%;[\s\S]*?min-height:\s*128px/)
+  assert.match(latest,/\.pc-products \.pc-product-image img\s*\{[\s\S]*?object-fit:\s*contain/)
+  assert.match(latest,/\.pc-products \.pc-product-meta\s*\{[\s\S]*?flex-direction:\s*column/)
+  assert.match(latest,/@media \(max-width:\s*640px\)/)
+  assert.match(css,/\.pc-products \.pc-product:focus-visible/) // original accessibility is retained
+  assert.doesNotMatch(card[0],/>\\+ Tambah<\/button>/)
+})

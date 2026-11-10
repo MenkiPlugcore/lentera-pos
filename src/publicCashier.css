@@ -243,3 +243,124 @@
 @media (prefers-reduced-motion:reduce) {
   .pc-products .pc-product { transition: none; transform: none; }
 }
+
+
+/* v1.9.3 — horizontal image-first product cards.
+   The product photo occupies the entire left half, while name, price and
+   the small plus indicator stay inside the same clickable card. */
+.pc-products .pc-product {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 43%) minmax(0, 57%);
+  grid-template-rows: minmax(128px, auto);
+  align-items: stretch;
+  gap: 0;
+  width: 100%;
+  min-height: 128px;
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid #d9e9df;
+  border-radius: 15px;
+  background: #ffffff;
+  text-align: left;
+}
+.pc-products .pc-product-image {
+  display: grid;
+  place-items: center;
+  align-self: stretch;
+  justify-self: stretch;
+  width: 100%;
+  height: 100%;
+  min-height: 128px;
+  margin: 0;
+  border-radius: 14px 0 0 14px;
+  background: linear-gradient(140deg, #f0f8f0 0%, #e5f2e8 100%);
+  overflow: hidden;
+}
+.pc-products .pc-product-image img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center;
+  padding: .25rem;
+  transition: transform .16s ease;
+}
+.pc-products .pc-product:hover .pc-product-image img { transform: scale(1.045); }
+.pc-products .pc-product-image > span { font-size: 2.7rem; color: #8cbca0; }
+.pc-products .pc-product-meta {
+  display: flex;
+  flex-direction: column;
+  align-self: center;
+  justify-content: center;
+  gap: .45rem;
+  min-width: 0;
+  width: 100%;
+  padding: .9rem 2.25rem .9rem .95rem;
+  background: #fff;
+}
+.pc-products .pc-product-name {
+  color: #1f4930;
+  font-size: clamp(.88rem, 1.35vw, 1.03rem);
+  font-weight: 950;
+  line-height: 1.26;
+  overflow-wrap: anywhere;
+}
+.pc-products .pc-product-price {
+  color: #0d8444;
+  font-size: clamp(.89rem, 1.3vw, 1.03rem);
+  font-weight: 950;
+  line-height: 1.25;
+  white-space: nowrap;
+}
+.pc-products .pc-product-add {
+  position: absolute;
+  z-index: 1;
+  top: .6rem;
+  right: .6rem;
+  display: grid;
+  place-items: center;
+  width: 29px;
+  height: 29px;
+  border-radius: 9px;
+  font-size: 1.12rem;
+  pointer-events: none;
+}
+.pc-products .pc-product:hover { background: #f5fcf6; }
+.pc-products .pc-product:hover .pc-product-meta { background: #f5fcf6; }
+.pc-products .pc-product:active .pc-product-image img { transform: scale(.99); }
+
+/* Two visual cards per row on roomy screens; keep a full-width card on mobile. */
+@media (min-width: 791px) and (max-width: 1180px) {
+  .pc-products { grid-template-columns: 1fr; }
+}
+@media (max-width: 790px) {
+  .pc-products { grid-template-columns: repeat(2, minmax(0,1fr)); }
+  .pc-products .pc-product { grid-template-columns: minmax(0, 43%) minmax(0, 57%); }
+  .pc-products .pc-product-meta { padding: .65rem 1.9rem .65rem .6rem; }
+  .pc-products .pc-product-add { top: .42rem; right: .42rem; width: 26px; height: 26px; }
+}
+@media (max-width: 640px) {
+  .pc-products { grid-template-columns: 1fr; }
+  .pc-products .pc-product {
+    grid-template-columns: minmax(0, 39%) minmax(0, 61%);
+    grid-template-rows: minmax(115px, auto);
+    min-height: 115px;
+  }
+  .pc-products .pc-product-image { min-height: 115px; }
+  .pc-products .pc-product-meta { padding: .75rem 2.2rem .75rem .85rem; }
+  .pc-products .pc-product-name,
+  .pc-products .pc-product-price { font-size: .94rem; }
+}
+@media (max-width: 345px) {
+  .pc-products .pc-product { grid-template-columns: minmax(0, 38%) minmax(0, 62%); }
+  .pc-products .pc-product-meta { padding-right: 1.75rem; padding-left: .6rem; }
+  .pc-products .pc-product-name,
+  .pc-products .pc-product-price { font-size: .83rem; }
+  .pc-products .pc-product-add { top: .4rem; right: .4rem; width: 24px; height: 24px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pc-products .pc-product-image img { transition: none; }
+  .pc-products .pc-product:hover .pc-product-image img,
+  .pc-products .pc-product:active .pc-product-image img { transform: none; }
+}
