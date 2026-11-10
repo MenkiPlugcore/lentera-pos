@@ -1,0 +1,351 @@
+/* LENTERA POS — Kartu produk besar dari referensi HTML pengguna.
+   Isolasi class pc-gallery-* menghindari CSS kartu horizontal lama. */
+.pc-layout {
+  display:grid;
+  grid-template-columns:minmax(0,1fr) minmax(320px,370px);
+  gap:1rem;
+  align-items:start;
+  min-width:0;
+}
+.pc-layout .pc-catalog-panel {
+  min-width:0;
+  background:transparent;
+  border:0;
+  box-shadow:none;
+  padding:0;
+}
+.pc-layout .pc-checkout-panel {
+  min-width:0;
+  position:sticky;
+  top:.75rem;
+  display:flex;
+  flex-direction:column;
+  max-height:calc(100dvh - 1.5rem);
+  overflow-y:auto;
+  border-radius:18px;
+  box-shadow:0 12px 32px rgba(18,65,37,.09);
+}
+.pc-layout .pc-checkout-panel .pc-cart-list {
+  flex:1 1 auto;
+  min-height:100px;
+  max-height:min(34vh,350px);
+  overflow-y:auto;
+}
+.pc-layout .pc-checkout-panel .pc-payment,
+.pc-layout .pc-checkout-panel .pc-totals {flex-shrink:0;}
+.pc-gallery-search {
+  position:relative;
+  display:flex;
+  align-items:center;
+  gap:.35rem;
+  height:56px;
+  margin-bottom:1.1rem;
+  border:1.5px solid #d1e5d9;
+  background:#fff;
+  box-shadow:0 3px 12px rgba(19,64,39,.045);
+  border-radius:15px;
+  overflow:hidden;
+}
+.pc-gallery-search:focus-within {border-color:#19a05a;box-shadow:0 0 0 3px rgba(23,150,83,.12)}
+.pc-gallery-search-icon {
+  flex:0 0 auto;
+  font-size:1.7rem;
+  font-weight:900;
+  color:#6e9680;
+  margin-left:1.1rem;
+  line-height:1;
+}
+.pc-gallery-search input {
+  min-width:0;
+  flex:1;
+  border:none;
+  outline:0;
+  background:transparent;
+  color:#234b34;
+  font-size:1rem;
+  font-weight:650;
+  padding:.7rem 0;
+}
+.pc-gallery-search input::placeholder {color:#88a094;}
+.pc-gallery-search>button {
+  flex:0 0 auto;
+  margin-right:.45rem;
+  min-height:40px;
+  padding:.45rem .7rem;
+  border:1px solid #cbe8d4;
+  border-radius:10px;
+  background:#e5f7e9;
+  color:#207347;
+  font-size:.75rem;
+  font-weight:850;
+  cursor:pointer;
+}
+.pc-gallery-search>button:disabled {opacity:.4;cursor:default;}
+.pc-gallery-grid {
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:.85rem;
+  min-width:0;
+}
+.pc-gallery-card {
+  appearance:none;
+  -webkit-appearance:none;
+  position:relative;
+  display:flex;
+  flex-direction:column;
+  align-items:stretch;
+  justify-content:flex-start;
+  min-width:0;
+  min-height:202px;
+  width:100%;
+  padding:.75rem .7rem .8rem;
+  border:1.5px solid #dfece4;
+  border-radius:17px;
+  background:white;
+  color:#2f4c38;
+  box-shadow:0 3px 12px rgba(15,83,40,.05);
+  text-align:center;
+  font-family:inherit;
+  cursor:pointer;
+  touch-action:manipulation;
+  transition:transform .16s ease,box-shadow .16s ease,border-color .16s ease;
+}
+.pc-gallery-card:hover {
+  transform:translateY(-3px);
+  border-color:#9bdbb2;
+  box-shadow:0 10px 25px rgba(17,93,44,.12);
+}
+.pc-gallery-card:active {transform:scale(.975);}
+.pc-gallery-card:focus-visible {
+  outline:3px solid #178a50;
+  outline-offset:2px;
+  border-color:#178a50;
+}
+.pc-gallery-photo {
+  display:flex;
+  flex:1 1 auto;
+  justify-content:center;
+  align-items:center;
+  width:100%;
+  min-height:118px;
+  height:132px;
+  max-height:167px;
+  overflow:hidden;
+  border-radius:13px;
+  background:linear-gradient(145deg,#f2faf4 0%,#e7f5ea 100%);
+  color:#83b797;
+}
+.pc-gallery-photo img {
+  display:block;
+  width:100%;
+  height:100%;
+  object-fit:contain;
+  object-position:center center;
+  padding:.15rem;
+  transition:transform .18s ease;
+}
+.pc-gallery-card:hover .pc-gallery-photo img {transform:scale(1.07);}
+.pc-gallery-photo--missing::after {
+  content:'▣';
+  font-size:3rem;
+  font-weight:850;
+}
+.pc-gallery-placeholder {font-size:3rem;line-height:1;}
+.pc-gallery-details {
+  display:flex;
+  flex:0 0 auto;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:.25rem;
+  width:100%;
+  min-width:0;
+  margin-top:.65rem;
+}
+.pc-gallery-name {
+  width:100%;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  color:#284833;
+  font-size:.89rem;
+  font-weight:900;
+  line-height:1.3;
+}
+.pc-gallery-price {
+  color:#0d8949;
+  font-size:1rem;
+  line-height:1.2;
+  font-weight:950;
+  white-space:nowrap;
+}
+.pc-gallery-add {
+  position:absolute;
+  top:.5rem;
+  right:.5rem;
+  display:grid;
+  place-items:center;
+  width:29px;
+  height:29px;
+  border-radius:50%;
+  border:1px solid #c5e8ce;
+  background:#d9f3e3;
+  color:#147c43;
+  font-weight:950;
+  font-size:1.1rem;
+  pointer-events:none;
+  opacity:.8;
+  transition:opacity .14s ease,transform .14s ease;
+}
+.pc-gallery-card:hover .pc-gallery-add {opacity:1;transform:scale(1.08);}
+.pc-gallery-grid .pc-empty {grid-column:1/-1;}
+.pc-mobile-cart-heading,.pc-cart-fab,.pc-cart-backdrop {display:none;}
+
+@media(min-width:1160px) {
+  .pc-gallery-grid {grid-template-columns:repeat(3,minmax(0,1fr));}
+}
+@media(min-width:1520px) {
+  .pc-gallery-grid {grid-template-columns:repeat(4,minmax(0,1fr));}
+}
+@media(min-width:1080px) and (max-width:1159px) {
+  .pc-gallery-grid {grid-template-columns:repeat(2,minmax(0,1fr));}
+}
+@media(max-width:900px) {
+  .pc-layout {display:block;}
+  .pc-layout .pc-catalog-panel {padding-bottom:4.5rem;}
+  .pc-gallery-grid {grid-template-columns:repeat(3,minmax(0,1fr));}
+  .pc-layout .pc-checkout-panel {
+    position:fixed;
+    z-index:1002;
+    top:auto;
+    left:0;
+    right:0;
+    bottom:0;
+    width:100%;
+    height:min(85dvh,820px);
+    max-height:85dvh;
+    padding:1rem;
+    margin:0;
+    border-radius:22px 22px 0 0;
+    border:1px solid #cbe5d5;
+    background:white;
+    box-shadow:0 -10px 42px rgba(12,47,28,.26);
+    overflow-y:auto;
+    visibility:hidden;
+    pointer-events:none;
+    transform:translateY(101%);
+    transition:transform .25s ease,visibility 0s linear .25s;
+  }
+  .pc-layout .pc-checkout-panel--open {
+    visibility:visible;
+    pointer-events:auto;
+    transform:translateY(0);
+    transition:transform .25s ease,visibility 0s;
+  }
+  .pc-layout .pc-checkout-panel .pc-cart-list {
+    flex:1 1 auto;
+    min-height:75px;
+    max-height:unset;
+  }
+  .pc-layout .pc-checkout-panel .pc-payment {padding-bottom:max(.5rem,env(safe-area-inset-bottom));}
+  .pc-mobile-cart-heading {
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    position:relative;
+    min-height:22px;
+    margin:-.4rem 0 .45rem;
+  }
+  .pc-mobile-cart-handle {
+    width:50px;
+    height:5px;
+    border-radius:99px;
+    background:#d1ded5;
+  }
+  .pc-mobile-cart-heading>button {
+    position:absolute;
+    top:-.15rem;
+    right:0;
+    min-width:40px;
+    min-height:40px;
+    border-radius:10px;
+    background:#eef8f0;
+    color:#246d44;
+    font-weight:850;
+    cursor:pointer;
+  }
+  .pc-cart-fab {
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    position:fixed;
+    z-index:1000;
+    right:1rem;
+    bottom:calc(1rem + env(safe-area-inset-bottom));
+    width:68px;
+    height:68px;
+    padding:.5rem;
+    border:4px solid #ecfff2;
+    border-radius:50%;
+    background:#18854f;
+    color:white;
+    box-shadow:0 9px 30px rgba(5,80,38,.3);
+    cursor:pointer;
+  }
+  .pc-cart-fab span {font-size:1.8rem;}
+  .pc-cart-fab strong {
+    position:absolute;
+    top:-8px;
+    right:-7px;
+    display:grid;
+    place-items:center;
+    min-width:26px;
+    height:26px;
+    padding:0 .25rem;
+    border:2px solid #fff;
+    border-radius:99px;
+    background:#e64c5f;
+    color:#fff;
+    font-size:.75rem;
+    font-weight:950;
+  }
+  .pc-cart-backdrop {
+    display:block;
+    position:fixed;
+    z-index:1001;
+    inset:0;
+    width:100%;
+    height:100%;
+    border:0;
+    background:rgba(7,24,16,.54);
+    cursor:pointer;
+  }
+  .pc-cart-fab:focus-visible,.pc-mobile-cart-heading>button:focus-visible {
+    outline:3px solid #91ebac;
+    outline-offset:3px;
+  }
+}
+@media(max-width:630px) {
+  .pc-gallery-grid {grid-template-columns:repeat(2,minmax(0,1fr));gap:.6rem;}
+  .pc-gallery-card {min-height:197px;padding:.55rem .48rem .7rem;border-radius:14px;}
+  .pc-gallery-photo {min-height:112px;height:127px;max-height:150px;}
+  .pc-gallery-name {font-size:.8rem;}
+  .pc-gallery-price {font-size:.88rem;}
+  .pc-gallery-details {margin-top:.55rem;}
+  .pc-gallery-add {width:25px;height:25px;top:.38rem;right:.38rem;font-size:.95rem;}
+}
+@media(max-width:375px) {
+  .pc-gallery-grid {gap:.4rem;}
+  .pc-gallery-card {min-height:184px;padding:.4rem .4rem .65rem;}
+  .pc-gallery-photo {min-height:104px;height:118px;}
+  .pc-gallery-name {font-size:.74rem;}
+  .pc-gallery-price {font-size:.8rem;}
+  .pc-gallery-search input {font-size:.85rem;}
+  .pc-gallery-search>button {font-size:.7rem;padding:.4rem .45rem;}
+}
+@media(prefers-reduced-motion:reduce){
+  .pc-gallery-card,.pc-gallery-photo img,.pc-gallery-add,
+  .pc-layout .pc-checkout-panel {transition:none!important;}
+  .pc-gallery-card:hover,.pc-gallery-card:active,
+  .pc-gallery-card:hover .pc-gallery-photo img {transform:none!important;}
+}

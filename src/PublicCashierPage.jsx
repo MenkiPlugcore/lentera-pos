@@ -5,21 +5,25 @@ import {
   setCartQty,cartTotal,getCashChange,checkoutDemo,receiptText,formatRupiah,
 } from './publicCashier.js'
 import './publicCashier.css'
+import './publicCashierGallery.css'
 
 const prettyInput=value=>String(value||'').replace(/\B(?=(\d{3})+(?!\d))/g,'.')
 
 function ProductPhoto({product}){
-  return <span className="pc-product-image">
-    {product.imageUrl?<img src={product.imageUrl} alt="" loading="lazy"
-      onError={e=>{e.currentTarget.hidden=true;e.currentTarget.parentElement.classList.add('pc-product-image--missing')}}/>
-      :<span aria-hidden="true">▣</span>}
+  return <span className="pc-gallery-photo">
+    {product.imageUrl ? (
+      <img src={product.imageUrl} alt="" loading="lazy"
+        onError={event=>{
+          event.currentTarget.hidden=true
+          event.currentTarget.parentElement.classList.add('pc-gallery-photo--missing')
+        }}/>
+    ) : <span className="pc-gallery-placeholder" aria-hidden="true">▣</span>}
   </span>
 }
 
 export default function PublicCashierPage(){
   const [catalog,setCatalog]=useState(DEMO_CATALOG)
   const [search,setSearch]=useState('')
-  const [scan,setScan]=useState('')
   const [cart,setCart]=useState([])
   const [paidRaw,setPaidRaw]=useState('')
   const [manualName,setManualName]=useState('')
@@ -27,7 +31,9 @@ export default function PublicCashierPage(){
   const [receipt,setReceipt]=useState(null)
   const [salesCount,setSalesCount]=useState(0)
   const [notice,setNotice]=useState('')
-  const barcodeInput=useRef(null)
+  const searchInput=useRef(null)
+  const drawerClose=useRef(null)
+  const [cartOpen,setCartOpen]=useState(false)
   useEffect(()=>{
     let active=true
     cloudApiFetch('/api/public/catalog').then(data=>{
@@ -46,6 +52,34 @@ export default function PublicCashierPage(){
   const payment=getCashChange(total,paid)
   const units=cart.reduce((sum,item)=>sum+item.qty,0)
 
+  useEffect(()=>{
+    if(!cartOpen)return
+    const previousFocus=document.activeElement
+    const previousOverflow=document.body.style.overflow
+    document.body.style.overflow='hidden'
+    drawerClose.current?.focus()
+    const onKey=event=>{
+      if(event.key==='Escape'){
+        event.preventDefault()
+        setCartOpen(false)
+      }
+      if(event.key!=='Tab')return
+      const drawer=document.getElementById('pc-cart-panel')
+      const elements=Array.from(drawer?.querySelectorAll('button:not(:disabled),input:not(:disabled)')||[])
+        .filter(el=>el.getClientRects().length>0)
+      if(!elements.length)return
+      const first=elements[0],last=elements[elements.length-1]
+      if(event.shiftKey&&document.activeElement===first){event.preventDefault();last.focus()}
+      else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first.focus()}
+    }
+    document.addEventListener('keydown',onKey)
+    return ()=>{
+      document.body.style.overflow=previousOverflow
+      document.removeEventListener('keydown',onKey)
+      if(previousFocus?.isConnected&&typeof previousFocus.focus==='function')previousFocus.focus()
+    }
+  },[cartOpen])
+
   function add(product){
     try{setCart(current=>addToCart(current,product));setReceipt(null);setNotice('')}
     catch(e){setNotice(e.message)}
@@ -56,11 +90,11 @@ export default function PublicCashierPage(){
   }
   function scanProduct(event){
     event.preventDefault()
-    const product=findByBarcode(catalog,scan)
+    const product=findByBarcode(catalog,search)
     if(product)add(product)
     else setNotice('Kode tidak ditemukan dalam katalog latihan.')
-    setScan('')
-    barcodeInput.current?.focus()
+    if(product)setSearch('')
+    searchInput.current?.focus()
   }
   function manualProduct(event){
     event.preventDefault()
@@ -102,32 +136,31 @@ export default function PublicCashierPage(){
         <span aria-hidden="true">ⓘ</span> Stok otomatis · Bukan transaksi asli
       </p>
       {notice&&<div role="status" aria-live="polite" className="pc-notice">{notice}</div>}
-      <div className="pc-grid">
+      <div className="pc-layout">
         <section className="pc-catalog-panel" aria-labelledby="pc-catalog-title">
           <div className="pc-panel-heading">
             <h2 id="pc-catalog-title">Produk</h2>
             <span className="pc-item-count">{catalog.length} produk</span>
           </div>
-          <form className="pc-scan" onSubmit={scanProduct}>
-            <label htmlFor="pc-barcode" className="sr-only">Barcode atau SKU produk</label>
-            <div><input id="pc-barcode" ref={barcodeInput} value={scan}
-              onChange={e=>setScan(e.target.value)} autoComplete="off"
-              placeholder="Scan barcode / SKU"/>
-              <button type="submit" disabled={!scan.trim()}>Tambah</button></div>
+          <form className="pc-gallery-search" onSubmit={scanProduct} role="search">
+            <label className="sr-only" htmlFor="pc-search">Cari barang atau scan barcode</label>
+            <span className="pc-gallery-search-icon" aria-hidden="true">⌕</span>
+            <input id="pc-search" ref={searchInput} type="search" autoComplete="off"
+              placeholder="Cari barang atau scan barcode..."
+              value={search} onChange={e=>setSearch(e.target.value)}/>
+            <button type="submit" aria-label="Tambahkan produk berdasarkan barcode atau SKU"
+              disabled={!search.trim()}>Enter</button>
           </form>
-          <label className="sr-only" htmlFor="pc-search">Cari produk</label>
-          <input id="pc-search" className="pc-search" type="search" placeholder="Cari barang..."
-            value={search} onChange={e=>setSearch(e.target.value)} />
-          <div className="pc-products" aria-live="polite">
-            {filtered.map(product=><button type="button" className="pc-product" key={product.id}
+          <div className="pc-gallery-grid" aria-label="Daftar produk latihan">
+            {filtered.map(product=><button type="button" className="pc-gallery-card" key={product.id}
               onClick={()=>add(product)}
               aria-label={'Tambahkan '+product.name+' ke keranjang, '+formatRupiah(product.sellingPrice)}>
               <ProductPhoto product={product}/>
-              <span className="pc-product-meta">
-                <strong className="pc-product-name">{product.name}</strong>
-                <span className="pc-product-price">{formatRupiah(product.sellingPrice)}</span>
+              <span className="pc-gallery-details">
+                <strong className="pc-gallery-name">{product.name}</strong>
+                <span className="pc-gallery-price">{formatRupiah(product.sellingPrice)}</span>
               </span>
-              <span className="pc-product-add" aria-hidden="true">＋</span>
+              <span className="pc-gallery-add" aria-hidden="true">+</span>
             </button>)}
             {!filtered.length&&<p className="pc-empty">Produk tidak ditemukan.</p>}
           </div>
@@ -146,7 +179,15 @@ export default function PublicCashierPage(){
           </details>
         </section>
 
-        <aside className="pc-checkout-panel" aria-labelledby="pc-cart-title">
+        <aside id="pc-cart-panel"
+          className={'pc-checkout-panel'+(cartOpen?' pc-checkout-panel--open':'')}
+          aria-labelledby="pc-cart-title"
+          aria-hidden={undefined}>
+          <div className="pc-mobile-cart-heading">
+            <span aria-hidden="true" className="pc-mobile-cart-handle"></span>
+            <button ref={drawerClose} type="button" onClick={()=>setCartOpen(false)}
+              aria-label="Tutup keranjang">✕</button>
+          </div>
           <div className="pc-panel-heading">
             <h2 id="pc-cart-title">Keranjang <small>({units})</small></h2>
             <button type="button" className="pc-clear" disabled={!cart.length}
@@ -213,5 +254,13 @@ export default function PublicCashierPage(){
         </aside>
       </div>
     </div>
+    <button type="button" className="pc-cart-fab" aria-controls="pc-cart-panel"
+      aria-expanded={cartOpen} aria-label={'Buka keranjang, '+units+' barang'}
+      onClick={()=>setCartOpen(true)}>
+      <span aria-hidden="true">🛒</span>
+      <strong>{units}</strong>
+    </button>
+    {cartOpen&&<button type="button" className="pc-cart-backdrop"
+      aria-label="Tutup panel keranjang" onClick={()=>setCartOpen(false)}/>}
   </main>
 }
