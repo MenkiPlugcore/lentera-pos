@@ -94,6 +94,7 @@ function ProductManager({ view = 'dashboard', editProductId = null }) {
   const [categoryName, setCategoryName] = useState('')
   const [loading, setLoading] = useState(true)
   const [busy, setBusy] = useState(false)
+  const [deletingId, setDeletingId] = useState(null)
   const [categoryBusy, setCategoryBusy] = useState(false)
   const [notice, setNotice] = useState(() => {
     if (IS_CLOUD && view === 'products' && typeof window !== 'undefined' &&
@@ -206,16 +207,30 @@ function ProductManager({ view = 'dashboard', editProductId = null }) {
     }
   }
 
-  async function archiveProduct(product) {
-    if (!window.confirm(`Arsipkan produk ${product.name} (${product.sku})? Riwayat transaksi tetap aman.`)) return
+  async function deleteProduct(product) {
+    if (deletingId || busy) return
+    const typed = window.prompt(
+      `Hapus permanen ${product.name} (${product.sku})?\n\nKetik SKU ${product.sku} untuk melanjutkan.`
+    )
+    if (typed === null) return
+    if (typed.trim() !== product.sku) {
+      setNotice({ tone: 'error', text: 'SKU tidak cocok. Produk tidak dihapus.' })
+      return
+    }
+    if (!window.confirm(
+      `Hapus produk ${product.name} secara permanen dari inventaris?\n\nRiwayat transaksi praktik dan struk tetap tersimpan. Riwayat pergerakan stok produk akan dihapus. Tindakan ini tidak bisa dibatalkan.`
+    )) return
+    setDeletingId(product.id)
     setNotice(null)
     try {
-      await apiFetch(`/api/products/${product.id}`, { method: 'DELETE' })
-      setNotice({ tone: 'success', text: `${product.name} berhasil diarsipkan.` })
+      const result = await apiFetch(`/api/products/${product.id}/hard-delete`, { method: 'DELETE' })
+      setProducts((current) => current.filter((item) => item.id !== product.id))
+      setNotice({ tone: 'success', text: `${result.deleted.name} (${result.deleted.sku}) berhasil dihapus permanen.` })
       if (editingId === product.id) resetForm()
-      await loadData()
     } catch (error) {
       setNotice({ tone: 'error', text: error.message })
+    } finally {
+      setDeletingId(null)
     }
   }
 
@@ -266,7 +281,7 @@ function ProductManager({ view = 'dashboard', editProductId = null }) {
       </div>
       )}
       {showList && <section className="mb-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <Stat label="Produk Aktif" value={activeProducts.length} note={`${products.length - activeProducts.length} diarsipkan`} />
+        <Stat label="Produk Aktif" value={activeProducts.length} note={`${products.length - activeProducts.length} tidak aktif`} />
         <Stat label="Total Stok" value={totalStock} note="unit tersimpan" />
         <Stat label="Stok Menipis" value={lowStock.length} note="perlu diperiksa" alert={lowStock.length > 0} />
         <Stat label="Kode Berikutnya" value="LPxxxxxx" note="otomatis saat produk dibuat" />
@@ -370,7 +385,13 @@ function ProductManager({ view = 'dashboard', editProductId = null }) {
                         <td className="px-4 py-4 text-right font-semibold">{formatRupiah(product.selling_price)}</td>
                         <td className="px-4 py-4 text-right"><span className={isLow ? 'font-black text-amber-300' : 'font-bold text-slate-200'}>{product.stock}</span><p className="mt-1 text-xs text-slate-600">min. {product.minimum_stock}</p></td>
                         <td className="px-4 py-4">{!product.is_active ? <Badge tone="muted">Arsip</Badge> : isLow ? <Badge tone="warning">Stok Menipis</Badge> : <Badge tone="success">Aktif</Badge>}</td>
-                        <td className="px-4 py-4"><div className="flex justify-end gap-2"><button type="button" className="table-button" onClick={() => editProduct(product)}>Edit</button>{product.is_active && <button type="button" className="table-button text-rose-300" onClick={() => archiveProduct(product)}>Arsipkan</button>}</div></td>
+                        <td className="px-4 py-4"><div className="flex flex-wrap justify-end gap-2">
+                          <button type="button" className="table-button" disabled={deletingId === product.id} onClick={() => editProduct(product)}>Edit</button>
+                          <button type="button" className="table-button border border-rose-800 text-rose-300 hover:bg-rose-950/50 disabled:opacity-50"
+                            disabled={deletingId !== null || busy}
+                            aria-label={`Hapus permanen ${product.name}`}
+                            onClick={() => deleteProduct(product)}>{deletingId === product.id ? 'Menghapus...' : 'Hapus'}</button>
+                        </div></td>
                       </tr>
                     )
                   })}

@@ -177,7 +177,6 @@ function RootRoute() {
   if (path === '/admin') return <CloudGate>
     <App/>
     <AdminCashierShortcut/>
-    <HardDeletePanel/>
     <ReportsPanel/>
   </CloudGate>
 

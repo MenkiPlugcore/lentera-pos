@@ -277,9 +277,13 @@ export async function apiFetch(rawUrl, options = {}) {
       const id = decodeURIComponent(hardDelete[1]);
       const product = state.products.find((item) => item.id === id);
       if (!product) invalid('Produk tidak ditemukan.');
-      if (state.transactions.some((tx) => tx.items.some((item) => item.productId === id))) {
-        invalid('Produk sudah dipakai dalam transaksi. Arsipkan agar riwayat dan laporan tetap konsisten.');
-      }
+      // Riwayat penjualan latihan menyimpan snapshot barang; putuskan relasi
+      // dengan katalog agar produk bisa dihapus tanpa menghapus struk lama.
+      state.transactions = state.transactions.map((tx) => ({
+        ...tx,
+        items: tx.items.map((item) => item.productId === id
+          ? { ...item, productId: null } : item),
+      }));
       state.products = state.products.filter((item) => item.id !== id);
       return { ok: true, deleted: { id, sku: product.sku, name: product.name } };
     });

@@ -83,7 +83,7 @@ export default function HardDeletePanel() {
                 <p className="text-xs font-bold uppercase tracking-[0.2em] text-rose-300">Danger Zone</p>
                 <h2 className="mt-2 text-2xl font-black">Hapus Produk Permanen</h2>
                 <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-400">
-                  Produk yang belum pernah dipakai dalam transaksi dapat dihapus dari {IS_CLOUD ? 'database' : 'browser'}. Riwayat stok produk tersebut ikut terhapus. Produk yang sudah pernah masuk transaksi wajib diarsipkan agar laporan kasir tetap konsisten.
+                  Produk bisa dihapus permanen, termasuk yang sudah dipakai latihan. Struk dan catatan transaksi lama tetap tersimpan, sedangkan riwayat pergerakan stok untuk produk tersebut ikut dihapus. Tindakan ini tidak dapat dibatalkan.
                 </p>
               </div>
               <button

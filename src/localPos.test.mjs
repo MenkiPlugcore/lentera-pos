@@ -48,7 +48,7 @@ test('checkout reduces stock and keeps an immutable item snapshot', async () => 
     items: [{ productId: product.id, quantity: 999 }], paidAmount: 999999,
   }), /Stok/)
   assert.equal((await apiFetch('/api/products')).products[0].stock, 8)
-  await assert.rejects(apiFetch('/api/products/' + product.id + '/hard-delete', { method: 'DELETE' }), /transaksi/)
+  assert.equal((await apiFetch('/api/products')).products[0].id,product.id)
 })
 
 test('reports use Jakarta dates, history filters, and actual purchase costs', async () => {
@@ -86,4 +86,26 @@ test('archiving prevents sale and fresh products may be hard deleted', async () 
   const deleted = await apiFetch('/api/products/' + extra.id + '/hard-delete', { method: 'DELETE' })
   assert.equal(deleted.deleted.sku, 'LP000002')
   assert.equal((await apiFetch('/api/products')).products.length, 1)
+})
+
+test('previously sold product can be deleted permanently without removing practice receipt', async () => {
+  const product = (await apiFetch('/api/products')).products.find(item => item.sku === 'LP000001')
+  assert.ok(product)
+  const historyBefore = (await apiFetch('/api/transactions')).transactions
+  const snapshot = historyBefore.flatMap(tx => tx.items).find(item => item.sku === product.sku)
+  assert.ok(snapshot)
+  const deleted = await apiFetch('/api/products/' + product.id + '/hard-delete', { method: 'DELETE' })
+  assert.equal(deleted.deleted.id,product.id)
+  assert.equal((await apiFetch('/api/products')).products.some(item => item.id === product.id),false)
+  const historyAfter = (await apiFetch('/api/transactions')).transactions
+  const saved = historyAfter.flatMap(tx => tx.items).find(item => item.sku === product.sku)
+  assert.ok(saved)
+  assert.equal(saved.productId,null)
+  assert.equal(saved.name,snapshot.name)
+  assert.equal(saved.unitPrice,snapshot.unitPrice)
+  assert.equal(saved.quantity,snapshot.quantity)
+  assert.equal(saved.subtotal,snapshot.subtotal)
+  const backup = JSON.parse(exportBackup())
+  assert.equal(backup.data.products.some(item => item.id === product.id),false)
+  assert.equal(backup.data.transactions.length,historyBefore.length)
 })

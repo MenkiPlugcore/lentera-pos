@@ -49,9 +49,9 @@ test('product creation and editing reuse original API, Cloudinary upload and cat
 test('local POS and existing inventory actions remain available',()=>{
   assert.match(app,/const showEditor = !IS_CLOUD \|\| standaloneEditor/)
   assert.match(app,/const showList = !IS_CLOUD \|\| view === 'products'/)
-  assert.match(app,/archiveProduct\(product\)/)
+  assert.match(app,/deleteProduct\(product\)/)
   assert.match(app,/ProductBarcodeActions product=\{product\}/)
-  assert.match(app,/apiFetch\(\`\/api\/products\/\$\{product\.id\}\`, \{ method: 'DELETE'/)
+  assert.match(app,/apiFetch\(\`\/api\/products\/\$\{product\.id\}\/hard-delete\`, \{ method: 'DELETE'/)
   assert.match(main,/if \(!IS_CLOUD\)/)
 })
 

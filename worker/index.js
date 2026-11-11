@@ -387,10 +387,13 @@ async function handleApi(request, env) {
   }
   const deleteMatch = path.match(/^\/api\/products\/([0-9a-f-]+)\/hard-delete$/i)
   if (deleteMatch && uuidRE.test(deleteMatch[1]) && method === 'DELETE') {
+    // Safe for practice: historical transaction/cafe items retain their name,
+    // SKU, quantity and price snapshots (FK ON DELETE SET NULL). Only this
+    // product's stock movements are removed (FK ON DELETE CASCADE).
     const [row] = await db.query(
-      "DELETE FROM public.products p WHERE p.id=$1::uuid AND NOT EXISTS (SELECT 1 FROM public.transaction_items i WHERE i.product_id=p.id) RETURNING id,sku,name",
+      "DELETE FROM public.products WHERE id=$1::uuid RETURNING id,sku,name",
       [deleteMatch[1]])
-    if (!row) return fail('Produk sudah terjual atau tidak ditemukan. Gunakan Arsipkan.', 409)
+    if (!row) return fail('Produk tidak ditemukan.', 404)
     return json({ ok: true, deleted: row })
   }
 
