@@ -93,6 +93,8 @@ function CloudGate({ children }) {
         <span className="portal-adminbar-user">● Admin · {state.user.fullName || state.user.username}</span>
         <nav className="portal-adminbar-nav" aria-label="Navigasi LENTERA POS">
           <a href="/admin">Dashboard</a>
+          <a href="/admin#daftar-produk">Produk</a>
+          <a href="/admin/produk/tambah">+ Tambah Produk</a>
           <a href="/kasir">Kasir</a>
           <a href="/cafe">Smart Cafe</a>
           <a href="/kasir-umum">Kasir Biasa</a>
@@ -166,6 +168,9 @@ function RootRoute() {
 
   if (path === '/kasir') return <CloudGate><CashierPage/></CloudGate>
   if (path === '/cafe') return <CloudGate><CafePage/></CloudGate>
+  if (path === '/admin/produk/tambah') return <CloudGate><App view="create"/></CloudGate>
+  const editProductRoute = path.match(/^\/admin\/produk\/edit\/([0-9a-f-]{36})$/i)
+  if (editProductRoute) return <CloudGate><App view="edit" editProductId={editProductRoute[1]}/></CloudGate>
   if (path === '/admin') return <CloudGate>
     <App/>
     <AdminCashierShortcut/>

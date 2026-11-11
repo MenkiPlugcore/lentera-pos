@@ -1,5 +1,5 @@
-const CACHE_NAME = 'lentera-pos-offline-v24'
-const PAGES = ['/', '/admin', '/kasir', '/cafe', '/simulasi', '/kasir-umum', '/game']
+const CACHE_NAME = 'lentera-pos-offline-v25'
+const PAGES = ['/', '/admin', '/admin/produk/tambah', '/kasir', '/cafe', '/simulasi', '/kasir-umum', '/game']
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
