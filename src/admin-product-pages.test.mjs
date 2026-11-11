@@ -10,7 +10,7 @@ const wrangler=readFileSync(new URL('../wrangler.jsonc',import.meta.url),'utf8')
 test('add product has its own protected admin route and navigation',()=>{
   assert.match(main,/path === '\/admin\/produk\/tambah'\) return <CloudGate><App view="create"\/><\/CloudGate>/)
   assert.match(main,/<a href="\/admin\/produk\/tambah">\+ Tambah Produk<\/a>/)
-  assert.match(main,/<a href="\/admin#daftar-produk">Produk<\/a>/)
+  assert.match(main,/<a href="\/admin\/produk">Produk<\/a>/)
   assert.match(main,/if \(path === '\/admin'\) return <CloudGate>/)
 })
 
@@ -23,15 +23,15 @@ test('editing products opens a dedicated protected URL, not the inline list form
 })
 
 test('dashboard shows inventory with add button while editor remains a standalone form',()=>{
-  assert.match(app,/const standaloneEditor = IS_CLOUD && view !== 'dashboard'/)
-  assert.match(app,/const showList = !standaloneEditor/)
+  assert.match(app,/const standaloneEditor = IS_CLOUD && \(view === 'create' \|\| view === 'edit'\)/)
+  assert.match(app,/const showList = !IS_CLOUD \|\| view === 'products'/)
   assert.match(app,/const showEditor = !IS_CLOUD \|\| standaloneEditor/)
   assert.match(app,/\{showEditor && \(!editingPage \|\| \(!loading && editingId\)\) && \(/)
   assert.match(app,/\{showList && \(/)
   assert.match(app,/<a href="\/admin\/produk\/tambah" className="primary-button shrink-0">\+ Tambah Produk<\/a>/)
   assert.match(app,/id="daftar-produk"/)
   assert.match(app,/max-w-3xl/)
-  assert.match(app,/href="\/admin#daftar-produk"/)
+  assert.match(app,/href="\/admin\/produk"/)
 })
 
 test('product creation and editing reuse original API, Cloudinary upload and category logic',()=>{
@@ -43,12 +43,12 @@ test('product creation and editing reuse original API, Cloudinary upload and cat
   assert.match(app,/setPendingCloudImage\(false\)/)
   assert.match(app,/Simpan Produk/)
   assert.match(app,/Simpan Perubahan/)
-  assert.match(app,/window\.location\.assign\('\/admin\?produk=diperbarui#daftar-produk'\)/)
+  assert.match(app,/window\.location\.assign\('\/admin\/produk\?produk=diperbarui'\)/)
 })
 
 test('local POS and existing inventory actions remain available',()=>{
   assert.match(app,/const showEditor = !IS_CLOUD \|\| standaloneEditor/)
-  assert.match(app,/const showList = !standaloneEditor/)
+  assert.match(app,/const showList = !IS_CLOUD \|\| view === 'products'/)
   assert.match(app,/archiveProduct\(product\)/)
   assert.match(app,/ProductBarcodeActions product=\{product\}/)
   assert.match(app,/apiFetch\(\`\/api\/products\/\$\{product\.id\}\`, \{ method: 'DELETE'/)

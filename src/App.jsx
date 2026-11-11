@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import ProductBarcodeActions from './ProductBarcodeActions.jsx'
 import LocalBackupPanel from './LocalBackupPanel.jsx'
 import CloudAdminPanel from './CloudAdminPanel.jsx'
+import MoneyAssetsPanel from './MoneyAssetsPanel.jsx'
 import { IS_CLOUD, cloudApiFetch } from './cloudApi.js'
 import { apiFetch, imageFileToDataUrl } from './localPos.js'
 
@@ -57,16 +58,32 @@ function AdminApp({ view, editProductId }) {
       </header>
       <div className="mx-auto max-w-7xl px-5 py-7">
         {view === 'dashboard' && (IS_CLOUD ? <CloudAdminPanel /> : <LocalBackupPanel />)}
-        <ProductManager view={view} editProductId={editProductId}/>
+        {IS_CLOUD && view === 'money' && (
+          <section className="mx-auto max-w-5xl">
+            <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <p className="text-xs font-bold uppercase tracking-widest text-emerald-700">Aset Pembelajaran</p>
+                <h2 className="mt-1 text-2xl font-black">Gambar Uang</h2>
+              </div>
+              <a href="/admin" className="secondary-button">← Dashboard</a>
+            </div>
+            <div className="rounded-3xl border border-slate-800 bg-slate-900/70 p-5">
+              <MoneyAssetsPanel/>
+            </div>
+          </section>
+        )}
+        {(!IS_CLOUD || ['products','create','edit'].includes(view)) &&
+          <ProductManager view={view} editProductId={editProductId}/>}
+
       </div>
     </main>
   )
 }
 
 function ProductManager({ view = 'dashboard', editProductId = null }) {
-  const standaloneEditor = IS_CLOUD && view !== 'dashboard'
+  const standaloneEditor = IS_CLOUD && (view === 'create' || view === 'edit')
   const editingPage = standaloneEditor && view === 'edit'
-  const showList = !standaloneEditor
+  const showList = !IS_CLOUD || view === 'products'
   const showEditor = !IS_CLOUD || standaloneEditor
   const [products, setProducts] = useState([])
   const [categories, setCategories] = useState([])
@@ -79,7 +96,7 @@ function ProductManager({ view = 'dashboard', editProductId = null }) {
   const [busy, setBusy] = useState(false)
   const [categoryBusy, setCategoryBusy] = useState(false)
   const [notice, setNotice] = useState(() => {
-    if (IS_CLOUD && view === 'dashboard' && typeof window !== 'undefined' &&
+    if (IS_CLOUD && view === 'products' && typeof window !== 'undefined' &&
         new URLSearchParams(window.location.search).get('produk') === 'diperbarui') {
       return { tone: 'success', text: 'Produk berhasil diperbarui.' }
     }
@@ -172,7 +189,7 @@ function ProductManager({ view = 'dashboard', editProductId = null }) {
       if (editingId) {
         await apiFetch(`/api/products/${editingId}`, { method: 'PATCH', body: JSON.stringify(payload) })
         if (editingPage) {
-          window.location.assign('/admin?produk=diperbarui#daftar-produk')
+          window.location.assign('/admin/produk?produk=diperbarui')
           return
         }
         setNotice({ tone: 'success', text: 'Produk berhasil diperbarui.' })
@@ -239,6 +256,15 @@ function ProductManager({ view = 'dashboard', editProductId = null }) {
 
   return (
     <>
+      {showList && (
+      <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <p className="text-xs font-bold uppercase tracking-widest text-emerald-700">Inventaris</p>
+          <h2 className="mt-1 text-2xl font-black">Kelola Produk</h2>
+        </div>
+        {IS_CLOUD && <a href="/admin" className="secondary-button">← Dashboard</a>}
+      </div>
+      )}
       {showList && <section className="mb-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <Stat label="Produk Aktif" value={activeProducts.length} note={`${products.length - activeProducts.length} diarsipkan`} />
         <Stat label="Total Stok" value={totalStock} note="unit tersimpan" />
@@ -254,7 +280,7 @@ function ProductManager({ view = 'dashboard', editProductId = null }) {
             <p className="text-xs font-bold uppercase tracking-widest text-emerald-700">Kelola Produk</p>
             <h2 className="mt-1 text-xl font-black text-emerald-950">{editingPage ? 'Edit Produk' : 'Tambah Produk Baru'}</h2>
           </div>
-          <a href="/admin#daftar-produk" className="secondary-button">← Kembali ke Daftar</a>
+          <a href="/admin/produk" className="secondary-button">← Kembali ke Daftar</a>
         </div>
       )}
 
@@ -293,7 +319,7 @@ function ProductManager({ view = 'dashboard', editProductId = null }) {
             {editingId && <label className="flex items-center gap-3 rounded-2xl border border-slate-800 bg-slate-950/60 px-4 py-3 text-sm"><input type="checkbox" checked={form.isActive} onChange={(event) => setForm({ ...form, isActive: event.target.checked })} />Produk aktif dan tampil di kasir</label>}
             <div className="flex flex-col gap-3 sm:flex-row">
               <button className="primary-button flex-1" type="submit" disabled={busy}>{busy ? 'Menyimpan...' : editingId ? 'Simpan Perubahan' : 'Simpan Produk'}</button>
-              {standaloneEditor && <a href="/admin#daftar-produk" className="secondary-button text-center">Batal</a>}
+              {standaloneEditor && <a href="/admin/produk" className="secondary-button text-center">Batal</a>}
             </div>
           </form>
 
@@ -304,7 +330,7 @@ function ProductManager({ view = 'dashboard', editProductId = null }) {
         </div>
         )}
         {editingPage && loading && <div role="status" className="rounded-2xl border border-slate-800 bg-slate-900 p-8 text-center text-slate-500">Memuat produk untuk diedit...</div>}
-        {editingPage && !loading && !editingId && <a className="secondary-button" href="/admin#daftar-produk">Kembali ke Daftar Produk</a>}
+        {editingPage && !loading && !editingId && <a className="secondary-button" href="/admin/produk">Kembali ke Daftar Produk</a>}
 
         {showList && (
         <div id="daftar-produk" className="rounded-3xl border border-slate-800 bg-slate-900/70 p-6">

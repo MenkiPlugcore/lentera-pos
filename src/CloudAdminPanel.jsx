@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { cloudApiFetch } from './cloudApi.js'
 import { exportBackup, getLocalStats } from './localPos.js'
-import MoneyAssetsPanel from './MoneyAssetsPanel.jsx'
 import AutoStockPanel from './AutoStockPanel.jsx'
 
 export default function CloudAdminPanel() {
@@ -89,6 +88,14 @@ export default function CloudAdminPanel() {
       <p className="text-xs font-black uppercase tracking-[0.2em] text-cyan-300">Cloud Dashboard · Administrator</p>
       <h2 className="mt-1 text-xl font-black">Database LENTERA POS</h2>
       <p className="mt-1 text-sm text-slate-400">Menu, stok, dan transaksi tersimpan di Neon, bukan terpisah antar-browser. Data lama tidak otomatis dipindahkan.</p>
+      <nav className="mt-5 grid gap-3 sm:grid-cols-2" aria-label="Menu pengelolaan">
+        <a href="/admin/produk" className="flex items-center justify-between rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-4 font-black text-emerald-800 hover:bg-emerald-100">
+          <span>📦 Produk & Stok</span><span aria-hidden="true">→</span>
+        </a>
+        <a href="/admin/gambar-uang" className="flex items-center justify-between rounded-2xl border border-sky-200 bg-sky-50 px-4 py-4 font-black text-sky-800 hover:bg-sky-100">
+          <span>💵 Gambar Uang</span><span aria-hidden="true">→</span>
+        </a>
+      </nav>
       <div className="mt-4 grid grid-cols-2 gap-3 md:grid-cols-5">
         {[
           ['Produk',stats?.products],
@@ -124,7 +131,6 @@ export default function CloudAdminPanel() {
         </div>
         {mediaNotice && <p role="status" className="mt-2 text-sm text-cyan-300">{mediaNotice}</p>}
       </div>
-      <MoneyAssetsPanel />
       <AutoStockPanel />
       <div className="mt-5 border-t border-slate-800 pt-4">
         <h3 className="font-black">Migrasi menu dari browser lama</h3>
