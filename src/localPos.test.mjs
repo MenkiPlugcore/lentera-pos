@@ -89,15 +89,21 @@ test('archiving prevents sale and fresh products may be hard deleted', async () 
 })
 
 test('previously sold product can be deleted permanently without removing practice receipt', async () => {
+  const parts=new Intl.DateTimeFormat('en-GB',{
+    timeZone:'Asia/Jakarta',year:'numeric',month:'2-digit',day:'2-digit'
+  }).formatToParts(new Date())
+  const piece=type=>parts.find(part=>part.type===type).value
+  const today=piece('year')+'-'+piece('month')+'-'+piece('day')
+  const transactionsUrl='/api/transactions?from='+today+'&to='+today
   const product = (await apiFetch('/api/products')).products.find(item => item.sku === 'LP000001')
   assert.ok(product)
-  const historyBefore = (await apiFetch('/api/transactions')).transactions
+  const historyBefore = (await apiFetch(transactionsUrl)).transactions
   const snapshot = historyBefore.flatMap(tx => tx.items).find(item => item.sku === product.sku)
   assert.ok(snapshot)
   const deleted = await apiFetch('/api/products/' + product.id + '/hard-delete', { method: 'DELETE' })
   assert.equal(deleted.deleted.id,product.id)
   assert.equal((await apiFetch('/api/products')).products.some(item => item.id === product.id),false)
-  const historyAfter = (await apiFetch('/api/transactions')).transactions
+  const historyAfter = (await apiFetch(transactionsUrl)).transactions
   const saved = historyAfter.flatMap(tx => tx.items).find(item => item.sku === product.sku)
   assert.ok(saved)
   assert.equal(saved.productId,null)
