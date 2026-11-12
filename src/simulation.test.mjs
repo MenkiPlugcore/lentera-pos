@@ -80,7 +80,7 @@ test('invalid UUID session is rejected before database access',async()=>{
 test('eight extra visitors join the existing three customers',()=>{
   assert.equal(CUSTOMERS.length,11)
   const ids=CUSTOMERS.map(customer=>customer.id)
-  assert.equal(new Set(ids).size,7)
+  assert.equal(new Set(ids).size,11)
   for(const id of ['milo','boo','rubi','aura','wiwi','buahlul','mulyana','megamom']){
     const customer=CUSTOMERS.find(c=>c.id===id)
     assert.ok(customer,'Missing visitor '+id)
