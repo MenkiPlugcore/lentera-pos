@@ -77,11 +77,11 @@ test('invalid UUID session is rejected before database access',async()=>{
   assert.equal(queried,false)
 })
 
-test('four fantasy visitors join the existing three customers',()=>{
-  assert.equal(CUSTOMERS.length,7)
+test('eight extra visitors join the existing three customers',()=>{
+  assert.equal(CUSTOMERS.length,11)
   const ids=CUSTOMERS.map(customer=>customer.id)
   assert.equal(new Set(ids).size,7)
-  for(const id of ['milo','boo','rubi','aura']){
+  for(const id of ['milo','boo','rubi','aura','wiwi','buahlul','mulyana','megamom']){
     const customer=CUSTOMERS.find(c=>c.id===id)
     assert.ok(customer,'Missing visitor '+id)
     assert.ok(customer.imageUrl.includes('e_background_removal/f_png/'))
@@ -98,4 +98,16 @@ test('customer selection varies across new challenges but stays stable for each 
     seen.add(a.id)
   }
   assert.equal(seen.size,CUSTOMERS.length)
+})
+
+test('four named guest customers retain their own greetings and image mapping',()=>{
+  const names=['Wiwi','Buahlul','Mulyana','Megamom']
+  const ids=['wiwi','buahlul','mulyana','megamom']
+  for(let i=0;i<ids.length;i++){
+    const customer=CUSTOMERS.find(item=>item.id===ids[i])
+    assert.ok(customer)
+    assert.equal(customer.name,names[i])
+    assert.match(customer.imageUrl,new RegExp('pelanggan-'+ids[i]+'-v1'))
+    assert.ok(customer.greeting.length>10)
+  }
 })

@@ -3,10 +3,10 @@ import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { CUSTOMERS } from './customerProfiles.js'
 
-test('seven customer assets use transparent Cloudinary images and four fantasy guests preserve white foregrounds', () => {
-  assert.equal(CUSTOMERS.length, 7)
-  assert.equal(new Set(CUSTOMERS.map(c => c.imageUrl)).size, 7)
-  const fantasy=new Set(['milo','boo','rubi','aura'])
+test('eleven customers include four new guest characters with transparent assets', () => {
+  assert.equal(CUSTOMERS.length, 11)
+  assert.equal(new Set(CUSTOMERS.map(c => c.imageUrl)).size, 11)
+  const fantasy=new Set(['milo','boo','rubi','aura','wiwi','buahlul','mulyana','megamom'])
   for (const customer of CUSTOMERS) {
     assert.match(customer.imageUrl, /^https:\/\/res\.cloudinary\.com\/dvds41ivm\/image\/upload\/e_(?:make_transparent:15|background_removal)\/f_png\/v\d+\/lentera-pos\/customers\//)
     if (fantasy.has(customer.id)) {

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'lentera-pos-offline-v27'
+const CACHE_NAME = 'lentera-pos-offline-v28'
 const PAGES = ['/', '/admin', '/admin/produk', '/admin/gambar-uang', '/admin/produk/tambah', '/kasir', '/cafe', '/simulasi', '/kasir-umum', '/game']
 
 self.addEventListener('install', (event) => {
